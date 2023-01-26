@@ -1,0 +1,62 @@
+{
+  "name": "m3u8-dl",
+  "version": "0.0.1",
+  "description": "Batch download of m3u8 files",
+  "main": "cjs/index.js",
+  "types": "cjs/index.d.ts",
+  "license": "MIT",
+  "repository": "https://github.com/lzwme/m3u8-dl.git",
+  "author": {
+    "name": "renxia",
+    "email": "lzwy0820@qq.com",
+    "url": "https://lzw.me"
+  },
+  "scripts": {
+    "prepare": "husky install",
+    "dev": "npm run watch",
+    "watch": "tsc -w",
+    "lint": "flh --eslint --tscheck --prettier",
+    "build": "tsc -p tsconfig.json",
+    "doc": "typedoc src/ --exclude **/*.spec.ts --out docs --tsconfig tsconfig.module.json",
+    "version": "standard-version",
+    "dist": "npm run build && npm run doc",
+    "release": "npm run dist && npm run version",
+    "clean": "flh rm -rf ./cjs ./esm ./docs",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "bin": {
+    "m3u8dl": "bin/m3u8dl.js"
+  },
+  "keywords": [
+    "m3u8",
+    "mp4",
+    "download",
+    "ffmpeg"
+  ],
+  "packageManager": "pnpm@7.6.0",
+  "engines": {
+    "node": ">=14.18"
+  },
+  "publishConfig": {
+    "access": "public",
+    "registry": "https://registry.npmjs.com"
+  },
+  "devDependencies": {
+    "@lzwme/fed-lint-helper": "^2.2.0",
+    "@types/node": "^18.11.18",
+    "@typescript-eslint/eslint-plugin": "^5.49.0",
+    "@typescript-eslint/parser": "^5.49.0",
+    "eslint": "^8.32.0",
+    "eslint-config-prettier": "^8.6.0",
+    "eslint-plugin-prettier": "^4.2.1",
+    "husky": "^8.0.3",
+    "prettier": "^2.8.3",
+    "typescript": "^4.9.4"
+  },
+  "dependencies": {
+    "@lzwme/fe-utils": "^1.3.2",
+    "commander": "^10.0.0",
+    "console-log-colors": "^0.3.3",
+    "m3u8-parser": "^6.0.0"
+  }
+}

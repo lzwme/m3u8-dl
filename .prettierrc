@@ -1,0 +1,18 @@
+{
+  "printWidth": 140,
+  "singleQuote": true,
+  "trailingComma": "es5",
+  "proseWrap": "preserve",
+  "semi": true,
+  "bracketSpacing": true,
+  "arrowParens": "avoid",
+  "tabWidth": 2,
+  "overrides": [
+    {
+      "files": ".prettierrc",
+      "options": {
+        "parser": "json"
+      }
+    }
+  ]
+}

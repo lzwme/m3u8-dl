@@ -1,0 +1,29 @@
+.grs.config.js
+npm-debug.log
+.DS_Store
+/release/
+/debug/
+/dist/
+/esm
+/cjs
+/docs
+/config
+/cache
+tmp
+coverage
+package-lock.json
+yarn.lock
+yarn-error.log
+pnpm-lock.yaml
+.pnpm-debug.log
+node_modules
+build
+eslintWhitelist.json
+tsCheckWhiteList.json
+.nyc_output
+.husky/post-commit
+
+# test files
+*.m3u8
+# /*(^.d).ts
+/*.mp4

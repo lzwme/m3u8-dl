@@ -1,0 +1,42 @@
+{
+  "typescript.tsdk": "./node_modules/typescript/lib",
+  "css.validate": false,
+  "editor.codeActionsOnSave": {
+    "source.fixAll.eslint": true
+  },
+  "editor.defaultFormatter": "esbenp.prettier-vscode",
+  "editor.formatOnSave": true,
+  "editor.renderWhitespace": "all",
+  "javascript.validate.enable": false,
+  "jest.autoRun": "off",
+  "scss.validate": false,
+  "stylelint.validate": [
+    "scss",
+    "css"
+  ],
+  "files.trimFinalNewlines": true,
+  "files.trimTrailingWhitespace": true,
+  "files.autoGuessEncoding": true,
+  "files.defaultLanguage": "typescript",
+  "files.insertFinalNewline": true,
+  "files.exclude": {
+    "**/.git": true
+  },
+  "files.watcherExclude": {
+    "addons/**": true,
+    "public/**": true,
+    "**/dist/**": true,
+    "**/dist-admin/**": true,
+    "**/mock/**": true,
+  },
+  "git.rebaseWhenSync": true,
+  "[json]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+  "[javascript]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+  "[jsonc]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  }
+}
