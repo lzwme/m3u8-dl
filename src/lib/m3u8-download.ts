@@ -2,7 +2,7 @@ import { resolve } from 'node:path';
 import { existsSync, rmSync, promises } from 'node:fs';
 import { Barrier, md5 } from '@lzwme/fe-utils';
 import { green, cyanBright } from 'console-log-colors';
-import { logger } from './utils';
+import { isSupportFfmpeg, logger } from './utils';
 import { WorkerPool } from './worker_pool';
 import { parseM3U8 } from './parseM3u8';
 import { m3u8Convert } from './m3u8-convert';
@@ -45,12 +45,19 @@ export async function m3u8Download(url: string, options: M3u8DLOptions = {}) {
   logger.info('starting download for', cyanBright(url));
   [url, options] = await formatOptions(url, options);
 
+  const ext = isSupportFfmpeg() ? '.mp4' : '.ts';
   let filepath = resolve(options.saveDir, options.filename);
-  // todo
+  if (!filepath.endsWith(ext)) filepath += ext;
 
-  const pool = new WorkerPool<WorkerTaskInfo, { success: boolean; info: TsItemInfo }>(tsDlFile, options.threadNum);
   const m3u8Info = await parseM3U8('', url, options.cacheDir);
   const result = { options, m3u8Info, filepath };
+
+  if (!options.force && existsSync(filepath)) {
+    logger.info('file already exist:', filepath);
+    return result;
+  }
+
+  const pool = new WorkerPool<WorkerTaskInfo, { success: boolean; info: TsItemInfo }>(tsDlFile, options.threadNum);
 
   if (m3u8Info.tsCount > 0) {
     const barrier = new Barrier();
