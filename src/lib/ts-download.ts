@@ -2,7 +2,7 @@ import { createDecipheriv } from 'node:crypto';
 import { existsSync, promises } from 'node:fs';
 import { isMainThread, parentPort } from 'node:worker_threads';
 import type { M3u8Crypto, TsItemInfo, WorkerTaskInfo } from '../type';
-import { logger, getRetry } from './utils';
+import { logger, getRetry, request } from './utils';
 
 export async function tsDownload(info: TsItemInfo, cryptoInfo: M3u8Crypto) {
   try {
@@ -35,6 +35,7 @@ function aesDecrypt(data: Buffer, cryptoInfo: M3u8Crypto) {
 
 if (!isMainThread && parentPort) {
   parentPort.on('message', (data: WorkerTaskInfo) => {
+    if (data.options?.headers) request.setHeaders(data.options.headers);
     tsDownload(data.info, data.crypto).then(success => {
       data.info.success = success;
       parentPort.postMessage({ success, info: data.info });

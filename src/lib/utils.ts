@@ -1,5 +1,4 @@
-import { execSync, NLogger, Request, retry } from '@lzwme/fe-utils';
-import { color } from 'console-log-colors';
+import { execSync, NLogger, color, Request, retry } from '@lzwme/fe-utils';
 
 export const request = new Request('', {
   'content-type': 'application/x-www-form-urlencoded; charset=UTF-8',

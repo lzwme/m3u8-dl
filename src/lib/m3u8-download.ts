@@ -2,7 +2,7 @@ import { resolve } from 'node:path';
 import { existsSync, rmSync, promises } from 'node:fs';
 import { Barrier, md5 } from '@lzwme/fe-utils';
 import { green, cyanBright } from 'console-log-colors';
-import { isSupportFfmpeg, logger } from './utils';
+import { isSupportFfmpeg, logger, request } from './utils';
 import { WorkerPool } from './worker_pool';
 import { parseM3U8 } from './parseM3u8';
 import { m3u8Convert } from './m3u8-convert';
@@ -33,6 +33,7 @@ async function formatOptions(url: string, opts: M3u8DLOptions) {
   if (!options.filename.endsWith('.mp4')) options.filename += '.mp4';
   if (!options.cacheDir) options.cacheDir = `cache/${urlMd5}`;
   if (!existsSync(options.cacheDir)) await promises.mkdir(options.cacheDir, { recursive: true });
+  if (options.headers) request.setHeaders(options.headers);
 
   if (options.debug) {
     logger.updateOptions({ levelType: 'debug' });
@@ -71,7 +72,7 @@ export async function m3u8Download(url: string, options: M3u8DLOptions = {}) {
     };
 
     for (const info of m3u8Info.data) {
-      pool.runTask({ info, crypto: m3u8Info.crypto }, (err, res) => {
+      pool.runTask({ info, options: JSON.parse(JSON.stringify(options)), crypto: m3u8Info.crypto }, (err, res) => {
         if (err) {
           console.log('\n');
           logger.error('[TS-DL][error]', info.index, err, res);
@@ -117,5 +118,3 @@ export async function m3u8Download(url: string, options: M3u8DLOptions = {}) {
   logger.debug('Done!', url, result.m3u8Info);
   return result;
 }
-
-// m3u8Download('test/t.m3u8', { debug: true });

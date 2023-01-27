@@ -81,9 +81,13 @@ m3u8dl 三体.txt
 ```ts
 import { m3u8Download } from '@lzwme/m3u8-dl';
 
+// 示例：单文件下载
+m3u8Download('test/t.m3u8', { debug: true, filenmae: '测试视频' });
+
+// 示例：批量下载
 const fileList = ['第一集$$test/t.m3u8'];
 for (const filepath of fileList) {
-  const r = await m3u8Download(filepath, { debug: true, fileName: '测试视频' });
+  const r = await m3u8Download(filepath, { debug: true, filenmae: '测试视频' });
   console.log('文件已下载：', r.filepath);
 }
 ```
@@ -97,13 +101,13 @@ for (const filepath of fileList) {
 本地二次开发：
 
 ```bash
-git clone https://github.com/lzwme/m3u8-dl.git
+git clone git@github.com:lzwme/m3u8-dl.git
 pnpm install
 pnpm dev
 # npm link
 ```
 
-或者 [fork](https://github.com/lzwme/m3u8-dl.git) 本项目进行代码贡献。
+或者 [fork](https://github.com/lzwme/m3u8-dl/fork) 本项目进行代码贡献。
 
 **欢迎贡献想法与代码。**
 

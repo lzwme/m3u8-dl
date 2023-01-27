@@ -1,6 +1,8 @@
 /* eslint-disable @typescript-eslint/triple-slash-reference */
 /// <reference path="../global.d.ts"/>
 
+import type { IncomingHttpHeaders } from 'node:http';
+
 export interface TsItemInfo {
   /** ts 文件次序 */
   index: number;
@@ -43,9 +45,12 @@ export interface M3u8DLOptions {
   delCache?: boolean;
   /** 文件已存在时是否仍强制下载和生成。默认为 false，文件已存在则跳过 */
   force?: boolean;
+  /** 下载 m3u8、ts 等文件时自定义请求 headers */
+  headers?: IncomingHttpHeaders;
 }
 
 export interface WorkerTaskInfo {
   info: TsItemInfo;
   crypto: M3u8Crypto;
+  options: M3u8DLOptions;
 }
