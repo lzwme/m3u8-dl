@@ -24,6 +24,7 @@ program
   .option('-n,--thread-num <number>', `并发下载线程数。取决于服务器限制，过多可能会容易下载失败。一般建议不超过 4 个`, '4')
   .option('-f,--force', `文件已存在时，是否仍继续下载和生成`)
   .option('--no-progress', `是否不打印进度信息`)
+  .option('--play', `是否边下边看`)
   .option('--cache-dir <dirpath>', `临时文件保存目录。默认为 cache`)
   .option('--save-dir <dirpath>', `下载文件保存的路径。默认为当前目录`)
   .option('--no-del-cache', `下载成功后是否删除临时文件。默认为 true。保存临时文件可以在重复下载时识别缓存`, true)

@@ -39,7 +39,7 @@ export interface M3u8DLOptions {
   filename?: string;
   /** 下载文件保存的路径。默认为当前目录 */
   saveDir?: string;
-  /** 临时文件保存目录。默认为 cache */
+  /** 临时文件保存目录。默认为 cache/<md5(url)> */
   cacheDir?: string;
   /** 下载成功后是否删除临时文件。默认为 true。保存临时文件可以在重复下载时识别缓存 */
   delCache?: boolean;
@@ -47,6 +47,8 @@ export interface M3u8DLOptions {
   force?: boolean;
   /** 下载 m3u8、ts 等文件时自定义请求 headers */
   headers?: IncomingHttpHeaders;
+  /** 下载时是否启动本地资源播放（边下边看） */
+  play?: boolean;
 }
 
 export interface WorkerTaskInfo {

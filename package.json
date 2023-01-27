@@ -1,7 +1,7 @@
 {
-  "name": "m3u8-dl",
+  "name": "@lzwme/m3u8-dl",
   "version": "0.0.1",
-  "description": "Batch download of m3u8 files",
+  "description": "Batch download of m3u8 files and convert to mp4",
   "main": "cjs/index.js",
   "types": "cjs/index.d.ts",
   "license": "MIT",
@@ -28,6 +28,7 @@
     "m3u8dl": "bin/m3u8dl.js"
   },
   "keywords": [
+    "m3u8-download",
     "m3u8",
     "mp4",
     "download",

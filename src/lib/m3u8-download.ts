@@ -1,12 +1,14 @@
 import { resolve } from 'node:path';
-import { existsSync, rmSync, promises } from 'node:fs';
-import { Barrier, md5 } from '@lzwme/fe-utils';
+import { existsSync, promises } from 'node:fs';
+import { cpus } from 'node:os';
+import { Barrier, md5, rmrf } from '@lzwme/fe-utils';
 import { green, cyanBright } from 'console-log-colors';
 import { isSupportFfmpeg, logger, request } from './utils';
 import { WorkerPool } from './worker_pool';
 import { parseM3U8 } from './parseM3u8';
 import { m3u8Convert } from './m3u8-convert';
 import type { M3u8DLOptions, TsItemInfo, WorkerTaskInfo } from '../type';
+import { localPlay } from './local-play';
 
 const tsDlFile = resolve(__dirname, './ts-download.js');
 
@@ -29,6 +31,7 @@ async function formatOptions(url: string, opts: M3u8DLOptions) {
   }
   const urlMd5 = md5(url, false);
 
+  if (+options.threadNum <= 0) options.threadNum = cpus().length;
   if (!options.filename) options.filename = urlMd5;
   if (!options.filename.endsWith('.mp4')) options.filename += '.mp4';
   if (!options.cacheDir) options.cacheDir = `cache/${urlMd5}`;
@@ -58,10 +61,10 @@ export async function m3u8Download(url: string, options: M3u8DLOptions = {}) {
     return result;
   }
 
-  const pool = new WorkerPool<WorkerTaskInfo, { success: boolean; info: TsItemInfo }>(tsDlFile, options.threadNum);
-
   if (m3u8Info.tsCount > 0) {
+    const pool = new WorkerPool<WorkerTaskInfo, { success: boolean; info: TsItemInfo }>(tsDlFile, options.threadNum);
     const barrier = new Barrier();
+    const playStart = Math.min(options.threadNum + 2, m3u8Info.tsCount);
     const stats = {
       /** 下载成功的 ts 数量 */
       tsSuccess: 0,
@@ -105,6 +108,10 @@ export async function m3u8Download(url: string, options: M3u8DLOptions = {}) {
           pool.close();
           barrier.open();
         }
+
+        if (options.play && finished === playStart) {
+          localPlay(m3u8Info.data, options);
+        }
       });
     }
 
@@ -112,7 +119,7 @@ export async function m3u8Download(url: string, options: M3u8DLOptions = {}) {
     if (stats.tsFailed === 0) {
       result.filepath = await m3u8Convert(options, m3u8Info.data);
 
-      if (existsSync(options.cacheDir) && options.delCache) rmSync(options.cacheDir, { force: true, recursive: true });
+      if (existsSync(options.cacheDir) && options.delCache) rmrf(options.cacheDir);
     } else logger.debug('Download Failed! Please retry!', stats.tsFailed);
   }
   logger.debug('Done!', url, result.m3u8Info);
