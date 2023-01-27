@@ -28,6 +28,5 @@
     "typeRoots": ["./node_modules/@types", "./typings"]
   },
   "exclude": ["node_modules/**"],
-  "include": ["src/**/*.ts"],
   "compileOnSave": false
 }

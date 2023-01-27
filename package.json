@@ -14,9 +14,10 @@
   "scripts": {
     "prepare": "husky install",
     "dev": "npm run watch",
-    "watch": "npm run build -- -w",
+    "watch": "npm run build -- -- -w",
     "lint": "flh --eslint --tscheck --prettier",
-    "build": "npm run clean && tsc -p tsconfig.json",
+    "build": "npm run clean && npm run build:cjs",
+    "build:cjs": "tsc -p tsconfig.cjs.json",
     "doc": "typedoc src/ --exclude **/*.spec.ts --out docs --tsconfig tsconfig.module.json",
     "version": "standard-version",
     "dist": "npm run build",
@@ -60,5 +61,12 @@
     "commander": "^10.0.0",
     "console-log-colors": "^0.3.3",
     "m3u8-parser": "^6.0.0"
-  }
+  },
+  "files": [
+    "cjs",
+    "!cjs/type.js",
+    "!cjs/cli.d.ts",
+    "global.d.ts",
+    "bin"
+  ]
 }
