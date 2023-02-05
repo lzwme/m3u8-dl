@@ -12,8 +12,10 @@ export interface TsItemInfo {
   uri: string;
   /** ts 文件下载保存路径 */
   tsOut: string;
-  /** 是否下载成功 */
-  success?: boolean;
+  /** 下载成功的 ts 文件大小(byte) */
+  tsSize?: number;
+  /** 是否下载成功。成功为1，失败一次则减 1 */
+  success?: number;
 }
 
 export interface M3u8Crypto {

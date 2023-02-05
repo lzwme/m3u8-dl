@@ -1,4 +1,4 @@
-import { execSync, findFreePort, md5 } from '@lzwme/fe-utils';
+import { execSync, findFreePort } from '@lzwme/fe-utils';
 import { color } from 'console-log-colors';
 import { createReadStream, existsSync, promises, statSync } from 'node:fs';
 import { createServer } from 'node:http';
@@ -9,12 +9,12 @@ import { M3u8DLOptions, TsItemInfo } from '../type';
 /**
  * 边下边看
  */
-export async function localPlay(m3u8Info: TsItemInfo[], _options: M3u8DLOptions) {
+export async function localPlay(m3u8Info: TsItemInfo[], options: M3u8DLOptions) {
   if (!m3u8Info?.length) return null;
 
   const cacheDir = dirname(m3u8Info[0].tsOut);
   const info = await createLocalServer(cacheDir);
-  const filename = md5(cacheDir).slice(0, 8) + `.m3u8`;
+  const filename = basename(options.filename).slice(0, options.filename.lastIndexOf('.')) + `.m3u8`;
 
   await toLocalM3u8(m3u8Info, resolve(cacheDir, filename), info.origin);
 
@@ -49,7 +49,7 @@ async function createLocalServer(baseDir: string) {
   const port = await findFreePort();
   const origin = `http://localhost:${port}`;
   const server = createServer((req, res) => {
-    const filename = join(baseDir, req.url);
+    const filename = join(baseDir, decodeURIComponent(req.url));
     logger.debug('[req]', req.url, filename);
 
     if (existsSync(filename)) {

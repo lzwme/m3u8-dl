@@ -15,6 +15,7 @@ export async function tsDownload(info: TsItemInfo, cryptoInfo: M3u8Crypto) {
       const data = cryptoInfo.key ? aesDecrypt(r.buffer, cryptoInfo) : r.buffer;
 
       await promises.writeFile(info.tsOut, data);
+      info.tsSize = r.buffer.byteLength;
 
       return true;
     }
@@ -37,7 +38,6 @@ if (!isMainThread && parentPort) {
   parentPort.on('message', (data: WorkerTaskInfo) => {
     if (data.options?.headers) request.setHeaders(data.options.headers);
     tsDownload(data.info, data.crypto).then(success => {
-      data.info.success = success;
       parentPort.postMessage({ success, info: data.info });
     });
   });
