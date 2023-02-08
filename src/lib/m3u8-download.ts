@@ -8,7 +8,7 @@ import { isSupportFfmpeg, logger, request } from './utils';
 import { WorkerPool } from './worker_pool';
 import { parseM3U8 } from './parseM3u8';
 import { m3u8Convert } from './m3u8-convert';
-import type { M3u8DLOptions, TsItemInfo, WorkerTaskInfo } from '../type';
+import type { M3u8DLOptions, TsItemInfo, WorkerTaskInfo } from '../types/m3u8';
 import { localPlay } from './local-play';
 
 const tsDlFile = resolve(__dirname, './ts-download.js');

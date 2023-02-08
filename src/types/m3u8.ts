@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/triple-slash-reference */
-/// <reference path="../global.d.ts"/>
+/// <reference path="../../global.d.ts"/>
 
 import type { IncomingHttpHeaders } from 'node:http';
 

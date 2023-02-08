@@ -1,7 +1,7 @@
 import { existsSync, promises } from 'node:fs';
 import { basename } from 'node:path';
 import { m3u8Download } from './lib/m3u8-download';
-import { M3u8DLOptions } from './type';
+import { M3u8DLOptions } from './types/m3u8';
 
 export async function m3u8BatchDownload(urls: string[], options: M3u8DLOptions) {
   for (const url of urls) {

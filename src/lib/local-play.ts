@@ -4,7 +4,7 @@ import { createReadStream, existsSync, promises, statSync } from 'node:fs';
 import { createServer } from 'node:http';
 import { basename, dirname, extname, join, resolve } from 'node:path';
 import { logger } from './utils';
-import { M3u8DLOptions, TsItemInfo } from '../type';
+import { M3u8DLOptions, TsItemInfo } from '../types/m3u8';
 
 /**
  * 边下边看

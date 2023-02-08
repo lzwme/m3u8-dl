@@ -1,7 +1,7 @@
 import { existsSync, promises } from 'node:fs';
 import { basename, resolve } from 'node:path';
 import { Parser } from 'm3u8-parser';
-import type { M3u8Crypto, TsItemInfo } from '../type';
+import type { M3u8Crypto, TsItemInfo } from '../types/m3u8';
 import { logger, getRetry } from './utils';
 
 export async function parseM3U8(content: string, url = process.cwd(), cacheDir = './cache') {

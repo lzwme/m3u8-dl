@@ -1,7 +1,7 @@
 import { createDecipheriv } from 'node:crypto';
 import { existsSync, promises } from 'node:fs';
 import { isMainThread, parentPort } from 'node:worker_threads';
-import type { M3u8Crypto, TsItemInfo, WorkerTaskInfo } from '../type';
+import type { M3u8Crypto, TsItemInfo, WorkerTaskInfo } from '../types/m3u8';
 import { logger, getRetry, request } from './utils';
 
 export async function tsDownload(info: TsItemInfo, cryptoInfo: M3u8Crypto) {

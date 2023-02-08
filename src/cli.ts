@@ -5,7 +5,7 @@ import { PackageJson, readJsonFileSync } from '@lzwme/fe-utils';
 
 import { logger } from './lib/utils.js';
 import { m3u8BatchDownload } from './m3u8-batch-download';
-import type { M3u8DLOptions } from './type';
+import type { M3u8DLOptions } from './types/m3u8';
 
 interface POptions extends M3u8DLOptions {
   silent?: boolean;

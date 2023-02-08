@@ -2,7 +2,7 @@ import { readFileSync, promises, existsSync, statSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { execSync } from '@lzwme/fe-utils';
 import { greenBright, cyan, magentaBright } from 'console-log-colors';
-import type { M3u8DLOptions, TsItemInfo } from '../type';
+import type { M3u8DLOptions, TsItemInfo } from '../types/m3u8';
 import { isSupportFfmpeg, logger } from './utils';
 import { formatByteSize } from '@lzwme/fe-utils/cjs/common/helper';
 
