@@ -17,11 +17,12 @@ async function formatOptions(url: string, opts: M3u8DLOptions) {
   const options: M3u8DLOptions = {
     delCache: !opts.debug,
     saveDir: process.cwd(),
+    showProgress: true,
     ...opts,
   };
 
   if (!url.startsWith('http')) {
-    url = url.replace('$', '|').replace(/\|\|+/, '|');
+    url = url.replace(/\$+/, '|').replace(/\|\|+/, '|');
     if (url.includes('|')) {
       const r = url.split('|');
       url = r[1];
@@ -41,7 +42,7 @@ async function formatOptions(url: string, opts: M3u8DLOptions) {
 
   if (options.debug) {
     logger.updateOptions({ levelType: 'debug' });
-    logger.debug('[m3u8-DL]options', options);
+    logger.debug('[m3u8-DL]options', options, url);
   }
   return [url, options] as const;
 }
@@ -100,25 +101,28 @@ export async function m3u8Download(url: string, options: M3u8DLOptions = {}) {
             info.tsSize = res.info.tsSize;
             info.success = 1;
             stats.tsSuccess++;
-            stats.duration = +(stats.duration + info.duration).toFixed(2);
+            stats.duration += info.duration;
           } else {
             stats.tsFailed++;
           }
 
           const finished = stats.tsFailed + stats.tsSuccess;
 
-          if (options.showProgress !== false) {
+          if (options.showProgress) {
+            const timeCost = Date.now() - startTime;
             const downloadedSize = m3u8Info.data.reduce((a, b) => a + (b.tsSize || 0), 0);
-            const avgSpeed = formatByteSize((downloadedSize / (Date.now() - startTime)) * 1000);
+            const downloadedDuration = m3u8Info.data.reduce((a, b) => a + (b.tsSize ? b.duration : 0), 0);
+            const avgSpeed = formatByteSize((downloadedSize / timeCost) * 1000);
+            const restTime = downloadedDuration ? (timeCost * (m3u8Info.durationSecond - stats.duration)) / downloadedDuration : 0;
             const percent = Math.floor((finished / m3u8Info.tsCount) * 100);
             const processBar = '='.repeat(Math.floor(percent * 0.2)).padEnd(20, '-');
             logger.logInline(
               `${percent}% [${greenBright(processBar)}] ${cyan(finished)} ` +
-                `${green(stats.duration + 'sec')} ` +
+                `${green(stats.duration.toFixed(2) + 'sec')} ` +
                 `${blueBright(formatByteSize(downloadedSize))} ${yellowBright(formatTimeCost(startTime))} ${magentaBright(
                   avgSpeed + '/s'
-                )}` +
-                (finished === m3u8Info.tsCount ? '\n' : '')
+                )} ` +
+                (finished === m3u8Info.tsCount ? '\n' : restTime ? `${cyan(formatTimeCost(Date.now() - Math.ceil(restTime)))}` : '')
             );
           }
 
@@ -137,7 +141,7 @@ export async function m3u8Download(url: string, options: M3u8DLOptions = {}) {
     };
     if (options.showProgress) {
       console.info(
-        `Total segments: ${cyan(m3u8Info.tsCount)}, duration: ${green(m3u8Info.durationSecond + 'sec')}.`,
+        `\nTotal segments: ${cyan(m3u8Info.tsCount)}, duration: ${green(m3u8Info.durationSecond + 'sec')}.`,
         `Parallel jobs: ${magenta(options.threadNum)}`
       );
     }

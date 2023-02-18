@@ -19,9 +19,9 @@ export async function parseM3U8(content: string, url = process.cwd(), cacheDir =
   let parser = new Parser();
   parser.push(content);
   parser.end();
-
+  logger.debug('parser.manifest', parser.manifest);
   if (parser.manifest.playlists?.length > 0) {
-    url = new URL(url, parser.manifest.playlists[0].uri).toString();
+    url = new URL(parser.manifest.playlists[0].uri, url).toString();
 
     content = (await getRetry<string>(url)).data;
     parser = new Parser();
@@ -82,7 +82,7 @@ export async function parseM3U8(content: string, url = process.cwd(), cacheDir =
     });
     result.durationSecond += tsList[i].duration;
   }
-
+  result.durationSecond = +Number(result.durationSecond).toFixed(2);
   return result;
 }
 

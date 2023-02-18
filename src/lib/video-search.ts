@@ -1,46 +1,79 @@
 import { Request } from '@lzwme/fe-utils';
 import { VideoListResult, VideoSearchResult } from '../types';
-import { logger } from './utils';
+import { stor } from './storage';
 
 const req = new Request(null, {
   'content-type': 'application/json; charset=UTF-8',
 });
 
+interface VSOptions {
+  api?: string[];
+}
 export class VideoSearch {
-  protected apiList: string[] = [];
-  protected _api = process.env.VAPI;
-  constructor(protected options: { apiList?: string[] } = {}) {
-    if (options.apiList) this.apiList = options.apiList;
-    if (process.env.VAPI) this.apiList = process.env.VAPI.split('$$$');
+  public get api() {
+    return this.options.api;
   }
-  async search(wd: string, api = this.apiList[0]) {
+  constructor(protected options: VSOptions = {}) {
+    if (!options.api?.length) options.api = [];
+    if (process.env.VAPI) options.api.push(...process.env.VAPI.split('$$$'));
+    this.updateOptions(options).then(() => {
+      if (!this.api.length) throw Error('没有可用站点，请添加或指定');
+    });
+  }
+  async updateOptions(options: VSOptions) {
+    const cache = stor.get();
+    if (Array.isArray(cache.api)) this.options.api.push(...cache.api);
+    if (options.api?.length) {
+      this.options.api.unshift(...options.api);
+      this.options.api = await this.formatUrl(this.options.api);
+      stor.set({ api: this.options.api });
+    }
+    return this;
+  }
+  async search(wd: string, api = this.api[0]) {
     let { data } = await req.get<VideoSearchResult>(api, { wd });
 
     if (typeof data == 'string') data = JSON.parse(data) as VideoSearchResult;
-    if (data.code !== 200) logger.error(data.code, data.msg);
 
     return data;
   }
-  async getVideoList(ids: number | string | (number | string)[], api = this.apiList[0]) {
+  async getVideoList(ids: number | string | (number | string)[], api = this.api[0]) {
     let { data } = await req.get<VideoListResult>(api, {
       ac: 'videolist',
       ids: Array.isArray(ids) ? ids.join(',') : ids,
     });
 
     if (typeof data == 'string') data = JSON.parse(data) as VideoListResult;
-    if (data.code !== 200) logger.error(data.code, data.msg);
 
     return data;
   }
-  fetchVideoApi() {
-    // todo: fetch from remote config
-  }
-  getVideoApi() {
-    return this.apiList;
+  async formatUrl(url: string | string[]) {
+    const urls: string[] = [];
+    if (!url) return urls;
+    if (typeof url === 'string') url = [url];
+
+    for (let u of url) {
+      u = String(u || '').trim();
+      if (!u) continue;
+      if (u.endsWith('.json')) {
+        const { data } = await req.get<Record<string, string>>(u, {});
+        if (Array.isArray(data)) {
+          urls.push(...(await this.formatUrl(data as string[])));
+        } else {
+          urls.push(...Object.values(data));
+        }
+      } else if (u.startsWith('http')) {
+        if (u.endsWith('provide/')) u += 'vod/';
+        if (u.endsWith('provide/vod')) u += '/';
+        urls.push(u.replace('/at/xml/', '/'));
+      }
+    }
+
+    return [...new Set(urls)];
   }
 }
 
-// const v = new VideoSearch({ apiList: ['https://api.xinlangapi.com/xinlangapi.php/provide/vod/'] });
+// const v = new VideoSearch({ api: ['https://api.xinlangapi.com/xinlangapi.php/provide/vod/'] });
 // v.search('三体')
 //   .then(d => {
 //     console.log(d.total, d.list);

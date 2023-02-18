@@ -34,10 +34,10 @@ export interface VideoListResult {
   pagecount: number;
   limit: string;
   total: number;
-  list: VideoList[];
+  list: VideoDetails[];
 }
 
-export interface VideoList {
+export interface VideoDetails {
   vod_id: number;
   type_id: number;
   type_id_1: number;

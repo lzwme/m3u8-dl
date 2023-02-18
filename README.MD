@@ -12,16 +12,19 @@
 [![GitHub forks][forks-badge]][forks-url]
 [![GitHub stars][stars-badge]][stars-url]
 
-一个 m3u8 文件批量下载工具。
+一个 m3u8 文件视频批量下载工具。
+
+![](./examples/img/m3u8dl-search-demo.png)
 
 ## 功能特性(Features)
 
 - 多线程下载。线程池模式的多线程下载。
 - `边下边播模式`。支持使用已下载的 ts 缓存文件在线播放。
 - 支持指定多个 m3u8 地址批量下载。
-- 支持缓存续传。下载失败则保留缓存，重试时只下载失败的片段。
-- 支持常见的 AES 解密。
-- 支持转换为 mp4。**需全局安装 ffmpeg**
+- 支持缓存续传。下载失败会保留缓存，重试时只下载失败的片段。
+- 支持常见的 AES 加密视频流解密。
+- 自动转换为 mp4。**需全局安装 ffmpeg**
+- `[NEW!]`支持指定采集站标准 API，以命令行交互的方式搜索和下载。
 
 ## 安装(Install)
 
@@ -36,7 +39,7 @@ m3u8dl -h
 npx @lzwme/m3u8-dl -h
 ```
 
-## 使用(Useage)
+## Useage
 
 提示：如需要下载并转换为 `mp4` 视频格式，您需全局安装 [ffmpeg](https://ffmpeg.org/download.html)。
 
@@ -46,20 +49,20 @@ npx @lzwme/m3u8-dl -h
 m3u8dl --help
 ```
 
-**下载指定 URL 的 m3u8 文件：**
+#### 下载指定 URL 的 m3u8 文件：
 
 ```bash
 m3u8dl https://lzw.me/x/m3u8-player/test.m3u8
 ```
 
-**批量下载示例一：**
+#### 批量下载示例一：
 
 ```bash
 # 下载多个文件：
 m3u8dl "第1集｜https://s.xlzys.com/play/zbqMZYRb/index.m3u8" "第2集｜https://s.xlzys.com/play/PdyJXrwe/index.m3u8" --filename "三体"
 ```
 
-**批量下载示例二：**
+#### 批量下载示例二：
 
 新建文件 `三体.txt`，内容格式：
 
@@ -77,6 +80,17 @@ m3u8dl 三体.txt
 
 提示：可创建并指定多个 txt 文件实现对多个影视剧集的一键批量下载。
 
+#### 指定采集站 API 搜索并下载
+
+```bash
+m3u8dl search -h
+
+# 指定采集站 API url 地址（会缓存），然后按提示操作
+m3u8dl s -u https://jyzyapi.com/provide/vod/
+```
+
+**声明：** 以上仅作示例，请自行搜索查找可用的采集站 API。本工具仅用作技术研究学习，不提供任何具体资源类信息。
+
 ### API 调用
 
 ```ts
@@ -92,10 +106,6 @@ for (const filepath of fileList) {
   console.log('文件已下载：', r.filepath);
 }
 ```
-
-## API 文档
-
-- [https://lzwme.github.io/m3u8-dl/](https://lzwme.github.io/m3u8-dl/)
 
 ## 开发(Development)
 

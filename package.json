@@ -60,6 +60,7 @@
     "@lzwme/fe-utils": "^1.3.3",
     "commander": "^10.0.0",
     "console-log-colors": "^0.3.3",
+    "enquirer": "^2.3.6",
     "m3u8-parser": "^6.0.0"
   },
   "files": [

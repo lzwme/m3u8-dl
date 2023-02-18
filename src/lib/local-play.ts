@@ -76,6 +76,7 @@ async function createLocalServer(baseDir: string) {
     res.writeHead(404, { 'Content-Type': 'text/plain; charset=utf-8' });
     res.end('Not found');
   }).listen(port, () => {
+    console.log();
     logger.info('Created Local Server:', color.greenBright(origin));
   });
 
