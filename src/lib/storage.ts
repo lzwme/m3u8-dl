@@ -5,4 +5,4 @@ interface M3u8StorConfig {
   api: string[];
 }
 
-export const stor = LiteStorage.getInstance<M3u8StorConfig>({ uuid: 'm3u8dl' });
+export const stor = LiteStorage.getInstance<M3u8StorConfig>({ uuid: 'm3u8dl', filepath: 'm3u8dl.json' });
