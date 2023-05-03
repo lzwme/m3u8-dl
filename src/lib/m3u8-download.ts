@@ -1,5 +1,5 @@
 import { resolve } from 'node:path';
-import { existsSync, promises } from 'node:fs';
+import { existsSync } from 'node:fs';
 import { cpus } from 'node:os';
 import { Barrier, formatTimeCost, md5, rmrfAsync } from '@lzwme/fe-utils';
 import { formatByteSize } from '@lzwme/fe-utils/cjs/common/helper';
@@ -42,7 +42,6 @@ async function formatOptions(url: string, opts: M3u8DLOptions) {
   if (!options.filename) options.filename = urlMd5;
   if (!options.filename.endsWith('.mp4')) options.filename += '.mp4';
   if (!options.cacheDir) options.cacheDir = `cache/${urlMd5}`;
-  if (!existsSync(options.cacheDir)) await promises.mkdir(options.cacheDir, { recursive: true });
   if (options.headers) request.setHeaders(options.headers);
 
   if (options.debug) {
@@ -76,6 +75,8 @@ async function m3u8InfoParse(url: string, options: M3u8DLOptions = {}) {
 
 export async function preDownLoad(url: string, options: M3u8DLOptions) {
   const result = await m3u8InfoParse(url, options);
+
+  if (!result.m3u8Info) return;
 
   for (const info of result.m3u8Info.data) {
     if (!workPoll.freeNum) return;

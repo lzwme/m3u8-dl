@@ -43,7 +43,9 @@ export async function m3u8BatchDownload(urls: string[], options: M3u8DLOptions) 
       if (key) {
         const o = { ...tasks.get(key) };
         tasks.delete(key);
-        o.onProgress = (finished, total) => {
+        const p = o.onProgress;
+        o.onProgress = (finished, total, info) => {
+          if (p) p(finished, total, info);
           if (!preDLing && keyNext && tasks.size && workPoll.freeNum > 1 && total - finished < options.threadNum) {
             logger.debug(
               '\n[预下载下一集]',

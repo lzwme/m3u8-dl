@@ -1,6 +1,8 @@
 import { createDecipheriv } from 'node:crypto';
 import { existsSync, promises } from 'node:fs';
+import { dirname } from 'node:path';
 import { isMainThread, parentPort } from 'node:worker_threads';
+import { mkdirp } from '@lzwme/fe-utils';
 import type { M3u8Crypto, TsItemInfo, WorkerTaskInfo } from '../types/m3u8';
 import { logger, getRetry, request } from './utils';
 
@@ -14,6 +16,7 @@ export async function tsDownload(info: TsItemInfo, cryptoInfo: M3u8Crypto) {
       logger.debug('\n', info);
       const data = cryptoInfo.key ? aesDecrypt(r.buffer, cryptoInfo) : r.buffer;
 
+      mkdirp(dirname(info.tsOut));
       await promises.writeFile(info.tsOut, data);
       info.tsSize = r.buffer.byteLength;
 
