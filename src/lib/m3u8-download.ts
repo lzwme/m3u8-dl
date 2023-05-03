@@ -11,7 +11,12 @@ import { m3u8Convert } from './m3u8-convert';
 import type { M3u8DLOptions, TsItemInfo, WorkerTaskInfo } from '../types/m3u8';
 import { localPlay } from './local-play';
 
+const cache = {
+  m3u8Info: {} as Record<string, unknown>,
+  downloading: new Set<string>(),
+};
 const tsDlFile = resolve(__dirname, './ts-download.js');
+export const workPoll = new WorkerPool<WorkerTaskInfo, { success: boolean; info: TsItemInfo }>(tsDlFile);
 
 async function formatOptions(url: string, opts: M3u8DLOptions) {
   const options: M3u8DLOptions = {
@@ -47,8 +52,7 @@ async function formatOptions(url: string, opts: M3u8DLOptions) {
   return [url, options] as const;
 }
 
-export async function m3u8Download(url: string, options: M3u8DLOptions = {}) {
-  logger.info('Starting download for', cyanBright(url));
+async function m3u8InfoParse(url: string, options: M3u8DLOptions = {}) {
   [url, options] = await formatOptions(url, options);
 
   const ext = isSupportFfmpeg() ? '.mp4' : '.ts';
@@ -57,19 +61,53 @@ export async function m3u8Download(url: string, options: M3u8DLOptions = {}) {
 
   const result = { options, m3u8Info: null as Awaited<ReturnType<typeof parseM3U8>> | null, filepath };
 
-  if (!options.force && existsSync(filepath)) {
-    logger.info('file already exist:', filepath);
+  if (cache.m3u8Info[url]) {
+    Object.assign(result, cache.m3u8Info[url]);
     return result;
   }
 
-  const m3u8Info = await parseM3U8('', url, options.cacheDir).catch(e => logger.error(e));
-  if (m3u8Info && m3u8Info?.tsCount > 0) {
-    result.m3u8Info = m3u8Info;
+  if (!options.force && existsSync(filepath)) return result;
 
+  const m3u8Info = await parseM3U8('', url, options.cacheDir).catch(e => logger.error(e));
+  if (m3u8Info && m3u8Info?.tsCount > 0) result.m3u8Info = m3u8Info;
+
+  return result;
+}
+
+export async function preDownLoad(url: string, options: M3u8DLOptions) {
+  const result = await m3u8InfoParse(url, options);
+
+  for (const info of result.m3u8Info.data) {
+    if (!workPoll.freeNum) return;
+
+    if (!cache.downloading.has(info.uri)) {
+      cache.downloading.add(info.uri);
+
+      workPoll.runTask({ info, options: JSON.parse(JSON.stringify(result.options)), crypto: result.m3u8Info.crypto }, () => {
+        cache.downloading.delete(info.uri);
+      });
+    }
+  }
+}
+
+export async function m3u8Download(url: string, options: M3u8DLOptions = {}) {
+  logger.info('Starting download for', cyanBright(url));
+  const result = await m3u8InfoParse(url, options);
+  options = result.options;
+
+  if (!options.force && existsSync(result.filepath) && !result.m3u8Info) {
+    logger.info('file already exist:', result.filepath);
+    return result;
+  }
+
+  if (result.m3u8Info?.tsCount > 0) {
+    let n = options.threadNum - workPoll.numThreads;
+    if (n > 0) while (n--) workPoll.addNewWorker();
+
+    const { m3u8Info } = result;
     const startTime = Date.now();
-    const pool = new WorkerPool<WorkerTaskInfo, { success: boolean; info: TsItemInfo }>(tsDlFile, options.threadNum);
     const barrier = new Barrier();
-    const playStart = Math.min(options.threadNum + 2, m3u8Info.tsCount);
+    const playStart = Math.min(options.threadNum + 2, result.m3u8Info.tsCount);
     const stats = {
       /** 下载成功的 ts 数量 */
       tsSuccess: 0,
@@ -80,7 +118,7 @@ export async function m3u8Download(url: string, options: M3u8DLOptions = {}) {
     };
     const runTask = (data: TsItemInfo[]) => {
       for (const info of data) {
-        pool.runTask({ info, options: JSON.parse(JSON.stringify(options)), crypto: m3u8Info.crypto }, (err, res) => {
+        workPoll.runTask({ info, options: JSON.parse(JSON.stringify(options)), crypto: m3u8Info.crypto }, (err, res) => {
           if (!res || err) {
             if (err) {
               console.log('\n');
@@ -129,7 +167,7 @@ export async function m3u8Download(url: string, options: M3u8DLOptions = {}) {
           if (options.onProgress) options.onProgress(finished, m3u8Info.tsCount, info);
 
           if (finished === m3u8Info.tsCount) {
-            pool.close();
+            // pool.close();
             barrier.open();
           }
 

@@ -1,9 +1,11 @@
 import { existsSync, promises } from 'node:fs';
 import { basename } from 'node:path';
-import { m3u8Download } from './lib/m3u8-download';
+import { m3u8Download, preDownLoad, workPoll } from './lib/m3u8-download';
 import { M3u8DLOptions } from './types/m3u8';
+import { logger } from './lib/utils';
 
-export async function m3u8BatchDownload(urls: string[], options: M3u8DLOptions) {
+async function formatUrls(urls: string[], options: M3u8DLOptions): Promise<Map<string, M3u8DLOptions>> {
+  const taskset = new Map<string, M3u8DLOptions>();
   for (const url of urls) {
     if (existsSync(url)) {
       const content = await promises.readFile(url, 'utf8');
@@ -15,13 +17,53 @@ export async function m3u8BatchDownload(urls: string[], options: M3u8DLOptions) 
             if (href.startsWith('http')) href = `${idx}|${href}`;
             return href;
           });
+        const o = { ...options };
+        if (!o.filename) o.filename = basename(url).split('.')[0];
+        const t = await formatUrls(list, o);
+        for (const d of t.entries()) taskset.set(d[0], d[1]);
 
-        if (!options.filename) options.filename = basename(url).split('.')[0];
-        await m3u8BatchDownload(list, options);
         continue;
       }
     }
 
-    await m3u8Download(url, options);
+    taskset.set(url, options);
   }
+
+  return taskset;
+}
+
+export async function m3u8BatchDownload(urls: string[], options: M3u8DLOptions) {
+  const tasks = await formatUrls(urls, options);
+
+  return new Promise<void>(rs => {
+    let preDLing = false;
+    const run = async () => {
+      const [key, keyNext] = [...tasks.keys()];
+
+      if (key) {
+        const o = { ...tasks.get(key) };
+        tasks.delete(key);
+        o.onProgress = (finished, total) => {
+          if (!preDLing && keyNext && tasks.size && workPoll.freeNum > 1 && total - finished < options.threadNum) {
+            logger.debug(
+              '\n[预下载下一集]',
+              'freeNum:',
+              workPoll.freeNum,
+              'totalNum:',
+              workPoll.totalNum,
+              'totalTask:',
+              workPoll.totalTask,
+              tasks.size
+            );
+            preDLing = true;
+            preDownLoad(keyNext, options).then(() => (preDLing = false));
+          }
+        };
+
+        m3u8Download(key, o).then(() => (tasks.size === 0 ? rs() : run()));
+      }
+    };
+
+    run();
+  });
 }

@@ -26,6 +26,15 @@ export class WorkerPool<T = unknown, R = unknown> extends EventEmitter {
     task: T;
     callback: (err: Error | null, result: R) => void;
   }[] = [];
+  get totalTask() {
+    return this.tasks.length;
+  }
+  get totalNum() {
+    return this.workers.length;
+  }
+  get freeNum() {
+    return this.freeWorkers.length;
+  }
   constructor(private processorFile: string, public numThreads = 0) {
     super();
 
@@ -53,10 +62,10 @@ export class WorkerPool<T = unknown, R = unknown> extends EventEmitter {
       // 如果成功：调用传递给`runTask`的回调，删除与Worker关联的`TaskInfo`，并再次将其标记为空闲。
       const r = this.workerTaskInfo.get(worker);
       if (r) {
-        r.done(null, result);
         this.workerTaskInfo.delete(worker);
         this.freeWorkers.push(worker);
         this.emit(kWorkerFreedEvent);
+        r.done(null, result);
       }
     });
 
@@ -76,6 +85,7 @@ export class WorkerPool<T = unknown, R = unknown> extends EventEmitter {
     this.workers.push(worker);
     this.freeWorkers.push(worker);
     this.emit(kWorkerFreedEvent);
+    if (this.numThreads < this.workers.length) this.numThreads = this.workers.length;
   }
 
   runTask(task: T, callback: (err: Error | null, result: R) => void) {

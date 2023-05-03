@@ -15,6 +15,16 @@ interface POptions extends M3u8DLOptions {
 
 const pkg = readJsonFileSync<PackageJson>(resolve(__dirname, '../package.json'));
 
+process.on('unhandledRejection', (r, p) => {
+  console.log('[退出]UnhandledPromiseRejection', r, p);
+  process.exit();
+});
+
+process.on('SIGINT', signal => {
+  logger.info('强制退出', signal);
+  process.exit();
+});
+
 program
   .version(pkg.version, '-v, --version')
   .description(cyanBright(pkg.description))
@@ -160,7 +170,7 @@ async function VideoSerachAndDL(keyword: string, options: { url?: string[] }, ba
         message: `【${greenBright(info.vod_name)}】是否边下边播？`,
       });
       baseOpts.play = p.play;
-      await m3u8BatchDownload(answer.url === '1' ? urls : [answer.url], { filename: info.vod_name, ...baseOpts });
+      await m3u8BatchDownload(answer.url === '1' ? urls : [answer.url], { filename: info.vod_name.replaceAll(' ', '_'), ...baseOpts });
     }
 
     return VideoSerachAndDL(keyword, options, baseOpts);

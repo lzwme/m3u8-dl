@@ -6,9 +6,11 @@ const req = new Request(null, {
   'content-type': 'application/json; charset=UTF-8',
 });
 
-interface VSOptions {
+export interface VSOptions {
+  /** 播放地址缓存 */
   api?: string[];
 }
+
 export class VideoSearch {
   public get api() {
     return this.options.api;
