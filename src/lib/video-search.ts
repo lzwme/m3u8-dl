@@ -33,17 +33,22 @@ export class VideoSearch {
     return this;
   }
   async search(wd: string, api = this.api[0]) {
-    let { data } = await req.get<VideoSearchResult>(api, { wd });
+    let { data } = await req.get<VideoSearchResult>(api, { wd }, null, { rejectUnauthorized: false });
 
     if (typeof data == 'string') data = JSON.parse(data) as VideoSearchResult;
 
     return data;
   }
   async getVideoList(ids: number | string | (number | string)[], api = this.api[0]) {
-    let { data } = await req.get<VideoListResult>(api, {
-      ac: 'videolist',
-      ids: Array.isArray(ids) ? ids.join(',') : ids,
-    });
+    let { data } = await req.get<VideoListResult>(
+      api,
+      {
+        ac: 'videolist',
+        ids: Array.isArray(ids) ? ids.join(',') : ids,
+      },
+      null,
+      { rejectUnauthorized: false }
+    );
 
     if (typeof data == 'string') data = JSON.parse(data) as VideoListResult;
 
@@ -58,7 +63,7 @@ export class VideoSearch {
       u = String(u || '').trim();
       if (!u) continue;
       if (u.endsWith('.json')) {
-        const { data } = await req.get<Record<string, string>>(u, {});
+        const { data } = await req.get<Record<string, string>>(u, null, null, { rejectUnauthorized: false });
         if (Array.isArray(data)) {
           urls.push(...(await this.formatUrl(data as string[])));
         } else {

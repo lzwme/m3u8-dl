@@ -4,9 +4,10 @@ export const request = new Request('', {
   'content-type': 'application/x-www-form-urlencoded; charset=UTF-8',
 });
 
+// process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
 export const getRetry = <T = string>(url: string, retries = 3) =>
   retry(
-    () => request.get<T>(url),
+    () => request.get<T>(url, null, {}, { rejectUnauthorized: false }),
     1000,
     retries,
     r => r.response.statusCode === 200
