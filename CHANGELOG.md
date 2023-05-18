@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.0.4](https://github.com/lzwme/m3u8-dl/compare/v0.0.3...v0.0.4) (2023-05-18)
+
+
+### Bug Fixes
+
+* 修复windows下ffmpeg合成mp4失败的问题 ([fefd97c](https://github.com/lzwme/m3u8-dl/commit/fefd97caf5bc6d52038e5bebdb8ebe5e67bb11a5))
+* preDownLoad 预下载增加异常处理 ([88cd3c7](https://github.com/lzwme/m3u8-dl/commit/88cd3c722c8910d5b9f2e1887866b75183f57b7c))
+
 ### [0.0.3](https://github.com/lzwme/m3u8-dl/compare/v0.0.2...v0.0.3) (2023-05-03)
 
 
