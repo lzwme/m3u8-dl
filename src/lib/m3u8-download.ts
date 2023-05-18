@@ -190,7 +190,7 @@ export async function m3u8Download(url: string, options: M3u8DLOptions = {}) {
     if (stats.tsFailed === 0) {
       result.filepath = await m3u8Convert(options, m3u8Info.data);
 
-      if (existsSync(options.cacheDir) && options.delCache) rmrfAsync(options.cacheDir);
+      if (result.filepath && existsSync(options.cacheDir) && options.delCache) rmrfAsync(options.cacheDir);
     } else logger.debug('Download Failed! Please retry!', stats.tsFailed);
   }
   logger.debug('Done!', url, result.m3u8Info);
