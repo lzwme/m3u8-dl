@@ -1,0 +1,19 @@
+{
+  "apiSites": [
+    {
+      "url": "https://jyzyapi.com/provide/vod/",
+      "desc": "金鹰",
+      "enable": 1
+    },
+    {
+      "url": "https://jyzy1.com/provide/vod/",
+      "desc": "金鹰备用1",
+      "enable": 0
+    },
+    {
+      "url": "https://api.xinlangapi.com/xinlangapi.php/provide/vod/",
+      "desc": "新浪API",
+      "enable": 1
+    }
+  ]
+}

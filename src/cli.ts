@@ -33,7 +33,7 @@ program
   .option('--debug', `开启调试模式。`)
   .option('-f, --filename <name>', `指定下载文件的保存名称。默认取 url md5 值。若指定了多个 url 地址，则会在末尾增加序号`)
   .option('-n, --thread-num <number>', `并发下载线程数。默认为 cpu * 2。可设置不同数值观察下载效果`)
-  .option('-F, --force', `文件已存在时，是否仍继续下载和生成`)
+  .option('-F, --force', `启用强制执行模式。文件已存在时，是否仍继续下载和生成`)
   .option('--no-progress', `是否不打印进度信息`)
   .option('-p, --play', `是否边下边看`)
   .option('-C, --cache-dir <dirpath>', `临时文件保存目录。默认为 cache`)
@@ -54,6 +54,7 @@ program
   .command('search [keyword]')
   .alias('s')
   .option('-u,--url <api...>', '影视搜索的接口地址(m3u8采集站标准接口)')
+  .option('-F, --force', `是否强制`)
   .description('m3u8视频在线搜索与下载')
   .action(async (keyword, options: { url?: string[] }) => {
     VideoSerachAndDL(keyword, options, getOptions());
@@ -74,18 +75,18 @@ function getOptions() {
 
 async function VideoSerachAndDL(keyword: string, options: { url?: string[] }, baseOpts: POptions): Promise<void> {
   const vs = new VideoSearch();
-  await vs.updateOptions({ api: options.url || [] });
-  let apiUrl = vs.api[0];
+  await vs.updateOptions({ api: options.url || [], force: baseOpts.force });
+  const apis = vs.api;
+  let apiUrl = apis[0];
 
   if (!options.url && vs.api.length > 0) {
     await prompt<{ k: string }>({
       type: 'select',
       name: 'k',
       message: '请选择 API 站点',
-      choices: vs.api.map(d => ({ name: d, message: d })) as never,
-
+      choices: apis.map(d => ({ name: d.url, message: d.desc })) as never,
       validate: value => value.length >= 1,
-    }).then(v => (apiUrl = v.k));
+    }).then(v => (apiUrl = vs.apiMap.get(v.k)));
   }
 
   await prompt<{ k: string }>({
