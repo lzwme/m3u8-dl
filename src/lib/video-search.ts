@@ -14,6 +14,8 @@ export interface VSOptions {
   /** 播放地址缓存 */
   api?: string[];
   force?: boolean;
+  /** 远程配置的请求地址 */
+  remoteConfigUrl?: string;
 }
 
 /**
@@ -33,7 +35,7 @@ export interface VSOptions {
 export class VideoSearch {
   public apiMap = new Map<string, M3u8StorConfig['remoteConfig']['data']['apiSites'][0]>();
   public get api() {
-    return [...this.apiMap.values()];
+    return [...this.apiMap.values()].reverse();
   }
   constructor(protected options: VSOptions = {}) {
     if (!options.api?.length) options.api = [];
@@ -106,7 +108,8 @@ export class VideoSearch {
     }
 
     if (needUpdate) {
-      const url = 'https://ghproxy.com/raw.githubusercontent.com/lzwme/m3u8-dl/main/test/remote-config.json';
+      const url =
+        this.options.remoteConfigUrl || 'https://ghproxy.com/raw.githubusercontent.com/lzwme/m3u8-dl/main/test/remote-config.json';
       const { data } = await req.get<M3u8StorConfig['remoteConfig']['data']>(
         url,
         null,
@@ -141,7 +144,11 @@ export class VideoSearch {
   }
 }
 
-export async function VideoSerachAndDL(keyword: string, options: { url?: string[] }, baseOpts: CliOptions): Promise<void> {
+export async function VideoSerachAndDL(
+  keyword: string,
+  options: { url?: string[]; remoteConfigUrl?: string },
+  baseOpts: CliOptions
+): Promise<void> {
   const cache = stor.get();
   if (cache.latestSearchDL?.keyword) {
     const p = await prompt<{ k: boolean }>({
@@ -158,7 +165,7 @@ export async function VideoSerachAndDL(keyword: string, options: { url?: string[
   }
 
   const vs = new VideoSearch();
-  await vs.updateOptions({ api: options.url || [], force: baseOpts.force });
+  await vs.updateOptions({ api: options.url || [], force: baseOpts.force, remoteConfigUrl: options.remoteConfigUrl });
   const apis = vs.api;
   let apiUrl = options.url?.length ? { url: options.url[0] } : apis[0];
 

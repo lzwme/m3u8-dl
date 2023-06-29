@@ -1,19 +1,29 @@
 {
   "apiSites": [
     {
-      "url": "https://jyzyapi.com/provide/vod/",
-      "desc": "金鹰",
-      "enable": 1
+      "desc": "天堂",
+      "url": "http://vipmv.cc/api.php/provide/vod/",
+      "home": "http://vipmv.cc"
     },
     {
-      "url": "https://jyzy1.com/provide/vod/",
-      "desc": "金鹰备用1",
-      "enable": 0
+      "desc": "快车",
+      "home": "http://kuaichezy.com",
+      "url": "https://caiji.kczyapi.com/api.php/provide/vod/"
     },
     {
-      "url": "https://api.xinlangapi.com/xinlangapi.php/provide/vod/",
-      "desc": "新浪API",
-      "enable": 1
+      "desc": "天空",
+      "home": "https://tiankongzy.com",
+      "url": "https://api.tiankongapi.com/api.php/provide/vod/"
+    },
+    {
+      "desc": "飞速",
+      "home": "https://fszy2.com",
+      "url": "https://www.feisuzyapi.com/api.php/provide/vod/"
+    },
+    {
+      "desc": "卧龙",
+      "home": "http://wolongzy.cc",
+      "url": "https://collect.wolongzy.cc/api.php/provide/vod/"
     }
   ]
 }

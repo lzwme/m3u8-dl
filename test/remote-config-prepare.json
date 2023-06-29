@@ -1,0 +1,104 @@
+{
+  "apiSites": [
+    {
+      "desc": "天堂",
+      "url": "http://vipmv.cc/api.php/provide/vod/",
+      "home": "http://vipmv.cc"
+    },
+    {
+      "desc": "快车",
+      "home": "http://kuaichezy.com",
+      "url": "https://caiji.kczyapi.com/api.php/provide/vod/"
+    },
+    {
+      "desc": "天空",
+      "home": "https://tiankongzy.com",
+      "url": "https://api.tiankongapi.com/api.php/provide/vod/"
+    },
+    {
+      "desc": "飞速",
+      "home": "https://fszy2.com",
+      "url": "https://www.feisuzyapi.com/api.php/provide/vod/"
+    },
+    {
+      "desc": "卧龙",
+      "home": "http://wolongzy.cc",
+      "url": "https://collect.wolongzy.cc/api.php/provide/vod/"
+    },
+    {
+      "desc": "无尽",
+      "home": "https://wujinzy.net",
+      "enable": 0,
+      "remark": "接入了cf安全检测，接口请求失败",
+      "url": "https://api.wujinapi.me/api.php/provide/vod/"
+    },
+    {
+      "desc": "金鹰",
+      "home": "https://jyzyapi.com",
+      "url": "https://jyzyapi.com/provide/vod/",
+      "enable": 1
+    },
+    {
+      "desc": "金鹰备用1",
+      "home": "http://jyzy1.com",
+      "url": "https://jyzy1.com/provide/vod/",
+      "enable": 0
+    },
+    {
+      "desc": "金鹰备用2",
+      "home": "http://jinyingzy.com",
+      "url": "https://jyzyapi.com/provide/vod/",
+      "enable": 0
+    },
+    {
+      "desc": "新浪",
+      "home": "https://www.xinlangzy.com",
+      "url": "https://api.xinlangapi.com/xinlangapi.php/provide/vod/"
+    },
+    {
+      "desc": "光速",
+      "home": "https://guangsuzy.com",
+      "url": "https://api.guangsuapi.com/api.php/provide/vod/"
+    },
+    {
+      "desc": "闪电",
+      "home": "https://www.shan05.com",
+      "url": "https://sdzyapi.com/api.php/provide/vod/"
+    },
+    {
+      "desc": "apibdzy(百度云资源)",
+      "home": "https://bdyunzy.com",
+      "url": "https://api.apibdzy.com/api.php/provide/vod/"
+    },
+    {
+      "desc": "U酷",
+      "home": "https://ukuzy0.com",
+      "url": "https://api.ukuapi.com/api.php/provide/vod/"
+    },
+    {
+      "desc": "CK资源",
+      "home": "https://www.ckzy1.com/",
+      "url": "https://ckzy.me/api.php/provide/vod/"
+    },
+    {
+      "desc": "量子",
+      "home": "http://lzizy.net",
+      "url": "https://cj.lziapi.com/api.php/provide/vod/"
+    },
+    {
+      "desc": "速播",
+      "home": "https://www.subozy1.com",
+      "url": "https://subocaiji.com/api.php/provide/vod/"
+    },
+    {
+      "desc": "红牛",
+      "home": "https://hongniuzy.net/help/",
+      "url": "https://www.hongniuzy2.com/api.php/provide/vod/"
+    },
+    {
+      "desc": "6U",
+      "url": "http://www.6uapi.cc/api.php/provide/vod/",
+      "home": "http://www.6uzy.cc"
+    }
+  ]
+}

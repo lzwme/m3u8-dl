@@ -48,9 +48,9 @@ program
   .command('search [keyword]')
   .alias('s')
   .option('-u,--url <api...>', '影视搜索的接口地址(m3u8采集站标准接口)')
-  .option('-F, --force', `是否强制`)
+  .option('-R,--remote-config-url <url>', '自定义远程配置加载地址。默认从主仓库配置读取')
   .description('m3u8视频在线搜索与下载')
-  .action(async (keyword, options: { url?: string[] }) => {
+  .action(async (keyword, options: { url?: string[]; remoteConfigUrl?: string }) => {
     VideoSerachAndDL(keyword, options, getOptions());
   });
 
