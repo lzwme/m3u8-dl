@@ -58,3 +58,8 @@ export interface WorkerTaskInfo {
   crypto: M3u8Crypto;
   options: M3u8DLOptions;
 }
+
+export interface CliOptions extends M3u8DLOptions {
+  silent?: boolean;
+  progress?: boolean;
+}
