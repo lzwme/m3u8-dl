@@ -2,7 +2,7 @@ import { LiteStorage } from '@lzwme/fe-utils';
 import { resolve } from 'node:path';
 import { homedir } from 'node:os';
 import { type VSOptions } from './video-search';
-import type { M3u8DLOptions } from '../types';
+import type { M3u8DLOptions, VideoDetails } from '../types';
 
 export interface M3u8StorConfig extends VSOptions {
   /** 播放地址缓存 */
@@ -24,8 +24,8 @@ export interface M3u8StorConfig extends VSOptions {
   /** 最近一次搜索下载的信息缓存 */
   latestSearchDL?: {
     keyword: string;
-    name: string;
     urls: string[];
+    info: VideoDetails;
     dlOptions: M3u8DLOptions;
   };
 }

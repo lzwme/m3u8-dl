@@ -67,7 +67,7 @@ async function m3u8InfoParse(url: string, options: M3u8DLOptions = {}) {
 
   if (!options.force && existsSync(filepath)) return result;
 
-  const m3u8Info = await parseM3U8('', url, options.cacheDir).catch(e => logger.error(e));
+  const m3u8Info = await parseM3U8('', url, options.cacheDir).catch(e => logger.error('[parseM3U8][failed]', e));
   if (m3u8Info && m3u8Info?.tsCount > 0) result.m3u8Info = m3u8Info;
 
   return result;
@@ -191,7 +191,7 @@ export async function m3u8Download(url: string, options: M3u8DLOptions = {}) {
       result.filepath = await m3u8Convert(options, m3u8Info.data);
 
       if (result.filepath && existsSync(options.cacheDir) && options.delCache) rmrfAsync(options.cacheDir);
-    } else logger.debug('Download Failed! Please retry!', stats.tsFailed);
+    } else logger.warn('Download Failed! Please retry!', stats.tsFailed);
   }
   logger.debug('Done!', url, result.m3u8Info);
   return result;

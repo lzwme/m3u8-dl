@@ -35,7 +35,7 @@ async function formatUrls(urls: string[], options: M3u8DLOptions): Promise<Map<s
 export async function m3u8BatchDownload(urls: string[], options: M3u8DLOptions) {
   const tasks = await formatUrls(urls, options);
 
-  return new Promise<void>(rs => {
+  return new Promise<boolean>(rs => {
     let preDLing = false;
     const run = async () => {
       const [key, keyNext] = [...tasks.keys()];
@@ -62,7 +62,7 @@ export async function m3u8BatchDownload(urls: string[], options: M3u8DLOptions) 
           }
         };
 
-        m3u8Download(key, o).then(() => (tasks.size === 0 ? rs() : run()));
+        m3u8Download(key, o).then(r => (tasks.size === 0 ? rs(existsSync(r.filepath)) : run()));
       }
     };
 

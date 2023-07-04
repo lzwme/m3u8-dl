@@ -1,5 +1,5 @@
 import { Request } from '@lzwme/fe-utils';
-import type { VideoListResult, VideoSearchResult, CliOptions } from '../types';
+import type { VideoListResult, VideoSearchResult, CliOptions, VideoDetails } from '../types';
 import { stor, type M3u8StorConfig } from './storage.js';
 import { logger } from './utils.js';
 import { m3u8BatchDownload } from '../m3u8-batch-download.js';
@@ -150,18 +150,42 @@ export async function VideoSerachAndDL(
   baseOpts: CliOptions
 ): Promise<void> {
   const cache = stor.get();
-  if (cache.latestSearchDL?.keyword) {
+  const doDownload = async (info: VideoDetails, urls: string[]) => {
+    const p = await prompt<{ play: boolean }>({
+      type: 'confirm',
+      name: 'play',
+      initial: baseOpts.play,
+      message: `【${greenBright(info.vod_name)}】是否边下边播？`,
+    });
+    baseOpts.play = p.play;
+    try {
+      cache.latestSearchDL = {
+        ...cache.latestSearchDL,
+        info,
+        urls,
+        dlOptions: { filename: info.vod_name.replaceAll(' ', '_'), ...baseOpts },
+      };
+      stor.save({ latestSearchDL: cache.latestSearchDL });
+      const r = await m3u8BatchDownload(cache.latestSearchDL.urls, cache.latestSearchDL.dlOptions);
+      if (r) stor.set({ latestSearchDL: null });
+    } catch (error) {
+      logger.info('cachel download');
+    }
+  };
+
+  if (cache.latestSearchDL?.urls) {
     const p = await prompt<{ k: boolean }>({
       type: 'confirm',
       name: 'k',
-      initial: baseOpts.play,
-      message: `存在上次未完成的下载【${greenBright(cache.latestSearchDL.name)}】，是否继续？`,
+      initial: true,
+      message: `存在上次未完成的下载【${greenBright(cache.latestSearchDL.info.vod_name)}】，是否继续？`,
     });
 
     if (p.k) {
-      await m3u8BatchDownload(cache.latestSearchDL.urls, cache.latestSearchDL.dlOptions);
+      await doDownload(cache.latestSearchDL.info, cache.latestSearchDL.urls);
+    } else {
+      stor.set({ latestSearchDL: null });
     }
-    stor.set({ latestSearchDL: null });
   }
 
   const vs = new VideoSearch();
@@ -254,26 +278,7 @@ export async function VideoSerachAndDL(
     });
 
     if (answer.url !== '-1') {
-      const p = await prompt<{ play: boolean }>({
-        type: 'confirm',
-        name: 'play',
-        initial: baseOpts.play,
-        message: `【${greenBright(info.vod_name)}】是否边下边播？`,
-      });
-      baseOpts.play = p.play;
-      try {
-        cache.latestSearchDL = {
-          keyword,
-          name: info.vod_name,
-          urls: answer.url === '1' ? urls : [answer.url],
-          dlOptions: { filename: info.vod_name.replaceAll(' ', '_'), ...baseOpts },
-        };
-        stor.save({ latestSearchDL: cache.latestSearchDL });
-        await m3u8BatchDownload(cache.latestSearchDL.urls, cache.latestSearchDL.dlOptions);
-        stor.set({ latestSearchDL: null });
-      } catch (error) {
-        logger.info('cachel download');
-      }
+      await doDownload(info, answer.url === '1' ? urls : [answer.url]);
     }
 
     return VideoSerachAndDL(keyword, options, baseOpts);
