@@ -35,7 +35,7 @@ export interface M3u8DLOptions {
   showProgress?: boolean;
   /** 每当 ts 文件下载完成时回调，可用于自定义进度控制 */
   onProgress?: (finished: number, total: number, currentInfo: TsItemInfo) => void;
-  /** 并发下载线程数。取决于服务器限制，过多可能会容易下载失败。一般建议不超过 4 个。默认为 cpu 数量 */
+  /** 并发下载线程数。取决于服务器限制，过多可能会容易下载失败。一般建议不超过 8 个。默认为 cpu数 * 2，但不超过 8 */
   threadNum?: number;
   /** 要保存的文件名(路径) */
   filename?: string;

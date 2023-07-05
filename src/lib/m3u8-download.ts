@@ -38,7 +38,7 @@ async function formatOptions(url: string, opts: M3u8DLOptions) {
   }
   const urlMd5 = md5(url, false);
 
-  if (!options.threadNum || +options.threadNum <= 0) options.threadNum = cpus().length * 2;
+  if (!options.threadNum || +options.threadNum <= 0) options.threadNum = Math.min(cpus().length * 2, 8);
   if (!options.filename) options.filename = urlMd5;
   if (!options.filename.endsWith('.mp4')) options.filename += '.mp4';
   if (!options.cacheDir) options.cacheDir = `cache/${urlMd5}`;
