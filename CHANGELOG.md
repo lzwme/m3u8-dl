@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.0.5](https://github.com/lzwme/m3u8-dl/compare/v0.0.4...v0.0.5) (2023-07-06)
+
+
+### Features
+
+* 视频搜索增强缓存能力，支持缓存并继续最近一次未完成的下载 ([52a8ca3](https://github.com/lzwme/m3u8-dl/commit/52a8ca35d0dac7c1980268cfe96996b1814b1ebc))
+
 ### [0.0.4](https://github.com/lzwme/m3u8-dl/compare/v0.0.3...v0.0.4) (2023-05-18)
 
 
