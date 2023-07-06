@@ -70,6 +70,7 @@ export class WorkerPool<T = unknown, R = unknown> extends EventEmitter {
     });
 
     worker.on('error', err => {
+      console.error('worker error', err);
       // 如果发生未捕获的异常：调用传递给 `runTask` 并出现错误的回调。
       const r = this.workerTaskInfo.get(worker);
       if (r) {

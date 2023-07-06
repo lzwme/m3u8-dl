@@ -14,6 +14,10 @@ export async function parseM3U8(content: string, url = process.cwd(), cacheDir =
     }
   }
 
+  if (!content) {
+    logger.error('获取播放列表为空！', url);
+  }
+
   logger.debug('starting parsing m3u8 file:', url);
 
   let parser = new Parser();

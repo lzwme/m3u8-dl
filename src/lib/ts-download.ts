@@ -25,7 +25,7 @@ export async function tsDownload(info: TsItemInfo, cryptoInfo: M3u8Crypto) {
 
     logger.warn('[TS-Download][failed]', r.response.statusCode, info.uri);
   } catch (e) {
-    logger.error('[TS-Download][error]', (e as Error).message || e);
+    logger.error('[TS-Download][error]', (e as Error)?.message || e || 'unkown');
   }
 
   return false;
@@ -39,6 +39,7 @@ function aesDecrypt(data: Buffer, cryptoInfo: M3u8Crypto) {
 
 if (!isMainThread && parentPort) {
   parentPort.on('message', (data: WorkerTaskInfo) => {
+    if (data.options.debug) logger.updateOptions({ levelType: 'debug' });
     if (data.options?.headers) request.setHeaders(data.options.headers);
     tsDownload(data.info, data.crypto).then(success => {
       parentPort.postMessage({ success, info: data.info });

@@ -10,7 +10,15 @@ export const getRetry = <T = string>(url: string, retries = 3) =>
     () => request.get<T>(url, null, {}, { rejectUnauthorized: false }),
     1000,
     retries,
-    r => r.response.statusCode === 200
+    r => {
+      if (r.response.statusCode !== 200) {
+        console.log();
+        logger.warn(`[retry][${url}][${r.response.statusCode}]`, r.response.statusMessage || r.data);
+        // throw Error(`[${r.response.statusCode}]${r.response.statusMessage || r.data}`);
+      }
+
+      return r.response.statusCode === 200;
+    }
   );
 
 export const logger = NLogger.getLogger('[M3U8-DL]', { color });
