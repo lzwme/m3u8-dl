@@ -26,7 +26,7 @@ jobs:
         node-version:
           - 16
         include:
-          - node-version: 14
+          - node-version: 18
             os: ubuntu-latest
     name: Node ${{ matrix.node-version }} on ${{ matrix.os }}
     steps:
@@ -35,7 +35,7 @@ jobs:
           submodules: 'recursive'
       - uses: pnpm/action-setup@v2.2.1
         with:
-          version: 7
+          version: 8
       - uses: actions/setup-node@v3
         with:
           node-version: ${{ matrix.node-version }}

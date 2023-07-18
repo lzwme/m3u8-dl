@@ -44,24 +44,24 @@
     "registry": "https://registry.npmjs.com"
   },
   "devDependencies": {
-    "@lzwme/fed-lint-helper": "^2.3.2",
-    "@types/node": "^20.3.2",
-    "@typescript-eslint/eslint-plugin": "^5.60.1",
-    "@typescript-eslint/parser": "^5.60.1",
-    "eslint": "^8.43.0",
+    "@lzwme/fed-lint-helper": "^2.3.4",
+    "@types/node": "^20.4.2",
+    "@typescript-eslint/eslint-plugin": "^6.1.0",
+    "@typescript-eslint/parser": "^6.1.0",
+    "eslint": "^8.45.0",
     "eslint-config-prettier": "^8.8.0",
-    "eslint-plugin-prettier": "^4.2.1",
+    "eslint-plugin-prettier": "^5.0.0",
     "husky": "^8.0.3",
-    "prettier": "^2.8.8",
+    "prettier": "^3.0.0",
     "standard-version": "^9.5.0",
     "typescript": "^5.1.6"
   },
   "dependencies": {
-    "@lzwme/fe-utils": "^1.5.1",
+    "@lzwme/fe-utils": "^1.5.2",
     "commander": "^11.0.0",
     "console-log-colors": "^0.4.0",
     "enquirer": "^2.3.6",
-    "m3u8-parser": "^6.2.0"
+    "m3u8-parser": "^7.0.0"
   },
   "files": [
     "cjs",
