@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.0.6](https://github.com/lzwme/m3u8-dl/compare/v0.0.5...v0.0.6) (2023-08-16)
+
+
+### Bug Fixes
+
+* 修复获取播放地址分隔符为空时会报错的问题 ([e99bfa8](https://github.com/lzwme/m3u8-dl/commit/e99bfa8b9767e7a68b489b5e456bf884d7d73436))
+
 ### [0.0.5](https://github.com/lzwme/m3u8-dl/compare/v0.0.4...v0.0.5) (2023-07-06)
 
 
