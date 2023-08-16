@@ -35,7 +35,7 @@
     "download",
     "ffmpeg"
   ],
-  "packageManager": "pnpm@7.6.0",
+  "packageManager": "pnpm@8.0.0",
   "engines": {
     "node": ">=14.18"
   },
@@ -44,15 +44,15 @@
     "registry": "https://registry.npmjs.com"
   },
   "devDependencies": {
-    "@lzwme/fed-lint-helper": "^2.3.4",
-    "@types/node": "^20.4.2",
-    "@typescript-eslint/eslint-plugin": "^6.1.0",
-    "@typescript-eslint/parser": "^6.1.0",
-    "eslint": "^8.45.0",
-    "eslint-config-prettier": "^8.8.0",
+    "@lzwme/fed-lint-helper": "^2.4.1",
+    "@types/node": "^20.5.0",
+    "@typescript-eslint/eslint-plugin": "^6.4.0",
+    "@typescript-eslint/parser": "^6.4.0",
+    "eslint": "^8.47.0",
+    "eslint-config-prettier": "^9.0.0",
     "eslint-plugin-prettier": "^5.0.0",
     "husky": "^8.0.3",
-    "prettier": "^3.0.0",
+    "prettier": "^3.0.2",
     "standard-version": "^9.5.0",
     "typescript": "^5.1.6"
   },
@@ -60,8 +60,8 @@
     "@lzwme/fe-utils": "^1.5.2",
     "commander": "^11.0.0",
     "console-log-colors": "^0.4.0",
-    "enquirer": "^2.3.6",
-    "m3u8-parser": "^7.0.0"
+    "enquirer": "^2.4.1",
+    "m3u8-parser": "^7.1.0"
   },
   "files": [
     "cjs",

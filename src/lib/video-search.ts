@@ -239,8 +239,23 @@ export async function VideoSerachAndDL(
     return VideoSerachAndDL(keyword, options, baseOpts);
   } else {
     const info = vResult.list[0];
+    if (!info.vod_play_url) {
+      logger.error('未获取到播放地址信息', info);
+      return VideoSerachAndDL(keyword, options, baseOpts);
+    }
+
+    if (!info.vod_play_note || !String(info.vod_play_url).includes(info.vod_play_note)) {
+      ['#', '$'].some(d => {
+        if (info.vod_play_url.includes(d)) {
+          info.vod_play_note = d;
+          return true;
+        }
+        return true;
+      });
+    }
+
     const urls = info.vod_play_url
-      .split(info.vod_play_note)
+      .split(info.vod_play_note || '$')
       .find(d => d.includes('.m3u8'))
       .split('#');
 
