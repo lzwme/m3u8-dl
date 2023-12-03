@@ -45,20 +45,20 @@
   },
   "devDependencies": {
     "@lzwme/fed-lint-helper": "^2.4.1",
-    "@types/node": "^20.5.0",
-    "@typescript-eslint/eslint-plugin": "^6.4.0",
-    "@typescript-eslint/parser": "^6.4.0",
-    "eslint": "^8.47.0",
-    "eslint-config-prettier": "^9.0.0",
-    "eslint-plugin-prettier": "^5.0.0",
+    "@types/node": "^20.10.2",
+    "@typescript-eslint/eslint-plugin": "^6.13.1",
+    "@typescript-eslint/parser": "^6.13.1",
+    "eslint": "^8.55.0",
+    "eslint-config-prettier": "^9.1.0",
+    "eslint-plugin-prettier": "^5.0.1",
     "husky": "^8.0.3",
-    "prettier": "^3.0.2",
+    "prettier": "^3.1.0",
     "standard-version": "^9.5.0",
-    "typescript": "^5.1.6"
+    "typescript": "^5.3.2"
   },
   "dependencies": {
-    "@lzwme/fe-utils": "^1.5.2",
-    "commander": "^11.0.0",
+    "@lzwme/fe-utils": "^1.5.6",
+    "commander": "^11.1.0",
     "console-log-colors": "^0.4.0",
     "enquirer": "^2.4.1",
     "m3u8-parser": "^7.1.0"
