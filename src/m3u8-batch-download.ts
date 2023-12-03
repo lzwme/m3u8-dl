@@ -7,6 +7,7 @@ import { logger } from './lib/utils';
 async function formatUrls(urls: string[], options: M3u8DLOptions): Promise<Map<string, M3u8DLOptions>> {
   const taskset = new Map<string, M3u8DLOptions>();
   for (const url of urls) {
+    if (!url) continue;
     if (existsSync(url)) {
       const content = await promises.readFile(url, 'utf8');
       if (content.includes('.m3u8')) {
@@ -67,5 +68,8 @@ export async function m3u8BatchDownload(urls: string[], options: M3u8DLOptions) 
     };
 
     run();
+  }).then(d => {
+    if (workPoll.freeNum === workPoll.numThreads) workPoll.close();
+    return d;
   });
 }

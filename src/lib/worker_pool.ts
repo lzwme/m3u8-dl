@@ -35,10 +35,7 @@ export class WorkerPool<T = unknown, R = unknown> extends EventEmitter {
   get freeNum() {
     return this.freeWorkers.length;
   }
-  constructor(
-    private processorFile: string,
-    public numThreads = 0
-  ) {
+  constructor(private processorFile: string, public numThreads = 0) {
     super();
 
     numThreads = +numThreads || cpus().length;
