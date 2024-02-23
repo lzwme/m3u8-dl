@@ -1,6 +1,6 @@
 {
   "name": "@lzwme/m3u8-dl",
-  "version": "0.0.6",
+  "version": "0.0.7",
   "description": "Batch download of m3u8 files and convert to mp4",
   "main": "cjs/index.js",
   "types": "cjs/index.d.ts",
@@ -44,21 +44,21 @@
     "registry": "https://registry.npmjs.com"
   },
   "devDependencies": {
-    "@lzwme/fed-lint-helper": "^2.5.1",
-    "@types/node": "^20.11.0",
-    "@typescript-eslint/eslint-plugin": "^6.18.1",
-    "@typescript-eslint/parser": "^6.18.1",
+    "@lzwme/fed-lint-helper": "^2.5.2",
+    "@types/node": "^20.11.20",
+    "@typescript-eslint/eslint-plugin": "^7.0.2",
+    "@typescript-eslint/parser": "^7.0.2",
     "eslint": "^8.56.0",
     "eslint-config-prettier": "^9.1.0",
     "eslint-plugin-prettier": "^5.1.3",
-    "husky": "^8.0.3",
-    "prettier": "^3.2.1",
+    "husky": "^9.0.11",
+    "prettier": "^3.2.5",
     "standard-version": "^9.5.0",
     "typescript": "^5.3.3"
   },
   "dependencies": {
-    "@lzwme/fe-utils": "^1.5.10",
-    "commander": "^11.1.0",
+    "@lzwme/fe-utils": "^1.6.0",
+    "commander": "^12.0.0",
     "console-log-colors": "^0.4.0",
     "enquirer": "^2.4.1",
     "m3u8-parser": "^7.1.0"

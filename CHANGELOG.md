@@ -2,6 +2,15 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.0.7](https://github.com/lzwme/m3u8-dl/compare/v0.0.6...v0.0.7) (2024-02-23)
+
+
+### Bug Fixes
+
+* 更新默认远程配置加载URL ([b39deb4](https://github.com/lzwme/m3u8-dl/commit/b39deb412fc7ab0de72d0e1ee655bd34146ea4ef))
+* 修复文件名包含空格时转换为mp4失败的问题 ([a3728ed](https://github.com/lzwme/m3u8-dl/commit/a3728ed902f4eb04145a3295bca5c4bd4d29b2f6))
+* 修复下载结束不会自动退出的问题 ([1acc9ea](https://github.com/lzwme/m3u8-dl/commit/1acc9ea1714d62488e2a4df987252d1cda26decc))
+
 ### [0.0.6](https://github.com/lzwme/m3u8-dl/compare/v0.0.5...v0.0.6) (2023-08-16)
 
 
