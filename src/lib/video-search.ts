@@ -109,7 +109,7 @@ export class VideoSearch {
 
     if (needUpdate) {
       const url =
-        this.options.remoteConfigUrl || 'https://ghproxy.com/raw.githubusercontent.com/lzwme/m3u8-dl/main/test/remote-config.json';
+        this.options.remoteConfigUrl || 'https://mirror.ghproxy.com/raw.githubusercontent.com/lzwme/m3u8-dl/main/test/remote-config.json';
       const { data } = await req.get<M3u8StorConfig['remoteConfig']['data']>(
         url,
         null,
