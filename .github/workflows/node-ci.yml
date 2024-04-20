@@ -24,7 +24,7 @@ jobs:
           - macos-latest
           - windows-latest
         node-version:
-          - 16
+          - 20
         include:
           - node-version: 18
             os: ubuntu-latest

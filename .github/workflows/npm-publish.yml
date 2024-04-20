@@ -19,7 +19,7 @@ jobs:
           version: 8
       - uses: actions/setup-node@v3
         with:
-          node-version: '16.x'
+          node-version: 20
           registry-url: https://registry.npmjs.com
           # cache: 'pnpm'
       - run: pnpm install --no-frozen-lockfile
