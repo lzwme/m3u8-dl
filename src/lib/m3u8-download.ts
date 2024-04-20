@@ -18,7 +18,7 @@ const cache = {
 const tsDlFile = resolve(__dirname, './ts-download.js');
 export const workPoll = new WorkerPool<WorkerTaskInfo, { success: boolean; info: TsItemInfo }>(tsDlFile);
 
-async function formatOptions(url: string, opts: M3u8DLOptions) {
+function formatOptions(url: string, opts: M3u8DLOptions) {
   const options: M3u8DLOptions = {
     delCache: !opts.debug,
     saveDir: process.cwd(),
@@ -52,7 +52,7 @@ async function formatOptions(url: string, opts: M3u8DLOptions) {
 }
 
 async function m3u8InfoParse(url: string, options: M3u8DLOptions = {}) {
-  [url, options] = await formatOptions(url, options);
+  [url, options] = formatOptions(url, options);
 
   const ext = isSupportFfmpeg() ? '.mp4' : '.ts';
   let filepath = resolve(options.saveDir, options.filename);

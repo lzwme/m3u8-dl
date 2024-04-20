@@ -46,7 +46,7 @@ export class VideoSearch {
     const cache = stor.get();
     const apis = [...(cache.api || []), ...options.api];
 
-    await this.formatUrl(apis);
+    this.formatUrl(apis);
 
     if (options.api?.length) stor.set({ api: apis });
 

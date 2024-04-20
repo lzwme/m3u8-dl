@@ -10,24 +10,21 @@
   "javascript.validate.enable": false,
   "jest.autoRun": "off",
   "scss.validate": false,
-  "stylelint.validate": [
-    "scss",
-    "css"
-  ],
   "files.trimFinalNewlines": true,
   "files.trimTrailingWhitespace": true,
   "files.autoGuessEncoding": true,
   "files.defaultLanguage": "typescript",
   "files.insertFinalNewline": true,
   "files.exclude": {
-    "**/.git": true
+    "**/.git": true,
+    "**/cache": true
   },
   "files.watcherExclude": {
-    "addons/**": true,
     "public/**": true,
-    "**/dist/**": true,
-    "**/dist-admin/**": true,
+    "**/cjs/**": true,
+    "**/esm/**": true,
     "**/mock/**": true,
+    "**/cache/**": true
   },
   "git.rebaseWhenSync": true,
   "[json]": {
