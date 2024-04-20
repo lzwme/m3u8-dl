@@ -22,7 +22,14 @@ export async function m3u8Convert(options: M3u8DLOptions, data: TsItemInfo[]) {
     if (process.platform === 'win32') filesAllArr = filesAllArr.map(d => d.replaceAll('\\', '/'));
     await promises.writeFile(inputFilePath, 'ffconcat version 1.0\nfile ' + filesAllArr.join('\nfile '));
 
-    const cmd = `ffmpeg -y -f concat -safe 0 -i ${inputFilePath} -acodec copy -vcodec copy -bsf:a aac_adtstoasc "${filepath}"`;
+    let headersString = '';
+    if (options.headers) {
+      for (const [key, value] of Object.entries(options.headers)) {
+        headersString += `-headers "${key}: ${value}" `;
+      }
+    }
+
+    const cmd = `ffmpeg -y -f concat -safe 0 -i ${inputFilePath} -acodec copy -vcodec copy -bsf:a aac_adtstoasc ${headersString} "${filepath}"`;
     logger.debug('[convert to mp4]cmd:', cyan(cmd));
     const r = execSync(cmd);
     ffmpegSupport = !r.error;
