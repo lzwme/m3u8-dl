@@ -2,6 +2,18 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.0.8](https://github.com/lzwme/m3u8-dl/compare/v0.0.7...v0.0.8) (2024-04-20)
+
+
+### Features
+
+* add headers to ffmpeg cmd ([21a9cf4](https://github.com/lzwme/m3u8-dl/commit/21a9cf49cba9c6cd19ce3f7a33169aa00cf7fd8b))
+
+
+### Bug Fixes
+
+* update -absf ffmpeg argument to -bsf:a ([944ad65](https://github.com/lzwme/m3u8-dl/commit/944ad6520bf2da6a5f4fda4dec7efcd33cc856be))
+
 ### [0.0.7](https://github.com/lzwme/m3u8-dl/compare/v0.0.6...v0.0.7) (2024-02-23)
 
 
