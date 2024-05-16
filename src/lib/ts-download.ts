@@ -32,9 +32,13 @@ export async function tsDownload(info: TsItemInfo, cryptoInfo: M3u8Crypto) {
 }
 
 function aesDecrypt(data: Buffer, cryptoInfo: M3u8Crypto) {
-  const decipher = createDecipheriv((cryptoInfo.method + '-cbc').toLocaleLowerCase(), cryptoInfo.key, cryptoInfo.iv);
-
-  return Buffer.concat([decipher.update(Buffer.isBuffer(data) ? data : Buffer.from(data)), decipher.final()]);
+  try {
+    const decipher = createDecipheriv((cryptoInfo.method + '-cbc').toLocaleLowerCase(), cryptoInfo.key, cryptoInfo.iv);
+    return Buffer.concat([decipher.update(Buffer.isBuffer(data) ? data : Buffer.from(data)), decipher.final()]);
+  } catch (err) {
+    console.log('aesDecrypt err:', err);
+    throw err;
+  }
 }
 
 if (!isMainThread && parentPort) {

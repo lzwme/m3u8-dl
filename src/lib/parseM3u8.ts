@@ -35,7 +35,7 @@ export async function parseM3U8(content: string, url = process.cwd(), cacheDir =
 
   const tsList: {
     uri: string;
-    key: { uri: string; method: string; iv?: string };
+    key: { uri: string; method: string; iv?: string | Uint32Array };
     duration: number;
     timeline: number;
   }[] = parser.manifest.segments || [];
@@ -64,7 +64,9 @@ export async function parseM3U8(content: string, url = process.cwd(), cacheDir =
 
   if (tsKeyInfo?.uri) {
     if (tsKeyInfo.method) result.crypto.method = tsKeyInfo.method.toUpperCase();
-    if (tsKeyInfo.iv) result.crypto.iv = new Uint8Array(Buffer.from(tsKeyInfo.iv));
+    if (tsKeyInfo.iv) {
+      result.crypto.iv = typeof tsKeyInfo.iv === 'string' ? new Uint8Array(Buffer.from(tsKeyInfo.iv)) : tsKeyInfo.iv;
+    }
 
     result.crypto.uri = tsKeyInfo.uri.includes('://') ? tsKeyInfo.uri : new URL(tsKeyInfo.uri, url).toString();
   }
