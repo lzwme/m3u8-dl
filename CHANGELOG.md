@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.0.9](https://github.com/lzwme/m3u8-dl/compare/v0.0.8...v0.0.9) (2024-07-29)
+
+
+### Bug Fixes
+
+* 修复存在 iv 配置时 AES 解密失败的问题 ([56780eb](https://github.com/lzwme/m3u8-dl/commit/56780eb095b432aa83ffa739bdd00465352dedf3))
+
 ### [0.0.8](https://github.com/lzwme/m3u8-dl/compare/v0.0.7...v0.0.8) (2024-04-20)
 
 
