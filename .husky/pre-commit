@@ -1,6 +1,3 @@
-#!/bin/sh
-. "$(dirname "$0")/_/husky.sh"
-
 pnpm flh --tscheck --eslint --only-staged --fix
 pnpm flh --prettier --only-staged --fix
 git add --update
