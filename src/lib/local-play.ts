@@ -1,6 +1,6 @@
 import { execSync, findFreePort } from '@lzwme/fe-utils';
 import { color } from 'console-log-colors';
-import { createReadStream, existsSync, promises, statSync } from 'node:fs';
+import { createReadStream, existsSync, promises, readdirSync, statSync } from 'node:fs';
 import { createServer } from 'node:http';
 import { basename, dirname, extname, join, resolve } from 'node:path';
 import { logger } from './utils';
@@ -13,12 +13,13 @@ export async function localPlay(m3u8Info: TsItemInfo[], options: M3u8DLOptions) 
   if (!m3u8Info?.length) return null;
 
   const cacheDir = dirname(m3u8Info[0].tsOut);
-  const info = await createLocalServer(cacheDir);
+  const cacheDirname = basename(cacheDir);
+  const info = await createLocalServer(dirname(cacheDir));
   const filename = basename(options.filename).slice(0, options.filename.lastIndexOf('.')) + `.m3u8`;
 
-  await toLocalM3u8(m3u8Info, resolve(cacheDir, filename), info.origin);
+  await toLocalM3u8(m3u8Info, resolve(cacheDir, filename), `/${cacheDirname}`);
 
-  const playUrl = `https://lzw.me/x/m3u8-player?url=${encodeURIComponent(`${info.origin}/${filename}`)}`;
+  const playUrl = `https://lzw.me/x/m3u8-player?url=${encodeURIComponent(`${info.origin}/${cacheDirname}/${filename}`)}`;
   const cmd = `${process.platform === 'win32' ? 'start' : 'open'} ${playUrl}`;
   execSync(cmd);
 
@@ -46,6 +47,8 @@ export async function toLocalM3u8(m3u8Info: TsItemInfo[], filepath: string, host
 }
 
 async function createLocalServer(baseDir: string) {
+  baseDir = resolve(baseDir);
+
   const port = await findFreePort();
   const origin = `http://localhost:${port}`;
   const server = createServer((req, res) => {
@@ -69,6 +72,15 @@ async function createLocalServer(baseDir: string) {
         });
 
         createReadStream(filename).pipe(res);
+        return;
+      } else if (stats.isDirectory()) {
+        const html = readdirSync(filename).map(filepath => {
+          const rpath = resolve(filename, filepath).replace(baseDir, '');
+          return `<li><a href="${rpath}">${rpath}</a></li>`;
+        });
+
+        res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
+        res.end(`<ol>${html.join('')}</ol>`);
         return;
       }
     }
