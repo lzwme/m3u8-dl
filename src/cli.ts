@@ -49,7 +49,8 @@ program
   .command('search [keyword]')
   .alias('s')
   .option('-u,--url <api...>', '影视搜索的接口地址(m3u8采集站标准接口)')
-  .option('-R,--remote-config-url <url>', '自定义远程配置加载地址。默认从主仓库配置读取')
+  .option('-d, --apidir <dirpath>', '指定自定义视频搜索 api 所在的目录或具体路径')
+  // .option('-R,--remote-config-url <url>', '自定义远程配置加载地址。默认从主仓库配置读取')
   .description('m3u8视频在线搜索与下载')
   .action(async (keyword, options: { url?: string[]; remoteConfigUrl?: string }) => {
     await VideoSerachAndDL(keyword, options, getOptions());

@@ -27,7 +27,7 @@ export async function localPlay(m3u8Info: TsItemInfo[], options: M3u8DLOptions) 
   return info;
 }
 
-export function toLocalM3u8(m3u8Info: TsItemInfo[], m3u8FilePath: string, host = '.') {
+export function toLocalM3u8(m3u8Info: TsItemInfo[], m3u8FilePath: string, host = '') {
   const m3u8ContentList = [
     `#EXTM3U`,
     `#EXT-X-VERSION:3`,
@@ -37,8 +37,10 @@ export function toLocalM3u8(m3u8Info: TsItemInfo[], m3u8FilePath: string, host =
     // `#EXT-X-KEY:METHOD=AES-128,URI="/api/aes/enc.key"`,
   ];
 
+  if (host && !host.endsWith('/')) host += '/';
+
   m3u8Info.forEach(d => {
-    if (d.tsOut) m3u8ContentList.push(`#EXTINF:${Number(d.duration).toFixed(6)},`, `${host}/${basename(d.tsOut)}`);
+    if (d.tsOut) m3u8ContentList.push(`#EXTINF:${Number(d.duration).toFixed(6)},`, `${host}${basename(d.tsOut)}`);
   });
 
   m3u8ContentList.push(`#EXT-X-ENDLIST`);

@@ -1,13 +1,15 @@
 import { LiteStorage } from '@lzwme/fe-utils';
 import { resolve } from 'node:path';
 import { homedir } from 'node:os';
-import { type VSOptions } from './video-search';
 import type { M3u8DLOptions, VideoDetails } from '../types';
 
-export interface M3u8StorConfig extends VSOptions {
+export interface M3u8StorConfig {
   /** 播放地址缓存 */
   api?: string[];
-  /** 远程加载的配置信息 */
+  /**
+   * 远程加载的配置信息
+   * @deprecated
+   */
   remoteConfig?: {
     /** 最近一次更新的时间。默认缓存1小时 */
     updateTime?: number;
@@ -25,7 +27,7 @@ export interface M3u8StorConfig extends VSOptions {
   latestSearchDL?: {
     keyword: string;
     urls: string[];
-    info: VideoDetails;
+    info: Partial<VideoDetails>;
     dlOptions: M3u8DLOptions;
   };
 }

@@ -1,156 +1,19 @@
-import { Request } from '@lzwme/fe-utils';
-import type { VideoListResult, VideoSearchResult, CliOptions, VideoDetails } from '../types';
-import { stor, type M3u8StorConfig } from './storage.js';
+import type { CliOptions, VideoDetails } from '../types';
+import { stor } from './storage.js';
 import { logger } from './utils.js';
 import { m3u8BatchDownload } from '../m3u8-batch-download.js';
 import { prompt } from 'enquirer';
 import { cyanBright, color, greenBright, gray, green } from 'console-log-colors';
-
-const req = new Request(null, {
-  'content-type': 'application/json; charset=UTF-8',
-});
-
-export interface VSOptions {
-  /** 播放地址缓存 */
-  api?: string[];
-  force?: boolean;
-  /** 远程配置的请求地址 */
-  remoteConfigUrl?: string;
-}
-
-/**
- * @example
- * ```ts
- * const v = new VideoSearch({ api: ['https://api.xinlangapi.com/xinlangapi.php/provide/vod/'] });
- * v.search('三体')
- *   .then(d => {
- *     console.log(d.total, d.list);
- *     return v.getVideoList(d.list[0].vod_id);
- *   })
- *   .then(d => {
- *     console.log('detail:', d.total, d.list[0]);
- *   });
- * ```
- */
-export class VideoSearch {
-  public apiMap = new Map<string, M3u8StorConfig['remoteConfig']['data']['apiSites'][0]>();
-  public get api() {
-    return [...this.apiMap.values()].reverse();
-  }
-  constructor(protected options: VSOptions = {}) {
-    if (!options.api?.length) options.api = [];
-    if (process.env.VAPI) options.api.push(...process.env.VAPI.split('$$$'));
-    this.updateOptions(options);
-  }
-  async updateOptions(options: VSOptions) {
-    const cache = stor.get();
-    const apis = [...(cache.api || []), ...options.api];
-
-    this.formatUrl(apis);
-
-    if (options.api?.length) stor.set({ api: apis });
-
-    (cache.api || []).forEach(url => {
-      this.apiMap.set(url, { url, desc: url });
-    });
-
-    await this.updateApiFromRemote(options.force);
-
-    if (!this.apiMap.size) throw Error('没有可用的 API 站点，请添加或指定');
-
-    return this;
-  }
-  async search(wd: string, api = this.api[0]) {
-    let { data } = await req.get<VideoSearchResult>(api.url, { wd }, null, { rejectUnauthorized: false });
-
-    if (typeof data == 'string') data = JSON.parse(data) as VideoSearchResult;
-
-    return data;
-  }
-  async getVideoList(ids: number | string | (number | string)[], api = this.api[0]) {
-    let { data } = await req.get<VideoListResult>(
-      api.url,
-      {
-        ac: 'videolist',
-        ids: Array.isArray(ids) ? ids.join(',') : ids,
-      },
-      null,
-      { rejectUnauthorized: false }
-    );
-
-    if (typeof data == 'string') data = JSON.parse(data) as VideoListResult;
-
-    return data;
-  }
-  private formatUrl(url: string | string[]) {
-    const urls: string[] = [];
-    if (!url) return urls;
-    if (typeof url === 'string') url = [url];
-
-    for (let u of url) {
-      u = String(u || '').trim();
-
-      if (u.startsWith('http')) {
-        if (u.endsWith('provide/')) u += 'vod/';
-        if (u.endsWith('provide/vod')) u += '/';
-        urls.push(u.replace('/at/xml/', '/'));
-      }
-    }
-
-    return [...new Set(urls)];
-  }
-  private async loadRemoteConfig(force = false) {
-    const cache = stor.get();
-    let needUpdate = true;
-
-    if (!force && cache.remoteConfig?.updateTime) {
-      needUpdate = Date.now() - cache.remoteConfig.updateTime > 1 * 60 * 60 * 1000;
-    }
-
-    if (needUpdate) {
-      const url =
-        this.options.remoteConfigUrl || 'https://mirror.ghproxy.com/raw.githubusercontent.com/lzwme/m3u8-dl/main/test/remote-config.json';
-      const { data } = await req.get<M3u8StorConfig['remoteConfig']['data']>(
-        url,
-        null,
-        { 'content-type': 'application/json' },
-        { rejectUnauthorized: false }
-      );
-      logger.debug('加载远程配置', data);
-
-      if (Array.isArray(data.apiSites)) {
-        stor.set({
-          remoteConfig: {
-            updateTime: Date.now(),
-            data,
-          },
-        });
-      }
-    }
-
-    return cache.remoteConfig;
-  }
-  async updateApiFromRemote(force = false) {
-    const remoteConfig = await this.loadRemoteConfig(force);
-
-    if (Array.isArray(remoteConfig?.data?.apiSites)) {
-      remoteConfig.data.apiSites.forEach(item => {
-        if (item.enable === 0 || item.enable === false) return;
-        item.url = this.formatUrl(item.url)[0];
-        item.remote = true;
-        this.apiMap.set(item.url, item);
-      });
-    }
-  }
-}
+import { apiManage } from './search-api/ApiManage';
 
 export async function VideoSerachAndDL(
   keyword: string,
-  options: { url?: string[]; remoteConfigUrl?: string },
+  options: { url?: string[]; apidir?: string; remoteConfigUrl?: string },
   baseOpts: CliOptions
 ): Promise<void> {
+  logger.debug(options, baseOpts);
   const cache = stor.get();
-  const doDownload = async (info: VideoDetails, urls: string[]) => {
+  const doDownload = async (info: Partial<VideoDetails>, urls: string[]) => {
     const p = await prompt<{ play: boolean }>({
       type: 'confirm',
       name: 'play',
@@ -188,20 +51,12 @@ export async function VideoSerachAndDL(
     }
   }
 
-  const vs = new VideoSearch();
-  await vs.updateOptions({ api: options.url || [], force: baseOpts.force, remoteConfigUrl: options.remoteConfigUrl });
-  const apis = vs.api;
-  let apiUrl = options.url?.length ? { url: options.url[0] } : apis[0];
-
-  if (!options.url && apis.length > 0) {
-    await prompt<{ k: string }>({
-      type: 'select',
-      name: 'k',
-      message: '请选择 API 站点',
-      choices: apis.map(d => ({ name: d.url, message: d.desc })) as never,
-      validate: value => value.length >= 1,
-    }).then(v => (apiUrl = apis.find(d => d.url === v.k)));
+  if (options.apidir && !apiManage.current) apiManage.load(options.apidir);
+  if (options.url) {
+    options.url.forEach(api => apiManage.add({ api, desc: api }));
   }
+
+  await apiManage.select();
 
   await prompt<{ k: string }>({
     type: 'input',
@@ -211,14 +66,15 @@ export async function VideoSerachAndDL(
     initial: keyword,
   }).then(v => (keyword = v.k));
 
-  const sRes = await vs.search(keyword, apiUrl);
+  const sRes = await apiManage.search(keyword, apiManage.current);
   logger.debug(sRes);
-  if (!sRes.total) {
+
+  if (!sRes.length) {
     console.log(color.green(`[${keyword}]`), `没有搜到结果`);
     return VideoSerachAndDL(keyword, options, baseOpts);
   }
 
-  const choices = sRes.list.map((d, idx) => ({
+  const choices = sRes.map((d, idx) => ({
     name: d.vod_id,
     message: `${idx + 1}. [${d.type_name}] ${d.vod_name}`,
     hint: `${d.vod_remarks}(${d.vod_time})`,
@@ -227,15 +83,15 @@ export async function VideoSerachAndDL(
     type: 'select',
     name: 'vid',
     pointer: '👉',
-    message: `查找到了 ${color.greenBright(sRes.list.length)} 条结果，请选择：`,
+    message: `查找到了 ${color.greenBright(sRes.length)} 条结果，请选择：`,
     choices: choices.concat({ name: -1, message: greenBright('重新搜索'), hint: '' }) as never,
   } as never);
 
   if (answer1.vid === -1) return VideoSerachAndDL(keyword, options, baseOpts);
 
-  const vResult = await vs.getVideoList(answer1.vid, apiUrl);
-  if (!vResult.list?.length) {
-    logger.error('获取视频信息失败!', vResult.msg);
+  const vResult = await apiManage.detail(sRes.find(d => d.vod_id == answer1.vid));
+  if (!vResult) {
+    logger.error('获取视频信息失败!');
     return VideoSerachAndDL(keyword, options, baseOpts);
   } else {
     const info = vResult.list[0];
