@@ -1,17 +1,24 @@
 import { existsSync, promises } from 'node:fs';
-import { basename, resolve } from 'node:path';
+import { resolve } from 'node:path';
+import { md5 } from '@lzwme/fe-utils';
 import { Parser } from 'm3u8-parser';
 import type { M3u8Crypto, TsItemInfo } from '../types/m3u8';
 import { logger, getRetry } from './utils';
 
-export async function parseM3U8(content: string, url = process.cwd(), cacheDir = './cache') {
-  if (!content && url) {
-    if (!url.startsWith('http') && existsSync(url)) {
-      url = resolve(process.cwd(), url);
-      content = await promises.readFile(url, 'utf8');
-    } else {
-      content = (await getRetry<string>(url)).data;
-    }
+/**
+ * 解析 m3u8 文件
+ * @param content m3u8 文件的内容，可为 http 远程地址、本地文件路径
+ * @param cacheDir 缓存文件保存目录
+ */
+export async function parseM3U8(content: string, cacheDir = './cache') {
+  let url = process.cwd();
+
+  if (content.startsWith('http')) {
+    url = content;
+    content = (await getRetry<string>(url)).data;
+  } else if (!content.includes('\n') && existsSync(content)) {
+    url = resolve(process.cwd(), content);
+    content = await promises.readFile(url, 'utf8');
   }
 
   if (!content) {
@@ -84,7 +91,7 @@ export async function parseM3U8(content: string, url = process.cwd(), cacheDir =
       duration: tsList[i].duration,
       timeline: tsList[i].timeline,
       uri: tsList[i].uri,
-      tsOut: `${cacheDir}/${i}-${basename(tsList[i].uri).replace(/\.ts\?.+/, '.ts')}`,
+      tsOut: `${cacheDir}/${md5(tsList[i].uri)}.ts`,
     });
     result.durationSecond += tsList[i].duration;
   }

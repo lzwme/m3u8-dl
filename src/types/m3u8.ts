@@ -51,6 +51,8 @@ export interface M3u8DLOptions {
   headers?: IncomingHttpHeaders;
   /** 下载时是否启动本地资源播放（边下边看） */
   play?: boolean;
+  /** 下载完毕后，是否合并转换为 mp4 或 ts 文件。默认为 true */
+  convert?: boolean;
 }
 
 export interface WorkerTaskInfo {

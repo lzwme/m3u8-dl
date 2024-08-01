@@ -9,7 +9,7 @@ import { WorkerPool } from './worker_pool';
 import { parseM3U8 } from './parseM3u8';
 import { m3u8Convert } from './m3u8-convert';
 import type { M3u8DLOptions, TsItemInfo, WorkerTaskInfo } from '../types/m3u8';
-import { localPlay } from './local-play';
+import { localPlay, toLocalM3u8 } from './local-play';
 
 const cache = {
   m3u8Info: {} as Record<string, unknown>,
@@ -55,6 +55,7 @@ async function m3u8InfoParse(url: string, options: M3u8DLOptions = {}) {
   [url, options] = formatOptions(url, options);
 
   const ext = isSupportFfmpeg() ? '.mp4' : '.ts';
+  /** 最终合并转换后的文件路径 */
   let filepath = resolve(options.saveDir, options.filename);
   if (!filepath.endsWith(ext)) filepath += ext;
 
@@ -67,7 +68,7 @@ async function m3u8InfoParse(url: string, options: M3u8DLOptions = {}) {
 
   if (!options.force && existsSync(filepath)) return result;
 
-  const m3u8Info = await parseM3U8('', url, options.cacheDir).catch(e => logger.error('[parseM3U8][failed]', e));
+  const m3u8Info = await parseM3U8(url, options.cacheDir).catch(e => logger.error('[parseM3U8][failed]', e));
   if (m3u8Info && m3u8Info?.tsCount > 0) result.m3u8Info = m3u8Info;
 
   return result;
@@ -184,13 +185,16 @@ export async function m3u8Download(url: string, options: M3u8DLOptions = {}) {
         `Parallel jobs: ${magenta(options.threadNum)}`
       );
     }
+
     runTask(m3u8Info.data);
+    toLocalM3u8(m3u8Info.data, options.filename);
 
     await barrier.wait();
     if (stats.tsFailed === 0) {
-      result.filepath = await m3u8Convert(options, m3u8Info.data);
-
-      if (result.filepath && existsSync(options.cacheDir) && options.delCache) rmrfAsync(options.cacheDir);
+      if (options.convert !== false) {
+        result.filepath = await m3u8Convert(options, m3u8Info.data);
+        if (result.filepath && existsSync(options.cacheDir) && options.delCache) rmrfAsync(options.cacheDir);
+      }
     } else logger.warn('Download Failed! Please retry!', stats.tsFailed);
   }
   logger.debug('Done!', url, result.m3u8Info);

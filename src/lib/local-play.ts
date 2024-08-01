@@ -1,6 +1,6 @@
-import { execSync, findFreePort } from '@lzwme/fe-utils';
+import { execSync, findFreePort, mkdirp } from '@lzwme/fe-utils';
 import { color } from 'console-log-colors';
-import { createReadStream, existsSync, promises, readdirSync, statSync } from 'node:fs';
+import { createReadStream, existsSync, readdirSync, statSync, writeFileSync } from 'node:fs';
 import { createServer } from 'node:http';
 import { basename, dirname, extname, join, resolve } from 'node:path';
 import { logger } from './utils';
@@ -17,7 +17,8 @@ export async function localPlay(m3u8Info: TsItemInfo[], options: M3u8DLOptions) 
   const info = await createLocalServer(dirname(cacheDir));
   const filename = basename(options.filename).slice(0, options.filename.lastIndexOf('.')) + `.m3u8`;
 
-  await toLocalM3u8(m3u8Info, resolve(cacheDir, filename), `/${cacheDirname}`);
+  const cacheFilepath = resolve(cacheDir, filename);
+  if (!existsSync(cacheFilepath)) toLocalM3u8(m3u8Info, cacheFilepath);
 
   const playUrl = `https://lzw.me/x/m3u8-player?url=${encodeURIComponent(`${info.origin}/${cacheDirname}/${filename}`)}`;
   const cmd = `${process.platform === 'win32' ? 'start' : 'open'} ${playUrl}`;
@@ -26,7 +27,7 @@ export async function localPlay(m3u8Info: TsItemInfo[], options: M3u8DLOptions) 
   return info;
 }
 
-export async function toLocalM3u8(m3u8Info: TsItemInfo[], filepath: string, host = '') {
+export function toLocalM3u8(m3u8Info: TsItemInfo[], m3u8FilePath: string, host = '.') {
   const m3u8ContentList = [
     `#EXTM3U`,
     `#EXT-X-VERSION:3`,
@@ -43,7 +44,13 @@ export async function toLocalM3u8(m3u8Info: TsItemInfo[], filepath: string, host
   m3u8ContentList.push(`#EXT-X-ENDLIST`);
 
   const m3u8Content = m3u8ContentList.join('\n');
-  await promises.writeFile(filepath, m3u8Content, 'utf8');
+  const ext = extname(m3u8FilePath);
+  if (ext !== '.m3u8') m3u8FilePath = m3u8FilePath.replace(ext, '') + '.m3u8';
+  m3u8FilePath = resolve(dirname(m3u8Info[0].tsOut), m3u8FilePath);
+  mkdirp(dirname(m3u8FilePath));
+  writeFileSync(m3u8FilePath, m3u8Content, 'utf8');
+
+  return m3u8FilePath;
 }
 
 async function createLocalServer(baseDir: string) {
@@ -74,8 +81,8 @@ async function createLocalServer(baseDir: string) {
         createReadStream(filename).pipe(res);
         return;
       } else if (stats.isDirectory()) {
-        const html = readdirSync(filename).map(filepath => {
-          const rpath = resolve(filename, filepath).replace(baseDir, '');
+        const html = readdirSync(filename).map(fname => {
+          const rpath = resolve(filename, fname).replace(baseDir, '');
           return `<li><a href="${rpath}">${rpath}</a></li>`;
         });
 

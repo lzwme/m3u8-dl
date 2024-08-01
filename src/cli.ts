@@ -33,6 +33,7 @@ program
   .option('-C, --cache-dir <dirpath>', `临时文件保存目录。默认为 cache`)
   .option('-S, --save-dir <dirpath>', `下载文件保存的路径。默认为当前目录`)
   .option('--no-del-cache', `下载成功后是否删除临时文件。默认为 true。保存临时文件可以在重复下载时识别缓存`)
+  .option('--no-convert', '下载成功后，是否不合并转换为 mp4 文件。默认为 true。')
   .action(async (urls: string[]) => {
     const options = getOptions();
     logger.debug(urls, options);
