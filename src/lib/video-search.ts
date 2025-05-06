@@ -32,7 +32,7 @@ export async function VideoSerachAndDL(
       const r = await m3u8BatchDownload(cache.latestSearchDL.urls, cache.latestSearchDL.dlOptions);
       if (r) stor.set({ latestSearchDL: null });
     } catch (error) {
-      logger.info('cachel download');
+      logger.info('cancel download:', (error as Error).message);
     }
   };
 
