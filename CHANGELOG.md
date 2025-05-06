@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.0.10](https://github.com/lzwme/m3u8-dl/compare/v0.0.9...v0.0.10) (2025-05-06)
+
+
+### Bug Fixes
+
+* 修复合并为大文件 ts 时内存不足导致失败的问题 (close [#5](https://github.com/lzwme/m3u8-dl/issues/5)) ([2fab6a6](https://github.com/lzwme/m3u8-dl/commit/2fab6a6c318fb2daf2d6d809d9b88fcc5d454903))
+
 ### [0.0.9](https://github.com/lzwme/m3u8-dl/compare/v0.0.8...v0.0.9) (2024-07-29)
 
 
