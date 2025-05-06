@@ -1,4 +1,4 @@
-import { readFileSync, promises, existsSync, statSync } from 'node:fs';
+import { readFileSync, existsSync, statSync, createWriteStream, writeFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { execSync, formatByteSize } from '@lzwme/fe-utils';
 import { greenBright, cyan, magentaBright } from 'console-log-colors';
@@ -19,7 +19,7 @@ export async function m3u8Convert(options: M3u8DLOptions, data: TsItemInfo[]) {
     let filesAllArr = data.map(d => resolve(d.tsOut)).filter(d => existsSync(d));
 
     if (process.platform === 'win32') filesAllArr = filesAllArr.map(d => d.replaceAll('\\', '/'));
-    await promises.writeFile(inputFilePath, 'ffconcat version 1.0\nfile ' + filesAllArr.join('\nfile '));
+    writeFileSync(inputFilePath, 'ffconcat version 1.0\nfile ' + filesAllArr.join('\nfile '));
 
     let headersString = '';
     if (options.headers) {
@@ -37,7 +37,13 @@ export async function m3u8Convert(options: M3u8DLOptions, data: TsItemInfo[]) {
 
   if (!ffmpegSupport) {
     filepath = filepath.replace(/\.mp4$/, '.ts');
-    await promises.writeFile(filepath, Buffer.concat(data.map(d => readFileSync(d.tsOut))));
+    const filteWriteStream = createWriteStream(filepath);
+    for (const d of data) {
+      const err = await new Promise(rs => {
+        filteWriteStream.write(readFileSync(d.tsOut), e => rs(e));
+      });
+      if (err) logger.error(`Write file failed: ${d.tsOut}`, err);
+    }
   }
 
   if (!existsSync(filepath)) return '';
