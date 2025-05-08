@@ -51,7 +51,7 @@ export async function parseM3U8(content: string, cacheDir = './cache') {
     /** ts 文件数量 */
     tsCount: tsList.length,
     /** 总时长 */
-    durationSecond: 0,
+    duration: 0,
     data: [] as TsItemInfo[],
     /** 加密相关信息 */
     crypto: {
@@ -87,15 +87,16 @@ export async function parseM3U8(content: string, cacheDir = './cache') {
     if (!tsList[i].uri.startsWith('http')) tsList[i].uri = new URL(tsList[i].uri, url).toString();
 
     result.data.push({
+      m3u8: url,
       index: i,
       duration: tsList[i].duration,
       timeline: tsList[i].timeline,
       uri: tsList[i].uri,
       tsOut: `${cacheDir}/${md5(tsList[i].uri)}.ts`,
     });
-    result.durationSecond += tsList[i].duration;
+    result.duration += tsList[i].duration;
   }
-  result.durationSecond = +Number(result.durationSecond).toFixed(2);
+  result.duration = +Number(result.duration).toFixed(2);
   return result;
 }
 

@@ -39,11 +39,10 @@ export async function m3u8Convert(options: M3u8DLOptions, data: TsItemInfo[]) {
     filepath = filepath.replace(/\.mp4$/, '.ts');
     const filteWriteStream = createWriteStream(filepath);
     for (const d of data) {
-      const err = await new Promise(rs => {
-        filteWriteStream.write(readFileSync(d.tsOut), e => rs(e));
-      });
+      const err = await new Promise(rs => filteWriteStream.write(readFileSync(d.tsOut), e => rs(e)));
       if (err) logger.error(`Write file failed: ${d.tsOut}`, err);
     }
+    filteWriteStream.end();
   }
 
   if (!existsSync(filepath)) return '';

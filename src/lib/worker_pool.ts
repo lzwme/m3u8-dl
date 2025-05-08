@@ -9,7 +9,6 @@ const kWorkerFreedEvent = Symbol('kWorkerFreedEvent');
 class WorkerPoolTaskInfo<R> extends AsyncResource {
   constructor(public callback: (err: Error | null, result: R) => void) {
     super('WorkerPoolTaskInfo');
-    this.callback = callback;
   }
 
   done(err: Error | null, result: unknown) {
@@ -53,7 +52,6 @@ export class WorkerPool<T = unknown, R = unknown> extends EventEmitter {
       }
     });
   }
-
   addNewWorker(processorFile = this.processorFile) {
     if (!existsSync(processorFile)) {
       throw Error(`Not Found: ${processorFile}`);
@@ -91,7 +89,6 @@ export class WorkerPool<T = unknown, R = unknown> extends EventEmitter {
     this.emit(kWorkerFreedEvent);
     if (this.numThreads < this.workers.length) this.numThreads = this.workers.length;
   }
-
   runTask(task: T, callback: (err: Error | null, result: R) => void) {
     if (this.freeWorkers.length === 0) {
       this.tasks.push({ task, callback });
@@ -104,7 +101,12 @@ export class WorkerPool<T = unknown, R = unknown> extends EventEmitter {
       worker.postMessage(task);
     }
   }
-
+  removeTask(task: T | ((task: T) => boolean)) {
+    const filter = (typeof task === 'function' ? task : (t: T) => t === task) as (t: T) => boolean;
+    const count = this.tasks.length;
+    this.tasks = this.tasks.filter(item => !filter(item.task));
+    return count - this.tasks.length;
+  }
   close() {
     for (const worker of this.workers) worker.terminate();
   }

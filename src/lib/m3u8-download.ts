@@ -1,15 +1,16 @@
-import { resolve } from 'node:path';
+import { resolve, sep } from 'node:path';
 import { existsSync } from 'node:fs';
 import { cpus } from 'node:os';
+import type { IncomingHttpHeaders } from 'node:http';
 import { Barrier, formatTimeCost, md5, rmrfAsync } from '@lzwme/fe-utils';
 import { formatByteSize } from '@lzwme/fe-utils/cjs/common/helper';
 import { green, cyanBright, cyan, magenta, magentaBright, yellowBright, blueBright, greenBright } from 'console-log-colors';
-import { isSupportFfmpeg, logger, request } from './utils';
-import { WorkerPool } from './worker_pool';
-import { parseM3U8 } from './parseM3u8';
-import { m3u8Convert } from './m3u8-convert';
-import type { M3u8DLOptions, TsItemInfo, WorkerTaskInfo } from '../types/m3u8';
-import { localPlay, toLocalM3u8 } from './local-play';
+import { isSupportFfmpeg, logger, request } from './utils.js';
+import { WorkerPool } from './worker_pool.js';
+import { parseM3U8 } from './parseM3u8.js';
+import { m3u8Convert } from './m3u8-convert.js';
+import type { M3u8DLOptions, M3u8DLProgressStats, TsItemInfo, WorkerTaskInfo } from '../types/m3u8.js';
+import { localPlay, toLocalM3u8 } from './local-play.js';
 
 const cache = {
   m3u8Info: {} as Record<string, unknown>,
@@ -41,8 +42,14 @@ function formatOptions(url: string, opts: M3u8DLOptions) {
   if (!options.threadNum || +options.threadNum <= 0) options.threadNum = Math.min(cpus().length * 2, 8);
   if (!options.filename) options.filename = urlMd5;
   if (!options.filename.endsWith('.mp4')) options.filename += '.mp4';
-  if (!options.cacheDir) options.cacheDir = `cache/${urlMd5}`;
-  if (options.headers) request.setHeaders(options.headers);
+  if (!options.cacheDir) options.cacheDir = `cache`;
+  if (options.headers) {
+    let headers = options.headers;
+    if (typeof headers === 'string') {
+      headers = Object.fromEntries(headers.split('\n').map(line => line.split(':').map(d => d.trim())));
+    }
+    request.setHeaders(headers as IncomingHttpHeaders);
+  }
 
   if (options.debug) {
     logger.updateOptions({ levelType: 'debug' });
@@ -68,7 +75,7 @@ async function m3u8InfoParse(url: string, options: M3u8DLOptions = {}) {
 
   if (!options.force && existsSync(filepath)) return result;
 
-  const m3u8Info = await parseM3U8(url, options.cacheDir).catch(e => logger.error('[parseM3U8][failed]', e));
+  const m3u8Info = await parseM3U8(url, resolve(options.cacheDir, md5(url, false))).catch(e => logger.error('[parseM3U8][failed]', e));
   if (m3u8Info && m3u8Info?.tsCount > 0) result.m3u8Info = m3u8Info;
 
   return result;
@@ -85,7 +92,7 @@ export async function preDownLoad(url: string, options: M3u8DLOptions) {
     if (!cache.downloading.has(info.uri)) {
       cache.downloading.add(info.uri);
 
-      workPoll.runTask({ info, options: JSON.parse(JSON.stringify(result.options)), crypto: result.m3u8Info.crypto }, () => {
+      workPoll.runTask({ url, info, options: JSON.parse(JSON.stringify(result.options)), crypto: result.m3u8Info.crypto }, () => {
         cache.downloading.delete(info.uri);
       });
     }
@@ -110,17 +117,23 @@ export async function m3u8Download(url: string, options: M3u8DLOptions = {}) {
     const startTime = Date.now();
     const barrier = new Barrier();
     const playStart = Math.min(options.threadNum + 2, result.m3u8Info.tsCount);
-    const stats = {
-      /** 下载成功的 ts 数量 */
+    const stats: M3u8DLProgressStats = {
+      startTime,
+      progress: 0,
+      tsCount: m3u8Info.tsCount,
       tsSuccess: 0,
-      /** 下载失败的 ts 数量 */
       tsFailed: 0,
-      /** 下载完成的时长 */
-      duration: 0,
+      duration: m3u8Info.duration,
+      durationDownloaded: 0,
+      downloadedSize: 0,
+      speed: 0,
+      speedDesc: '',
+      remainingTime: 0,
+      localM3u8: toLocalM3u8(m3u8Info.data).replace(options.cacheDir, '').replaceAll(sep, '/').slice(1),
     };
     const runTask = (data: TsItemInfo[]) => {
       for (const info of data) {
-        workPoll.runTask({ info, options: JSON.parse(JSON.stringify(options)), crypto: m3u8Info.crypto }, (err, res) => {
+        workPoll.runTask({ url, info, options: JSON.parse(JSON.stringify(options)), crypto: m3u8Info.crypto }, (err, res) => {
           if (!res || err) {
             if (err) {
               console.log('\n');
@@ -141,47 +154,47 @@ export async function m3u8Download(url: string, options: M3u8DLOptions = {}) {
             info.tsSize = res.info.tsSize;
             info.success = 1;
             stats.tsSuccess++;
-            stats.duration += info.duration;
+            stats.durationDownloaded += info.duration;
           } else {
             stats.tsFailed++;
           }
 
           const finished = stats.tsFailed + stats.tsSuccess;
+          const timeCost = Date.now() - startTime;
+          stats.downloadedSize = m3u8Info.data.reduce((a, b) => a + (b.tsSize || 0), 0);
+          const downloadedDuration = m3u8Info.data.reduce((a, b) => a + (b.tsSize ? b.duration : 0), 0);
+          stats.speed = (stats.downloadedSize / timeCost) * 1000;
+          stats.speedDesc = formatByteSize(stats.speed) + '/s';
+          stats.remainingTime = downloadedDuration ? (timeCost * (m3u8Info.duration - stats.durationDownloaded)) / downloadedDuration : 0;
+          stats.progress = Math.floor((finished / m3u8Info.tsCount) * 100);
 
           if (options.showProgress) {
-            const timeCost = Date.now() - startTime;
-            const downloadedSize = m3u8Info.data.reduce((a, b) => a + (b.tsSize || 0), 0);
-            const downloadedDuration = m3u8Info.data.reduce((a, b) => a + (b.tsSize ? b.duration : 0), 0);
-            const avgSpeed = formatByteSize((downloadedSize / timeCost) * 1000);
-            const restTime = downloadedDuration ? (timeCost * (m3u8Info.durationSecond - stats.duration)) / downloadedDuration : 0;
-            const percent = Math.floor((finished / m3u8Info.tsCount) * 100);
-            const processBar = '='.repeat(Math.floor(percent * 0.2)).padEnd(20, '-');
+            const processBar = '='.repeat(Math.floor(stats.progress * 0.2)).padEnd(20, '-');
             logger.logInline(
-              `${percent}% [${greenBright(processBar)}] ${cyan(finished)} ` +
-                `${green(stats.duration.toFixed(2) + 'sec')} ` +
-                `${blueBright(formatByteSize(downloadedSize))} ${yellowBright(formatTimeCost(startTime))} ${magentaBright(
-                  avgSpeed + '/s'
-                )} ` +
-                (finished === m3u8Info.tsCount ? '\n' : restTime ? `${cyan(formatTimeCost(Date.now() - Math.ceil(restTime)))}` : '')
+              `${stats.progress}% [${greenBright(processBar)}] ${cyan(finished)} ${green(stats.durationDownloaded.toFixed(2) + 'sec')} ` +
+                `${blueBright(formatByteSize(stats.downloadedSize))} ${yellowBright(formatTimeCost(startTime))} ${magentaBright(stats.speedDesc)} ` +
+                (finished === m3u8Info.tsCount
+                  ? '\n'
+                  : stats.remainingTime
+                    ? `${cyan(formatTimeCost(Date.now() - Math.ceil(stats.remainingTime)))}`
+                    : '')
             );
           }
 
-          if (options.onProgress) options.onProgress(finished, m3u8Info.tsCount, info);
+          if (options.onProgress) options.onProgress(finished, m3u8Info.tsCount, info, stats);
 
           if (finished === m3u8Info.tsCount) {
             // pool.close();
             barrier.open();
           }
 
-          if (options.play && finished === playStart) {
-            localPlay(m3u8Info.data, options);
-          }
+          if (options.play && finished === playStart) localPlay(m3u8Info.data);
         });
       }
     };
     if (options.showProgress) {
       console.info(
-        `\nTotal segments: ${cyan(m3u8Info.tsCount)}, duration: ${green(m3u8Info.durationSecond + 'sec')}.`,
+        `\nTotal segments: ${cyan(m3u8Info.tsCount)}, duration: ${green(m3u8Info.duration + 'sec')}.`,
         `Parallel jobs: ${magenta(options.threadNum)}`
       );
     }
@@ -199,4 +212,8 @@ export async function m3u8Download(url: string, options: M3u8DLOptions = {}) {
   }
   logger.debug('Done!', url, result.m3u8Info);
   return result;
+}
+
+export function m3u8DLStop(url: string) {
+  return workPoll.removeTask(task => task.url === url);
 }

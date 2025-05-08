@@ -3,22 +3,20 @@ import { color } from 'console-log-colors';
 import { createReadStream, existsSync, readdirSync, statSync, writeFileSync } from 'node:fs';
 import { createServer } from 'node:http';
 import { basename, dirname, extname, join, resolve } from 'node:path';
-import { logger } from './utils';
-import { M3u8DLOptions, TsItemInfo } from '../types/m3u8';
+import { logger } from './utils.js';
+import type { TsItemInfo } from '../types/m3u8.js';
 
 /**
  * 边下边看
  */
-export async function localPlay(m3u8Info: TsItemInfo[], options: M3u8DLOptions) {
+export async function localPlay(m3u8Info: TsItemInfo[]) {
   if (!m3u8Info?.length) return null;
 
   const cacheDir = dirname(m3u8Info[0].tsOut);
   const cacheDirname = basename(cacheDir);
+  const cacheFilepath = toLocalM3u8(m3u8Info);
+  const filename = basename(cacheFilepath);
   const info = await createLocalServer(dirname(cacheDir));
-  const filename = basename(options.filename).slice(0, options.filename.lastIndexOf('.')) + `.m3u8`;
-
-  const cacheFilepath = resolve(cacheDir, filename);
-  if (!existsSync(cacheFilepath)) toLocalM3u8(m3u8Info, cacheFilepath);
 
   const playUrl = `https://lzw.me/x/m3u8-player?url=${encodeURIComponent(`${info.origin}/${cacheDirname}/${filename}`)}`;
   const cmd = `${process.platform === 'win32' ? 'start' : 'open'} ${playUrl}`;
@@ -27,7 +25,13 @@ export async function localPlay(m3u8Info: TsItemInfo[], options: M3u8DLOptions) 
   return info;
 }
 
-export function toLocalM3u8(m3u8Info: TsItemInfo[], m3u8FilePath: string, host = '') {
+export function toLocalM3u8(m3u8Info: TsItemInfo[], m3u8FilePath = '', host = '') {
+  const cacheDir = dirname(m3u8Info[0].tsOut);
+  const cacheDirname = basename(cacheDir);
+
+  if (!m3u8FilePath) m3u8FilePath = resolve(cacheDir, `${cacheDirname}.m3u8`);
+  if (existsSync(m3u8FilePath)) return m3u8FilePath;
+
   const m3u8ContentList = [
     `#EXTM3U`,
     `#EXT-X-VERSION:3`,
@@ -48,8 +52,8 @@ export function toLocalM3u8(m3u8Info: TsItemInfo[], m3u8FilePath: string, host =
   const m3u8Content = m3u8ContentList.join('\n');
   const ext = extname(m3u8FilePath);
   if (ext !== '.m3u8') m3u8FilePath = m3u8FilePath.replace(ext, '') + '.m3u8';
-  m3u8FilePath = resolve(dirname(m3u8Info[0].tsOut), m3u8FilePath);
-  mkdirp(dirname(m3u8FilePath));
+  m3u8FilePath = resolve(cacheDir, m3u8FilePath);
+  mkdirp(cacheDir);
   writeFileSync(m3u8FilePath, m3u8Content, 'utf8');
 
   return m3u8FilePath;

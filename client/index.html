@@ -1,0 +1,633 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <title>M3U8 下载管理</title>
+  <!-- 引入 Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- 引入 Vue.js 2 CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/vue@2.6.14/dist/vue.js"></script>
+  <!-- 引入 SweetAlert2 -->
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <!-- 引入图标库 -->
+  <link href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.0.0/css/all.min.css" rel="stylesheet">
+
+  <style>
+    #app {
+      max-width: 1400px;
+      margin: auto;
+      min-height: 100vh;
+      background-color: #f5f5f5;
+      position: relative;
+    }
+
+    .sidebar {
+      background-color: #fff;
+      box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1);
+      transition: all 0.3s ease;
+      position: absolute;
+      left: 0;
+      top: 0;
+      bottom: 0;
+      width: 16rem;
+      z-index: 1;
+    }
+
+    .download-item {
+      transition: all 0.3s ease;
+    }
+
+    .download-item:hover {
+      background-color: #f8f9fa;
+    }
+
+    .progress-bar {
+      height: 4px;
+      transition: width 0.3s ease;
+    }
+
+    .nav-item {
+      transition: all 0.3s ease;
+    }
+
+    .nav-item:hover {
+      background-color: #f0f0f0;
+    }
+
+    .nav-item.active {
+      background-color: #e6f3ff;
+      color: #1890ff;
+    }
+
+    /* 移动端适配 */
+    @media (max-width: 768px) {
+      .sidebar {
+        transform: translateX(-100%);
+      }
+
+      .sidebar.show {
+        transform: translateX(0);
+      }
+
+      .menu-toggle {
+        display: block !important;
+      }
+
+      .main-content {
+        margin-left: 0 !important;
+      }
+    }
+
+    .menu-toggle {
+      display: none;
+      position: fixed;
+      top: 1rem;
+      left: 1rem;
+      z-index: 51;
+      padding: 0.5rem;
+      background: white;
+      border-radius: 0.5rem;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+
+    .main-content {
+      transition: margin-left 0.3s ease;
+      margin-left: 16rem;
+      width: calc(100% - 16rem);
+    }
+  </style>
+</head>
+
+<body>
+  <div id="app" class="flex">
+    <button class="menu-toggle" @click="toggleSidebar">
+      <i class="fas" :class="sidebarCollapsed ? 'fa-bars' : 'fa-times'"></i>
+    </button>
+    <div class="sidebar p-4" :class="{ 'show': !sidebarCollapsed }">
+      <div class="mb-8">
+        <h1 class="text-xl font-bold text-gray-800 mb-4">M3U8 下载器</h1>
+        <button @click="showNewDownloadDialog"
+          class="w-full bg-blue-500 hover:bg-blue-600 text-white p-2 rounded-lg flex items-center justify-center">
+          <i class="fas fa-plus mr-2"></i>新建下载
+        </button>
+      </div>
+      <nav class="space-y-2">
+        <button @click="switchSection('download')" class="nav-item w-full p-3 rounded-lg flex items-center"
+          :class="{ 'active': activeSection === 'download' }">
+          <i class="fas fa-download mr-3"></i>下载管理
+        </button>
+        <button @click="switchSection('config')" class="nav-item w-full p-3 rounded-lg flex items-center"
+          :class="{ 'active': activeSection === 'config' }">
+          <i class="fas fa-cog mr-3"></i>配置设置
+        </button>
+      </nav>
+    </div>
+    <div class="main-content p-6"
+      :style="{ marginLeft: sidebarCollapsed ? '0' : '16rem', width: sidebarCollapsed ? '100%' : 'calc(100% - 16rem)' }">
+      <div v-if="activeSection === 'config'" class="bg-white rounded-lg shadow p-6">
+        <h2 class="text-xl font-semibold mb-6">配置设置</h2>
+        <form @submit.prevent="updateConfig" class="space-y-6">
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <!-- 保存目录 -->
+            <div>
+              <label class="block text-sm font-bold text-gray-700 mb-1">视频保存目录</label>
+              <div class="flex">
+                <input v-model="config.saveDir" type="text"
+                  class="w-full p-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  placeholder="请输入保存目录路径" />
+              </div>
+              <p class="mt-1 text-sm text-gray-500">默认为当前目录下 downloads 文件夹</p>
+            </div>
+
+            <!-- 线程数 -->
+            <div>
+              <label class="block text-sm font-bold text-gray-700 mb-1">并发下载线程数</label>
+              <input v-model.number="config.threadNum" type="number" min="1" max="16"
+                class="w-full p-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                placeholder="请输入线程数（1-16）" />
+              <p class="mt-1 text-sm text-gray-500">建议不超过 8 个，默认为 CPU 核心数 * 2</p>
+            </div>
+
+            <!-- 删除缓存 -->
+            <div>
+              <label class="block text-sm font-bold text-gray-700 mb-1">下载完成后删除缓存</label>
+              <div class="flex items-center mt-2">
+                <label class="inline-flex items-center">
+                  <input type="checkbox" v-model="config.delCache"
+                    class="form-checkbox h-5 w-5 text-blue-500 rounded focus:ring-blue-500">
+                  <span class="ml-2 text-gray-700">删除临时文件</span>
+                </label>
+              </div>
+              <p class="mt-1 text-sm text-gray-500">保存临时文件可以在重复下载时识别缓存</p>
+            </div>
+
+            <!-- 转换格式 -->
+            <div>
+              <label class="block text-sm font-bold text-gray-700 mb-1">下载完成后转换格式</label>
+              <div class="flex items-center mt-2">
+                <label class="inline-flex items-center">
+                  <input type="checkbox" v-model="config.convert"
+                    class="form-checkbox h-5 w-5 text-blue-500 rounded focus:ring-blue-500">
+                  <span class="ml-2 text-gray-700">合并转换为 MP4/TS 文件</span>
+                </label>
+              </div>
+            </div>
+
+            <!-- 显示预览按钮 -->
+            <div>
+              <label class="block text-sm font-bold text-gray-700 mb-1">显示预览按钮</label>
+              <div class="flex items-center mt-2">
+                <label class="inline-flex items-center">
+                  <input type="checkbox" v-model="config.showPreview"
+                    class="form-checkbox h-5 w-5 text-blue-500 rounded focus:ring-blue-500">
+                  <span class="ml-2 text-gray-700">在下载列表中显示预览按钮</span>
+                </label>
+              </div>
+            </div>
+
+            <!-- 显示边下边播按钮 -->
+            <div>
+              <label class="block text-sm font-bold text-gray-700 mb-1">显示边下边播按钮</label>
+              <div class="flex items-center mt-2">
+                <label class="inline-flex items-center">
+                  <input type="checkbox" v-model="config.showLocalPlay"
+                    class="form-checkbox h-5 w-5 text-blue-500 rounded focus:ring-blue-500">
+                  <span class="ml-2 text-gray-700">在下载列表中显示边下边播按钮</span>
+                </label>
+              </div>
+            </div>
+          </div>
+
+          <div class="flex justify-end space-x-4">
+            <!-- <button type="button" @click="resetConfig"
+              class="px-6 py-2 text-gray-600 hover:bg-gray-100 rounded-lg border">
+              重置配置
+            </button> -->
+            <button type="submit" class="px-6 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg">
+              保存配置
+            </button>
+          </div>
+        </form>
+      </div>
+      <div v-if="activeSection === 'download'" class="space-y-6">
+        <div class="bg-white rounded-lg shadow">
+          <div class="p-4 border-b">
+            <div class="flex justify-between items-center">
+              <h2 class="text-xl font-semibold">下载任务</h2>
+              <div class="flex space-x-2">
+                <button @click="showNewDownloadDialog"
+                  class="px-3 py-1 text-sm bg-blue-500 hover:bg-blue-600 text-white rounded">
+                  <i class="fas fa-plus mr-1"></i>新建
+                </button>
+                <button @click="pauseAll"
+                  class="px-3 py-1 text-sm bg-yellow-500 text-white rounded hover:bg-yellow-600">
+                  <i class="fas fa-pause mr-1"></i>全部暂停
+                </button>
+                <button @click="resumeAll" class="px-3 py-1 text-sm bg-green-500 text-white rounded hover:bg-green-600">
+                  <i class="fas fa-play mr-1"></i>全部开始
+                </button>
+              </div>
+            </div>
+          </div>
+          <div class="divide-y overflow-auto max-h-[calc(100vh-200px)]">
+            <div v-for="(task, url) in tasks" :key="url" class="download-item p-4">
+              <div class="flex items-center justify-between mb-2">
+                <div class="flex-1">
+                  <h3 class="font-bold text-green-600 truncate">{{ url }}</h3>
+                  <div class="flex items-center text-sm text-gray-500 mt-1">
+                    <span v-if="config.showPreview" class="mr-4 text-blue-500 hover:text-blue-600 cursor-pointer"
+                      @click="preview(url)">预览</span>
+                    <span v-if="config.showLocalPlay" class="mr-4 text-blue-500 hover:text-blue-600 cursor-pointer"
+                      @click="localPlay(task)">边下边播</span>
+                    <span class="mr-4">时长: {{ formatTime(task.duration * 1000) }}</span>
+                    <span class="mr-4">分片: {{ task.tsSuccess + task.tsFailed }}/{{ task.tsCount }}</span>
+                    <span class="mr-4">速度: {{ task.speedDesc }}</span>
+                    <span class="mr">剩余: {{ formatTime(task.remainingTime || 0) }}</span>
+                  </div>
+                </div>
+                <div class="flex space-x-2">
+                  <button v-if="task.status === 'resume'" @click="pauseDownload(url)"
+                    class="p-2 text-yellow-500 hover:bg-yellow-50 rounded" title="暂停">
+                    <i class="fas fa-pause"></i>
+                  </button>
+                  <button v-if="task.status === 'pause'" @click="resumeDownload(url)"
+                    class="p-2 text-green-500 hover:bg-green-50 rounded" title="继续">
+                    <i class="fas fa-play"></i>
+                  </button>
+                  <button @click="deleteDownload(url)" class="p-2 text-red-500 hover:bg-red-50 rounded" title="删除">
+                    <i class="fas fa-trash"></i>
+                  </button>
+                </div>
+              </div>
+              <div class="relative pt-1">
+                <div class="flex mb-2 items-center justify-between">
+                  <div>
+                    <span class="text-xs font-semibold inline-block text-blue-600">
+                      {{ task.progress || 0 }}%
+                    </span>
+                  </div>
+                </div>
+                <div class="overflow-hidden h-2 text-xs flex rounded bg-blue-200">
+                  <div :style="{ width: (task.progress || 0) + '%' }"
+                    class="progress-bar shadow-none flex flex-col text-center whitespace-nowrap text-white justify-center bg-blue-500">
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div v-if="Object.keys(tasks).length === 0" class="p-8 text-center text-gray-500">
+              <i class="fas fa-download text-4xl mb-4"></i>
+              <p>暂无下载任务</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <script>
+    const T = {
+      alert(msg, p) {
+        p = typeof msg === 'object' ? msg : Object.assign({ text: msg }, p);
+        Swal.fire(Object.assign({ icon: 'info', showConfirmButton: false }, p));
+      },
+      toast(msg, p) {
+        p = typeof msg === 'object' ? msg : Object.assign({ text: msg }, p);
+        return this.alert(Object.assign({ toast: true, position: 'top-end', icon: 'success', timer: 2000, timerProgressBar: true }, p));
+      },
+      post(url, data) {
+        return fetch(url, {
+          method: 'POST',
+          body: JSON.stringify(data),
+          headers: { 'Content-Type': 'application/json' }
+        }).then(d => d.json());
+      },
+      get(url) {
+        return fetch(url, { method: 'GET', headers: { 'Content-Type': 'application/json' } }).then(d => d.json());
+      },
+      safeJSONParse(data) {
+        try {
+          return JSON.parse(data);
+        } catch (error) {
+          console.error('解析 JSON 失败:', data, error);
+          return null;
+        }
+      }
+    };
+    new Vue({
+      el: '#app',
+      data: {
+        config: {
+          /** 并发下载线程数。取决于服务器限制，过多可能会容易下载失败。一般建议不超过 8 个。默认为 cpu数 * 2，但不超过 8 */
+          threadNum: 0,
+          /** 下载文件保存的路径。默认为当前目录 */
+          saveDir: '',
+          /** 下载成功后是否删除临时文件。默认为 true。保存临时文件可以在重复下载时识别缓存 */
+          delCache: true,
+          /** 下载 m3u8、ts 等文件时自定义请求 headers */
+          // headers: {},
+          /** 下载完毕后，是否合并转换为 mp4 或 ts 文件。默认为 true */
+          convert: true,
+          /** 是否显示预览按钮 */
+          showPreview: true,
+          /** 是否显示边下边播按钮 */
+          showLocalPlay: true,
+        },
+        downloadUrl: '',
+        /** 下载任务列表，以 url 为 key */
+        tasks: {},
+        activeSection: 'download',
+        sidebarCollapsed: window.innerWidth <= 768
+      },
+      methods: {
+        // 获取配置
+        fetchConfig: async function () {
+          try {
+            this.config = await T.get('/config');
+          } catch (error) {
+            console.error('获取配置失败:', error);
+          }
+        },
+        // 更新配置
+        updateConfig: async function () {
+          try {
+            const result = await T.post('/config', this.config);
+            T.toast(result.message || '配置已更新');
+          } catch (error) {
+            console.error('更新配置失败:', error);
+            T.alert('更新配置失败: ' + error.message);
+          }
+        },
+        // 显示新建下载弹窗
+        showNewDownloadDialog: function () {
+          Swal.fire({
+            title: '新建下载',
+            html: `
+              <div class="text-left">
+                <label class="block text-sm font-bold text-gray-700 mb-1">M3U8 链接</label>
+                <input id="downloadUrl" class="w-full p-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500" placeholder="请输入 M3U8 链接">
+
+                <div class="mt-4">
+                  <label class="block text-sm font-bold text-gray-700 mb-1">保存文件名</label>
+                  <input id="filename" class="w-full p-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500" placeholder="请输入保存文件名（可选）">
+                  <p class="mt-1 text-sm text-gray-500">不填写则使用默认文件名</p>
+                </div>
+
+                <div class="mt-4">
+                  <label class="block text-sm font-bold text-gray-700 mb-1">保存位置</label>
+                  <input id="saveDir" class="w-full p-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500" placeholder="请输入保存路径" value="${this.config.saveDir || ''}">
+                </div>
+
+                <div class="mt-4">
+                  <label class="block text-sm font-bold text-gray-700 mb-1">自定义请求头</label>
+                  <textarea id="headers" class="w-full p-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500" rows="4" placeholder="每行一个请求头，格式：Key: Value&#10;例如：&#10;User-Agent: Mozilla/5.0&#10;Referer: https://example.com"></textarea>
+                </div>
+              </div>
+            `,
+            showCancelButton: true,
+            confirmButtonText: '开始下载',
+            cancelButtonText: '取消',
+            focusConfirm: false,
+            preConfirm: () => {
+              const url = document.getElementById('downloadUrl').value;
+              const filename = document.getElementById('filename').value;
+              const saveDir = document.getElementById('saveDir').value;
+              const headersText = document.getElementById('headers').value;
+
+              if (!/https?:\/\/.+/.test(url)) {
+                Swal.showValidationMessage('请输入正确的 M3U8 链接');
+                return false;
+              }
+
+              // 解析请求头
+              const headers = {};
+              if (headersText) {
+                headersText.split('\n').forEach(line => {
+                  const [key, value] = line.split(':').map(s => s.trim());
+                  if (key && value) {
+                    headers[key] = value;
+                  }
+                });
+              }
+
+              return { url, filename, saveDir, headers };
+            }
+          }).then((result) => {
+            if (result.isConfirmed) {
+              this.startDownload(result.value);
+            }
+          });
+        },
+        // 开始下载
+        startDownload: async function (options) {
+          try {
+            const result = await T.post('/download', {
+              url: options.url,
+              options: {
+                saveDir: options.saveDir,
+                filename: options.filename,
+                headers: options.headers
+              }
+            });
+
+            this.tasks[options.url] = { status: 'resume', progress: 0, speed: 0, remainingTime: 0, size: 0 };
+            T.toast('下载已开始');
+          } catch (error) {
+            console.error('开始下载失败:', error);
+            T.alert('下载失败: ' + error.message);
+          }
+        },
+        // 暂停下载
+        pauseDownload: async function (url) {
+          try {
+            const r = await T.post(`/pause`, { url });
+            T.toast(r.message || '已暂停下载');
+            this.tasks[url].status = 'pause';
+          } catch (error) {
+            console.error('暂停下载失败:', error);
+          }
+        },
+        // 恢复下载
+        resumeDownload: async function (url) {
+          try {
+            const r = await T.post(`/resume`, { url });
+            T.toast(r.message || '已恢复下载');
+            this.tasks[url].status = 'resume';
+          } catch (error) {
+            console.error('恢复下载失败:', error);
+          }
+        },
+        // 删除下载
+        deleteDownload: async function (url) {
+          try {
+            const result = await Swal.fire({
+              title: '确认删除',
+              html: `
+                <div class="text-left">
+                  <div class="mb-4">
+                    <label class="inline-flex items-center">
+                      <input type="checkbox" id="deleteCache" class="form-checkbox h-5 w-5 text-blue-500 rounded focus:ring-blue-500" checked>
+                      <span class="ml-2 text-gray-700">同时删除已下载的缓存</span>
+                    </label>
+                  </div>
+                  <div>
+                    <label class="inline-flex items-center">
+                      <input type="checkbox" id="deleteVideo" class="form-checkbox h-5 w-5 text-blue-500 rounded focus:ring-blue-500" checked>
+                      <span class="ml-2 text-red-700">同时删除已下载的视频</span>
+                    </label>
+                  </div>
+                </div>
+              `,
+              showCancelButton: true,
+              confirmButtonText: '确认删除',
+              cancelButtonText: '取消',
+              confirmButtonColor: '#ef4444',
+              focusConfirm: false,
+              preConfirm: () => {
+                return {
+                  deleteCache: document.getElementById('deleteCache').checked,
+                  deleteVideo: document.getElementById('deleteVideo').checked
+                };
+              }
+            });
+
+            if (result.isConfirmed) {
+              const r = await T.post(`/delete`, {
+                url,
+                deleteCache: result.value.deleteCache,
+                deleteVideo: result.value.deleteVideo
+              });
+              T.toast(r.message || '已删除下载');
+              delete this.tasks[url];
+              this.$forceUpdate();
+            }
+          } catch (error) {
+            console.error('删除下载失败:', error);
+            T.alert('删除下载失败: ' + error.message);
+          }
+        },
+        // 暂停所有下载
+        pauseAll: async function () {
+          try {
+            const r = await T.post('/pauseAll');
+            T.toast(r.message || '已暂停所有下载');
+          } catch (error) {
+            console.error('暂停所有下载失败:', error);
+          }
+        },
+        // 恢复所有下载
+        resumeAll: async function () {
+          try {
+            const r = await T.post('/resumeAll');
+            T.toast(r.message || '已恢复所有下载');
+          } catch (error) {
+            console.error('恢复所有下载失败:', error);
+          }
+        },
+        // 格式化大小
+        formatSize: function (size) {
+          if (size < 1024) {
+            return size + ' B';
+          } else if (size < 1024 * 1024) {
+            return (size / 1024).toFixed(2) + ' KB';
+          } else if (size < 1024 * 1024 * 1024) {
+            return (size / (1024 * 1024)).toFixed(2) + ' MB';
+          } else {
+            return (size / (1024 * 1024 * 1024)).toFixed(2) + ' GB';
+          }
+        },
+        // 格式化速度
+        formatSpeed: function (speed) {
+          if (speed < 1024) {
+            return speed + ' B/s';
+          } else if (speed < 1024 * 1024) {
+            return (speed / 1024).toFixed(2) + ' KB/s';
+          } else if (speed < 1024 * 1024 * 1024) {
+            return (speed / (1024 * 1024)).toFixed(2) + ' MB/s';
+          } else {
+            return (speed / (1024 * 1024 * 1024)).toFixed(2) + ' GB/s';
+          }
+        },
+        // 格式化时间
+        formatTime: function (seconds) {
+          seconds /= 1000;
+          if (seconds < 60) {
+            return seconds + '秒';
+          } else if (seconds < 60 * 60) {
+            return (seconds / 60).toFixed(2) + '分钟';
+          } else if (seconds < 60 * 60 * 24) {
+            return (seconds / (60 * 60)).toFixed(2) + '小时';
+          } else {
+            return (seconds / (60 * 60 * 24)).toFixed(2) + '天';
+          }
+        },
+        getTasks: async function () {
+          this.tasks = await T.get('/tasks');
+        },
+        // 边下边播
+        localPlay: function (task) {
+          const url = location.origin + '/localplay/' + task.localM3u8;
+          window.open(`http://lzw.me/x/m3u8-player/?url=${encodeURIComponent(url)}`);
+        },
+        // 预览
+        preview: function (url) {
+          window.open(`https://lzw.me/x/m3u8-player/?url=${encodeURIComponent(url)}`);
+        },
+        wsConnect: function (reconnectDelay = 3000) {
+          const ws = new WebSocket(`ws://${location.host}/ws`);
+          ws.onmessage = (e) => {
+            const data = T.safeJSONParse(e.data);
+
+            switch (data.type) {
+              case 'tasks':
+                this.tasks = data.data;
+                break;
+              case 'progress':
+                if (!this.tasks[data.data.url]) this.$nextTick(() => this.$forceUpdate());
+                this.tasks[data.data.url] = data.data;
+                break;
+            }
+          };
+          ws.onopen = () => {
+            console.log('ws open');
+            T.toast('ws连接成功', { icon: 'success' });
+          };
+          ws.onclose = (ev, code, reason) => {
+            console.log('ws close', ev, code, reason);
+            T.toast(`连接已断开，${reconnectDelay / 1000}s 后将重试...`, { icon: 'error' });
+            setTimeout(() => {
+              this.wsConnect(reconnectDelay + 1000);
+            }, 3000);
+          };
+        },
+        // 切换侧栏状态
+        toggleSidebar() {
+          this.sidebarCollapsed = !this.sidebarCollapsed;
+        },
+        // 切换页面并自动收起侧栏
+        switchSection(section) {
+          this.activeSection = section;
+          if (window.innerWidth <= 768) {
+            this.sidebarCollapsed = true;
+          }
+        },
+        // 监听窗口大小变化
+        handleResize() {
+          this.sidebarCollapsed = window.innerWidth <= 768;
+        }
+      },
+      mounted() {
+        this.fetchConfig();
+        this.wsConnect();
+        window.addEventListener('resize', this.handleResize);
+      },
+      beforeDestroy() {
+        window.removeEventListener('resize', this.handleResize);
+      }
+    });
+  </script>
+</body>
+
+</html>

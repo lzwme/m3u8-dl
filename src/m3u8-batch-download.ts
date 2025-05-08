@@ -1,3 +1,11 @@
+/*
+ * @Author: renxia lzwy0820@qq.com
+ * @Date: 2024-07-30 08:57:58
+ * @LastEditors: renxia lzwy0820@qq.com
+ * @LastEditTime: 2025-05-07 13:31:05
+ * @FilePath: \m3u8-dl\src\m3u8-batch-download.ts
+ * @Description: 这是默认设置,请设置`customMade`, 打开koroFileHeader查看配置 进行设置: https://github.com/OBKoro1/koro1FileHeader/wiki/%E9%85%8D%E7%BD%AE
+ */
 import { existsSync, promises } from 'node:fs';
 import { basename } from 'node:path';
 import { m3u8Download, preDownLoad, workPoll } from './lib/m3u8-download';
@@ -45,8 +53,8 @@ export async function m3u8BatchDownload(urls: string[], options: M3u8DLOptions) 
         const o = { ...tasks.get(key) };
         tasks.delete(key);
         const p = o.onProgress;
-        o.onProgress = (finished, total, info) => {
-          if (p) p(finished, total, info);
+        o.onProgress = (finished, total, info, stats) => {
+          if (p) p(finished, total, info, stats);
           if (!preDLing && keyNext && tasks.size && workPoll.freeNum > 1 && total - finished < options.threadNum) {
             logger.debug(
               '\n[预下载下一集]',
