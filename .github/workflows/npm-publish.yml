@@ -1,40 +1,79 @@
 # see: https://help.github.com/actions/language-and-framework-guides/publishing-nodejs-packages
 
-name: Publish Package to npmjs for GPA
+name: Publish Package to npmjs
 
 on:
-  release:
-    types: [created]
   push:
     tags:
-      - 'v*'
+      - 'v*.*.*'
+  # release:
+  #   types: [created]
 
 jobs:
   npm-publish:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    concurrency:
+      group: ${{ github.workflow }}-${{ github.ref }}
     steps:
-      - uses: actions/checkout@v4
-      - uses: pnpm/action-setup@v4
+      - name: Checkout
+        uses: actions/checkout@v4
         with:
-          version: 9
-      - uses: actions/setup-node@v4
+          submodules: 'recursive'
+
+      - name: Install Node.js
+        uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22
           registry-url: https://registry.npmjs.com
-          # cache: 'pnpm'
-      - run: pnpm install --no-frozen-lockfile
-      # - run: npm run test
-      - run: npm run dist
+
+      - uses: pnpm/action-setup@v4
+        name: Install pnpm
+        id: pnpm-install
+        with:
+          run_install: false
+          version: 10
+
+      - name: Get pnpm store directory
+        id: pnpm-cache
+        shell: bash
+        run: |
+          echo "STORE_PATH=$(pnpm store path)" >> $GITHUB_OUTPUT
+
+      - uses: actions/cache@v3
+        name: Setup pnpm cache
+        with:
+          path: ${{ steps.pnpm-cache.outputs.STORE_PATH }}
+          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-pnpm-store-
+
+      - name: Install dependencies
+        run: pnpm install --no-frozen-lockfile --ignore-scripts
+
+      - name: Build and npm-publish
+        run: npm run dist
+
       - run: npm publish
         env:
           NODE_AUTH_TOKEN: ${{secrets.NPM_TOKEN}}
-      # - run: npm run
-      # - run: npm run publish:github # --registry=https://npm.pkg.github.com
-      #   env:
-      #     NODE_AUTH_TOKEN: ${{secrets.GITHUB_TOKEN}}
 
       # - name: GitHub Pages action
       #   uses: peaceiris/actions-gh-pages@v3
       #   with:
       #     github_token: ${{ secrets.GITHUB_TOKEN }}
       #     publish_dir: ./docs
+
+      - name: Github Release
+        uses: softprops/action-gh-release@v2
+        if: github.ref_type == 'tag'
+        with:
+          draft: false
+          prerelease: false
+          # tag_name: ${{ github.ref }}
+          # name: Release ${{ github.ref }}
+          # body: TODO New Release.
+          # files: |
+          #   ${{ secrets.ReleaseZipName }}.zip
+          #   LICENSE

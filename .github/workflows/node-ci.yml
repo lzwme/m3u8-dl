@@ -1,5 +1,6 @@
 name: 'Tests'
 on:
+  workflow_dispatch:
   push:
     branches:
       - '**'
@@ -24,9 +25,9 @@ jobs:
           - macos-latest
           - windows-latest
         node-version:
-          - 20
+          - 22
         include:
-          - node-version: 18
+          - node-version: 20
             os: ubuntu-latest
     name: Node ${{ matrix.node-version }} on ${{ matrix.os }}
     steps:
@@ -35,7 +36,7 @@ jobs:
           submodules: 'recursive'
       - uses: pnpm/action-setup@v4
         with:
-          version: 9
+          version: 10
       - uses: actions/setup-node@v4
         with:
           node-version: ${{ matrix.node-version }}

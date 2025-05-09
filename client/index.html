@@ -10,11 +10,11 @@
   <!-- 引入 Tailwind CSS CDN -->
   <script src="https://cdn.tailwindcss.com"></script>
   <!-- 引入 Vue.js 2 CDN -->
-  <script src="https://cdn.jsdelivr.net/npm/vue@2.6.14/dist/vue.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/vue@2.7.16/dist/vue.js"></script>
   <!-- 引入 SweetAlert2 -->
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
   <!-- 引入图标库 -->
-  <link href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.0.0/css/all.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.7.2/css/all.min.css" rel="stylesheet">
 
   <style>
     #app {
@@ -599,7 +599,7 @@
             T.toast(`连接已断开，${reconnectDelay / 1000}s 后将重试...`, { icon: 'error' });
             setTimeout(() => {
               this.wsConnect(reconnectDelay + 1000);
-            }, 3000);
+            }, reconnectDelay);
           };
         },
         // 切换侧栏状态

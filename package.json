@@ -70,6 +70,7 @@
   },
   "files": [
     "cjs",
+    "client",
     "!cjs/type.js",
     "!cjs/cli.d.ts",
     "global.d.ts",

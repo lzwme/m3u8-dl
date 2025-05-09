@@ -25,6 +25,7 @@
 - 支持常见的 AES 加密视频流解密。
 - 自动转换为 mp4。**需全局安装 [ffmpeg](https://ffmpeg.org/download.html)**
 - `[NEW!]`支持指定采集站标准 API，以命令行交互的方式搜索和下载。
+- `[NEW!]` 新增下载中心，支持启动为 webui 服务方式进行下载管理
 
 ## 安装(Install)
 
@@ -90,6 +91,34 @@ m3u8dl s -u https://jyzyapi.com/provide/vod/
 ```
 
 **声明：** 以上仅作示例，请自行搜索查找可用的采集站 API。本工具仅用作技术研究学习，不提供任何具体资源类信息。
+
+### 命令行方式启动 webui
+
+```bash
+# 安装 server 需要的依赖
+npm i -g express ws
+# 启动 server
+m3u8dl server -p 6600
+```
+
+然后浏览器访问： http://localhost:6600
+
+![](examples/img/m3u8dl-server-webui.jpg)
+
+## 基于 Docker 部署
+
+基于 docker 命令：
+
+```bash
+docker run
+```
+
+基于 `docker-compose.yml`：
+
+```bash
+m3u8dl:
+
+```
 
 ### API 调用
 

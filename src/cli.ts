@@ -46,6 +46,16 @@ program
   });
 
 program
+  .command('server')
+  .description('启动下载中心web服务')
+  .option('-P, --port <port>', '指定web服务端口。默认为6600')
+  .action((options: { port?: number }) => {
+    import('./server/download-server.js').then(m => {
+      new m.default({ port: options.port || 6600 });
+    });
+  });
+
+program
   .command('search [keyword]')
   .alias('s')
   .option('-u,--url <api...>', '影视搜索的接口地址(m3u8采集站标准接口)')
