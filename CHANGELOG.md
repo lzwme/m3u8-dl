@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [1.0.0](https://github.com/lzwme/m3u8-dl/compare/v0.0.10...v1.0.0) (2025-05-10)
+
+
+### Features
+
+* 新增 docker 构建脚本，支持 docker 部署 ([3dd7916](https://github.com/lzwme/m3u8-dl/commit/3dd79166f91120c91e35d56a63831b23dec4c352))
+* 新增 server 和 webui，支持在浏览器中管理下载 ([f704da2](https://github.com/lzwme/m3u8-dl/commit/f704da2d5b738fad477b0bc7a8d4893143eada9b))
+
 ### [0.0.10](https://github.com/lzwme/m3u8-dl/compare/v0.0.9...v0.0.10) (2025-05-06)
 
 
