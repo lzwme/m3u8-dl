@@ -1,6 +1,6 @@
 import { readFileSync, existsSync, statSync, createWriteStream, writeFileSync } from 'node:fs';
-import { resolve } from 'node:path';
-import { execSync, formatByteSize } from '@lzwme/fe-utils';
+import { dirname, resolve } from 'node:path';
+import { execSync, formatByteSize, mkdirp } from '@lzwme/fe-utils';
 import { greenBright, cyan, magentaBright } from 'console-log-colors';
 import type { M3u8DLOptions, TsItemInfo } from '../types/m3u8';
 import { isSupportFfmpeg, logger } from './utils';
@@ -13,6 +13,7 @@ export async function m3u8Convert(options: M3u8DLOptions, data: TsItemInfo[]) {
   if (!options.force && existsSync(filepath)) return filepath;
 
   logger.info(`Starting ${ffmpegSupport ? 'convert to mp4' : 'merge into ts'} file:`, greenBright(filepath));
+  mkdirp(dirname(filepath));
 
   if (ffmpegSupport) {
     const inputFilePath = resolve(options.cacheDir, 'input.txt');
@@ -28,6 +29,7 @@ export async function m3u8Convert(options: M3u8DLOptions, data: TsItemInfo[]) {
       }
     }
 
+    // ffmpeg -i nz.ts -c copy -map 0:v -map 0:a -bsf:a aac_adtstoasc nz.mp4
     const cmd = `ffmpeg -y -f concat -safe 0 -i ${inputFilePath} -acodec copy -vcodec copy -bsf:a aac_adtstoasc ${headersString} "${filepath}"`;
     logger.debug('[convert to mp4]cmd:', cyan(cmd));
     const r = execSync(cmd);

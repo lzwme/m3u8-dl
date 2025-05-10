@@ -1,4 +1,4 @@
-import { resolve, sep } from 'node:path';
+import { dirname, resolve, sep } from 'node:path';
 import { existsSync } from 'node:fs';
 import { cpus } from 'node:os';
 import type { IncomingHttpHeaders } from 'node:http';
@@ -9,15 +9,87 @@ import { isSupportFfmpeg, logger, request } from './utils.js';
 import { WorkerPool } from './worker_pool.js';
 import { parseM3U8 } from './parseM3u8.js';
 import { m3u8Convert } from './m3u8-convert.js';
-import type { M3u8DLOptions, M3u8DLProgressStats, TsItemInfo, WorkerTaskInfo } from '../types/m3u8.js';
+import type { M3u8DLOptions, M3u8DLProgressStats, M3u8WorkerPool, TsItemInfo } from '../types/m3u8.js';
 import { localPlay, toLocalM3u8 } from './local-play.js';
+
+// 下载队列管理
+export class DownloadQueue {
+  private queue: Array<{ url: string; options: M3u8DLOptions; priority: number }> = [];
+  private activeDownloads = new Set<string>();
+  private _maxConcurrent: number;
+
+  constructor(maxConcurrent = 3) {
+    this._maxConcurrent = maxConcurrent;
+  }
+
+  get maxConcurrent() {
+    return this._maxConcurrent;
+  }
+
+  set maxConcurrent(value: number) {
+    this._maxConcurrent = value;
+  }
+
+  add(url: string, options: M3u8DLOptions, priority = 0) {
+    this.queue.push({ url, options, priority });
+    this.queue.sort((a, b) => b.priority - a.priority);
+    this.processQueue();
+  }
+
+  private async processQueue() {
+    if (this.activeDownloads.size >= this._maxConcurrent) return;
+
+    const next = this.queue.shift();
+    if (!next) return;
+
+    this.activeDownloads.add(next.url);
+    try {
+      const { maxDownloads, ...options } = next.options;
+      const result = await m3u8Download(next.url, options);
+      next.options.onComplete?.({ filepath: result.filepath });
+    } catch (error) {
+      next.options.onComplete?.({
+        error: error instanceof Error ? error : new Error(error ? JSON.stringify(error) : 'Unknown error'),
+      });
+    } finally {
+      this.activeDownloads.delete(next.url);
+      this.processQueue();
+    }
+  }
+
+  pause(url: string) {
+    const index = this.queue.findIndex(item => item.url === url);
+    if (index > -1) {
+      this.queue.splice(index, 1);
+    }
+  }
+
+  resume(url: string, options: M3u8DLOptions, priority = 0) {
+    this.add(url, options, priority);
+  }
+
+  clear() {
+    this.queue = [];
+  }
+
+  getStatus() {
+    return {
+      queueLength: this.queue.length,
+      activeDownloads: Array.from(this.activeDownloads),
+      maxConcurrent: this._maxConcurrent,
+    };
+  }
+}
+
+// 创建全局下载队列实例
+export const downloadQueue = new DownloadQueue();
 
 const cache = {
   m3u8Info: {} as Record<string, unknown>,
   downloading: new Set<string>(),
 };
 const tsDlFile = resolve(__dirname, './ts-download.js');
-export const workPoll = new WorkerPool<WorkerTaskInfo, { success: boolean; info: TsItemInfo }>(tsDlFile);
+export const workPollPublic: M3u8WorkerPool = new WorkerPool(tsDlFile);
 
 function formatOptions(url: string, opts: M3u8DLOptions) {
   const options: M3u8DLOptions = {
@@ -81,18 +153,38 @@ async function m3u8InfoParse(url: string, options: M3u8DLOptions = {}) {
   return result;
 }
 
-export async function preDownLoad(url: string, options: M3u8DLOptions) {
+/**
+ * 计算实时下载速度：取从 idx 开始的最近 maxTime 时间内的下载总大小
+ */
+function calcSpeed(idx: number, data: TsItemInfo[], maxTime = 60 * 1000) {
+  const now = Date.now();
+  let startTime = now;
+  let downloadedSize = 0;
+
+  for (let i = idx; i >= 0; i--) {
+    const info = data[i];
+
+    if (info.tsSize && info.startTime && now - info.startTime < maxTime) {
+      if (startTime > info.startTime) startTime = info.startTime;
+      downloadedSize += info.tsSize;
+    }
+  }
+
+  return now > startTime ? 1000 * (downloadedSize / (now - startTime)) : 0;
+}
+
+export async function preDownLoad(url: string, options: M3u8DLOptions, wp = workPollPublic) {
   const result = await m3u8InfoParse(url, options);
 
   if (!result.m3u8Info) return;
 
   for (const info of result.m3u8Info.data) {
-    if (!workPoll.freeNum) return;
+    if (!wp.freeNum) return;
 
     if (!cache.downloading.has(info.uri)) {
       cache.downloading.add(info.uri);
 
-      workPoll.runTask({ url, info, options: JSON.parse(JSON.stringify(result.options)), crypto: result.m3u8Info.crypto }, () => {
+      wp.runTask({ url, info, options: JSON.parse(JSON.stringify(result.options)), crypto: result.m3u8Info.crypto }, () => {
         cache.downloading.delete(info.uri);
       });
     }
@@ -100,6 +192,21 @@ export async function preDownLoad(url: string, options: M3u8DLOptions) {
 }
 
 export async function m3u8Download(url: string, options: M3u8DLOptions = {}) {
+  // 如果设置了最大并发数，则使用队列管理
+  if (options.maxDownloads) {
+    downloadQueue.maxConcurrent = options.maxDownloads;
+    return new Promise<{ filepath?: string; error?: Error }>(resolve => {
+      const newOptions = {
+        ...options,
+        onComplete: (result: { error?: Error; filepath?: string }) => {
+          resolve(result);
+        },
+      };
+      downloadQueue.add(url, newOptions, options.priority || 0);
+    });
+  }
+
+  // 原有的下载逻辑
   logger.info('Starting download for', cyanBright(url));
   const result = await m3u8InfoParse(url, options);
   options = result.options;
@@ -110,12 +217,14 @@ export async function m3u8Download(url: string, options: M3u8DLOptions = {}) {
   }
 
   if (result.m3u8Info?.tsCount > 0) {
+    const workPoll: M3u8WorkerPool = new WorkerPool(tsDlFile);
     let n = options.threadNum - workPoll.numThreads;
     if (n > 0) while (n--) workPoll.addNewWorker();
 
     const { m3u8Info } = result;
     const startTime = Date.now();
     const barrier = new Barrier();
+    /** 本地开始播放最少需要下载的 ts 文件数量 */
     const playStart = Math.min(options.threadNum + 2, result.m3u8Info.tsCount);
     const stats: M3u8DLProgressStats = {
       startTime,
@@ -126,25 +235,31 @@ export async function m3u8Download(url: string, options: M3u8DLOptions = {}) {
       duration: m3u8Info.duration,
       durationDownloaded: 0,
       downloadedSize: 0,
+      avgSpeed: 0,
+      avgSpeedDesc: '',
       speed: 0,
       speedDesc: '',
       remainingTime: 0,
       localM3u8: toLocalM3u8(m3u8Info.data).replace(options.cacheDir, '').replaceAll(sep, '/').slice(1),
+      filename: options.filename,
     };
     const runTask = (data: TsItemInfo[]) => {
       for (const info of data) {
-        workPoll.runTask({ url, info, options: JSON.parse(JSON.stringify(options)), crypto: m3u8Info.crypto }, (err, res) => {
+        const o = JSON.parse(JSON.stringify(options));
+        workPoll.runTask({ url, info, options: o, crypto: m3u8Info.crypto }, (err, res, taskStartTime) => {
+          stats.errmsg = err ? (err.cause as string) || err.message || err.toString() : '';
+
           if (!res || err) {
             if (err) {
               console.log('\n');
               logger.error('[TS-DL][error]', info.index, err, res || '');
             }
 
-            if (!info.success) info.success = -1;
+            if (typeof info.success !== 'number') info.success = 0;
             else info.success--;
 
-            if (info.success > -3) {
-              logger.info(`[retry][times: ${info.success}]`, info.index, info.uri);
+            if (info.success >= -3) {
+              logger.warn(`[retry][times: ${info.success}]`, info.index, info.uri);
               setTimeout(() => runTask([info]), 1000);
               return;
             }
@@ -152,21 +267,33 @@ export async function m3u8Download(url: string, options: M3u8DLOptions = {}) {
 
           if (res?.success) {
             info.tsSize = res.info.tsSize;
+            info.startTime = taskStartTime; // res.timeCost;
+            info.timeCost = Date.now() - taskStartTime;
             info.success = 1;
             stats.tsSuccess++;
             stats.durationDownloaded += info.duration;
+            stats.speed = calcSpeed(info.index, data);
           } else {
             stats.tsFailed++;
           }
 
           const finished = stats.tsFailed + stats.tsSuccess;
           const timeCost = Date.now() - startTime;
-          stats.downloadedSize = m3u8Info.data.reduce((a, b) => a + (b.tsSize || 0), 0);
           const downloadedDuration = m3u8Info.data.reduce((a, b) => a + (b.tsSize ? b.duration : 0), 0);
-          stats.speed = (stats.downloadedSize / timeCost) * 1000;
+
+          stats.downloadedSize = m3u8Info.data.reduce((a, b) => a + (b.tsSize || 0), 0);
+          stats.avgSpeed = (stats.downloadedSize / timeCost) * 1000;
+          stats.avgSpeedDesc = formatByteSize(stats.avgSpeed) + '/s';
+          // 如果当前速度小于平均速度，则更新为平均速度
+          if (stats.speed < stats.avgSpeed) stats.speed = stats.avgSpeed;
           stats.speedDesc = formatByteSize(stats.speed) + '/s';
-          stats.remainingTime = downloadedDuration ? (timeCost * (m3u8Info.duration - stats.durationDownloaded)) / downloadedDuration : 0;
           stats.progress = Math.floor((finished / m3u8Info.tsCount) * 100);
+
+          if (downloadedDuration) {
+            stats.remainingTime = (timeCost / downloadedDuration) * (m3u8Info.duration - stats.durationDownloaded);
+            if (stats.speed > stats.avgSpeed) stats.remainingTime = stats.remainingTime * (stats.avgSpeed / stats.speed);
+            stats.remainingTime = Math.ceil(stats.remainingTime);
+          }
 
           if (options.showProgress) {
             const processBar = '='.repeat(Math.floor(stats.progress * 0.2)).padEnd(20, '-');
@@ -176,7 +303,7 @@ export async function m3u8Download(url: string, options: M3u8DLOptions = {}) {
                 (finished === m3u8Info.tsCount
                   ? '\n'
                   : stats.remainingTime
-                    ? `${cyan(formatTimeCost(Date.now() - Math.ceil(stats.remainingTime)))}`
+                    ? `${cyan(formatTimeCost(Date.now() - stats.remainingTime))}`
                     : '')
             );
           }
@@ -199,14 +326,16 @@ export async function m3u8Download(url: string, options: M3u8DLOptions = {}) {
       );
     }
 
-    runTask(m3u8Info.data);
     toLocalM3u8(m3u8Info.data, options.filename);
+    if (options.onInited) options.onInited(m3u8Info, workPoll);
+    runTask(m3u8Info.data);
 
     await barrier.wait();
+
     if (stats.tsFailed === 0) {
       if (options.convert !== false) {
         result.filepath = await m3u8Convert(options, m3u8Info.data);
-        if (result.filepath && existsSync(options.cacheDir) && options.delCache) rmrfAsync(options.cacheDir);
+        if (options.delCache && result.filepath && existsSync(result.filepath)) rmrfAsync(dirname(m3u8Info.data[0].tsOut));
       }
     } else logger.warn('Download Failed! Please retry!', stats.tsFailed);
   }
@@ -214,6 +343,7 @@ export async function m3u8Download(url: string, options: M3u8DLOptions = {}) {
   return result;
 }
 
-export function m3u8DLStop(url: string) {
-  return workPoll.removeTask(task => task.url === url);
+export function m3u8DLStop(url: string, wp = workPollPublic) {
+  if (!wp?.removeTask) return 0;
+  return wp.removeTask(task => task.url === url);
 }

@@ -10,7 +10,7 @@ import { VideoSerachAndDL } from './lib/video-search.js';
 const pkg = readJsonFileSync<PackageJson>(resolve(__dirname, '../package.json'));
 
 process.on('unhandledRejection', (r, p) => {
-  console.log('[退出][unhandledRejection]', r, p);
+  logger.info('[退出][unhandledRejection]', r, p);
   process.exit();
 });
 
@@ -37,8 +37,8 @@ program
   .action(async (urls: string[]) => {
     const options = getOptions();
     logger.debug(urls, options);
-
     if (options.progress != null) options.showProgress = options.progress;
+    delete options.progress;
 
     if (urls.length > 0) {
       await m3u8BatchDownload(urls, options);
@@ -50,8 +50,10 @@ program
   .description('启动下载中心web服务')
   .option('-P, --port <port>', '指定web服务端口。默认为6600')
   .action((options: { port?: number }) => {
+    const opts = Object.assign(getOptions(), options);
+
     import('./server/download-server.js').then(m => {
-      new m.default({ port: options.port || 6600 });
+      new m.DLServer({ port: opts.port || 6600, debug: opts.debug });
     });
   });
 
@@ -76,5 +78,6 @@ function getOptions() {
     logger.updateOptions({ levelType: 'silent' });
     options.progress = false;
   }
+
   return options;
 }

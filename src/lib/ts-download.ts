@@ -44,6 +44,7 @@ function aesDecrypt(data: Buffer, cryptoInfo: M3u8Crypto) {
 
 if (!isMainThread && parentPort) {
   parentPort.on('message', (data: WorkerTaskInfo) => {
+    const startTime = Date.now();
     if (data.options.debug) logger.updateOptions({ levelType: 'debug' });
     if (data.options?.headers) {
       let headers = data.options.headers;
@@ -53,7 +54,7 @@ if (!isMainThread && parentPort) {
       request.setHeaders(headers as IncomingHttpHeaders);
     }
     tsDownload(data.info, data.crypto).then(success => {
-      parentPort.postMessage({ success, info: data.info });
+      parentPort.postMessage({ success, info: data.info, timeCost: Date.now() - startTime });
     });
   });
 }

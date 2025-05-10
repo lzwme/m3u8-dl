@@ -2,7 +2,7 @@ import { existsSync, promises } from 'node:fs';
 import { resolve } from 'node:path';
 import { md5 } from '@lzwme/fe-utils';
 import { Parser } from 'm3u8-parser';
-import type { M3u8Crypto, TsItemInfo } from '../types/m3u8';
+import type { M3u8Crypto, M3u8Info, TsItemInfo } from '../types/m3u8';
 import { logger, getRetry } from './utils';
 
 /**
@@ -46,7 +46,7 @@ export async function parseM3U8(content: string, cacheDir = './cache') {
     duration: number;
     timeline: number;
   }[] = parser.manifest.segments || [];
-  const result = {
+  const result: M3u8Info = {
     manifest: parser.manifest,
     /** ts 文件数量 */
     tsCount: tsList.length,

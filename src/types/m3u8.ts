@@ -2,13 +2,15 @@
  * @Author: renxia
  * @Date: 2024-08-02 09:58:56
  * @LastEditors: renxia
- * @LastEditTime: 2025-05-08 16:24:52
+ * @LastEditTime: 2025-05-09 20:24:46
  * @Description:
  */
 /* eslint-disable @typescript-eslint/triple-slash-reference */
 /// <reference path="../../global.d.ts"/>
 
+import type { AnyObject } from '@lzwme/fe-utils';
 import type { IncomingHttpHeaders } from 'node:http';
+import type { WorkerPool } from '../lib/worker_pool';
 
 export interface TsItemInfo {
   /** m3u8 文件地址，可以用于唯一标记识别、缓存清理等 */
@@ -23,8 +25,25 @@ export interface TsItemInfo {
   tsOut: string;
   /** 下载成功的 ts 文件大小(byte) */
   tsSize?: number;
+  /** 下载耗时(ms) */
+  timeCost?: number;
+  /** 开始下载的时间 */
+  startTime?: number;
   /** 是否下载成功。成功为1，失败一次则减 1 */
   success?: number;
+}
+
+export interface M3u8Info {
+  /** ts 文件数量 */
+  tsCount: number;
+  /** 总时长 */
+  duration: number;
+  /** 加密相关信息 */
+  crypto: M3u8Crypto;
+  /** ts 文件列表 */
+  data: TsItemInfo[];
+  /** m3u8 文件信息 */
+  manifest: AnyObject;
 }
 
 export interface M3u8Crypto {
@@ -42,6 +61,8 @@ export interface M3u8Crypto {
 export interface M3u8DLProgressStats {
   /** 开始下载的时间 */
   startTime: number;
+  /** 下载完成的时间 */
+  endTime?: number;
   /** 下载进度百分比 */
   progress: number;
   /** 总 ts 数量 */
@@ -50,30 +71,50 @@ export interface M3u8DLProgressStats {
   tsSuccess: number;
   /** 已下载失败的 ts 数量 */
   tsFailed: number;
-  /** 总时长 */
+  /** 视频总时长 */
   duration: number;
-  /** 下载已消耗的时长 */
+  /** 已下载的视频时长 */
   durationDownloaded: number;
   /** 已下载的大小 */
   downloadedSize: number;
   /** 平均下载速度 */
+  avgSpeed: number;
+  /** 平均下载速度描述 */
+  avgSpeedDesc: string;
+  /** 实时下载速度 */
   speed: number;
-  /** 下载速度（格式化描述） */
+  /** 实时下载速度（格式化描述） */
   speedDesc: string;
   /** 预估剩余时间 */
   remainingTime: number;
   /** 本地 m3u8 文件路径 */
   localM3u8: string;
+  /** 本地视频文件路径（合并后的视频文件） */
+  localVideo?: string;
+  /** 本地保存的文件名 */
+  filename?: string;
+  /** 最新的错误信息 */
+  errmsg?: string;
 }
+
+export type M3u8WorkerPool = WorkerPool<WorkerTaskInfo, { success: boolean; info: TsItemInfo; timeCost: number }>;
 
 export interface M3u8DLOptions {
   debug?: boolean;
   /** 是否显示内置的进度信息。默认为 true */
   showProgress?: boolean;
+  /** 当初始化完成、下载开始时回调 */
+  onInited?: (m3u8Info: M3u8Info, workPoll: M3u8WorkerPool) => void;
   /** 每当 ts 文件下载完成时回调，可用于自定义进度控制 */
   onProgress?: (finished: number, total: number, currentInfo: TsItemInfo, stats: M3u8DLProgressStats) => void;
+  /** 下载完成时回调，主要用于内部多任务管理 */
+  onComplete?: (result: { error?: Error; filepath?: string }) => void;
   /** 并发下载线程数。取决于服务器限制，过多可能会容易下载失败。一般建议不超过 8 个。默认为 cpu数 * 2，但不超过 8 */
   threadNum?: number;
+  /** 最大并发下载任务数 */
+  maxDownloads?: number;
+  /** 下载优先级，数字越大优先级越高 */
+  priority?: number;
   /** 要保存的文件名(路径) */
   filename?: string;
   /** 下载文件保存的路径。默认为当前目录 */

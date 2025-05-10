@@ -1,5 +1,3 @@
-import DLServer from './download-server.js';
+import { DLServer } from './download-server.js';
 
-const dlServer = new DLServer();
-
-export default dlServer;
+export const dlServer = new DLServer();

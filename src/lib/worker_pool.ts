@@ -4,15 +4,17 @@ import { Worker } from 'node:worker_threads';
 import { cpus } from 'node:os';
 import { existsSync } from 'node:fs';
 
+type WorkerPoolCallback<R> = (err: Error | null, result: R, startTime: number) => void;
+
 const kWorkerFreedEvent = Symbol('kWorkerFreedEvent');
 
 class WorkerPoolTaskInfo<R> extends AsyncResource {
-  constructor(public callback: (err: Error | null, result: R) => void) {
+  startTime = Date.now();
+  constructor(public callback: WorkerPoolCallback<R>) {
     super('WorkerPoolTaskInfo');
   }
-
   done(err: Error | null, result: unknown) {
-    this.runInAsyncScope(this.callback, null, err, result);
+    this.runInAsyncScope(this.callback, null, err, result, this.startTime);
     this.emitDestroy();
   }
 }
@@ -23,7 +25,7 @@ export class WorkerPool<T = unknown, R = unknown> extends EventEmitter {
   private workerTaskInfo = new Map<Worker, WorkerPoolTaskInfo<R>>();
   private tasks: {
     task: T;
-    callback: (err: Error | null, result: R) => void;
+    callback: WorkerPoolCallback<R>;
   }[] = [];
   get totalTask() {
     return this.tasks.length;
@@ -89,7 +91,7 @@ export class WorkerPool<T = unknown, R = unknown> extends EventEmitter {
     this.emit(kWorkerFreedEvent);
     if (this.numThreads < this.workers.length) this.numThreads = this.workers.length;
   }
-  runTask(task: T, callback: (err: Error | null, result: R) => void) {
+  runTask(task: T, callback: WorkerPoolCallback<R>) {
     if (this.freeWorkers.length === 0) {
       this.tasks.push({ task, callback });
       return;

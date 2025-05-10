@@ -1,15 +1,15 @@
 /*
  * @Author: renxia lzwy0820@qq.com
  * @Date: 2024-07-30 08:57:58
- * @LastEditors: renxia lzwy0820@qq.com
- * @LastEditTime: 2025-05-07 13:31:05
+ * @LastEditors: renxia
+ * @LastEditTime: 2025-05-09 16:59:23
  * @FilePath: \m3u8-dl\src\m3u8-batch-download.ts
  * @Description: 这是默认设置,请设置`customMade`, 打开koroFileHeader查看配置 进行设置: https://github.com/OBKoro1/koro1FileHeader/wiki/%E9%85%8D%E7%BD%AE
  */
 import { existsSync, promises } from 'node:fs';
 import { basename } from 'node:path';
-import { m3u8Download, preDownLoad, workPoll } from './lib/m3u8-download';
-import { M3u8DLOptions } from './types/m3u8';
+import { m3u8Download, preDownLoad } from './lib/m3u8-download';
+import { M3u8DLOptions, M3u8WorkerPool } from './types/m3u8';
 import { logger } from './lib/utils';
 
 async function formatUrls(urls: string[], options: M3u8DLOptions): Promise<Map<string, M3u8DLOptions>> {
@@ -43,6 +43,7 @@ async function formatUrls(urls: string[], options: M3u8DLOptions): Promise<Map<s
 
 export async function m3u8BatchDownload(urls: string[], options: M3u8DLOptions) {
   const tasks = await formatUrls(urls, options);
+  let workPoll: M3u8WorkerPool;
 
   return new Promise<boolean>(rs => {
     let preDLing = false;
@@ -51,10 +52,12 @@ export async function m3u8BatchDownload(urls: string[], options: M3u8DLOptions) 
 
       if (key) {
         const o = { ...tasks.get(key) };
+        const onProgress = o.onProgress;
+
         tasks.delete(key);
-        const p = o.onProgress;
+        o.onInited = (_m3u8Info, wp) => (workPoll = wp);
         o.onProgress = (finished, total, info, stats) => {
-          if (p) p(finished, total, info, stats);
+          if (onProgress) onProgress(finished, total, info, stats);
           if (!preDLing && keyNext && tasks.size && workPoll.freeNum > 1 && total - finished < options.threadNum) {
             logger.debug(
               '\n[预下载下一集]',
@@ -67,7 +70,7 @@ export async function m3u8BatchDownload(urls: string[], options: M3u8DLOptions) 
               tasks.size
             );
             preDLing = true;
-            preDownLoad(keyNext, options).then(() => (preDLing = false));
+            preDownLoad(keyNext, options, workPoll).then(() => (preDLing = false));
           }
         };
 
