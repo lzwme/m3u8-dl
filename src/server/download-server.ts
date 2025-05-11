@@ -6,7 +6,7 @@
  */
 import { readFileSync, writeFileSync, existsSync, rmSync, statSync, unlinkSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
-import { assign, mkdirp } from '@lzwme/fe-utils';
+import { assign, getUrlParams, mkdirp } from '@lzwme/fe-utils';
 import type { Express } from 'express';
 import type { Server } from 'ws';
 import type { M3u8DLOptions, M3u8DLProgressStats, M3u8WorkerPool, TsItemInfo } from '../types/m3u8.js';
@@ -18,6 +18,8 @@ interface DLServerOptions {
   cacheDir?: string;
   configPath?: string;
   debug?: boolean;
+  /** 登录 token，默认取环境变量 DS_TOKEN */
+  token?: string;
 }
 
 interface CacheItem extends Partial<M3u8DLProgressStats> {
@@ -36,6 +38,7 @@ export class DLServer {
   options: DLServerOptions = {
     port: Number(process.env.DS_PORT) || 6600,
     cacheDir: resolve(process.cwd(), './cache'),
+    token: process.env.DS_TOKEN || '',
     debug: process.env.DS_DEBUG == '1',
   };
   private cfg = {
@@ -57,7 +60,9 @@ export class DLServer {
   /** 下载任务缓存 */
   private downloadCache = new Map<string, CacheItem>();
   /** 正在下载的任务数量 */
-  private downloading = 0;
+  private get downloading() {
+    return Array.from(this.downloadCache.values()).filter(item => item.status === 'resume').length;
+  }
 
   constructor(opts: DLServerOptions = {}) {
     opts = Object.assign(this.options, opts);
@@ -156,18 +161,44 @@ export class DLServer {
     app.use(express.json());
     app.use(express.static(resolve(__dirname, '../../client')));
 
-    // 设置 headers
-    app.use((_req, res, next) => {
+    // headers
+    app.use((req, res, next) => {
       res.setHeader('Access-Control-Allow-Origin', '*');
       res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE');
       res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
       res.setHeader('Cache-Control', 'no-cache');
 
+      if (req.method === 'OPTIONS') {
+        res.status(200).end();
+        return;
+      }
+
+      if (this.options.token && req.headers['authorization'] !== this.options.token) {
+        const ignorePaths = ['/healthcheck', '/localplay'];
+        if (!ignorePaths.some(d => req.url.includes(d))) {
+          const clientIp = req.headers['x-forwarded-for'] || req.socket.remoteAddress;
+          logger.warn('Unauthorized access:', clientIp, req.url, req.headers['authorization']);
+          res.status(401).json({ message: '未授权，禁止访问', code: 401 });
+          return;
+        }
+      }
+
       next();
     });
 
     wss.on('connection', (ws, req) => {
-      logger.info('Client connected:', req.socket.remoteAddress);
+      const clientIp = req.headers['x-forwarded-for'] || req.socket.remoteAddress;
+      logger.info('Client connected:', clientIp, req.url);
+
+      if (this.options.token) {
+        const token = getUrlParams(req.url).token;
+        if (!token || token !== this.options.token) {
+          logger.error('Unauthorized client:', req.socket.remoteAddress);
+          ws.close(1008, 'Unauthorized');
+          return;
+        }
+      }
+
       ws.send(JSON.stringify({ type: 'version', data: this.version }));
       ws.send(JSON.stringify({ type: 'tasks', data: Object.fromEntries(this.downloadCacheClone()) }));
 
@@ -198,8 +229,6 @@ export class DLServer {
 
     if (cacheItem && cacheItem?.status === 'resume') return cacheItem.options;
 
-    console.log('---', this.downloading, this.cfg.webOptions.maxDownloads);
-
     if (this.downloading >= this.cfg.webOptions.maxDownloads) {
       if (cacheItem) cacheItem.status = 'pending';
       else this.downloadCache.set(url, { options: dlOptions, status: 'pending', url });
@@ -210,7 +239,7 @@ export class DLServer {
     let workPoll: M3u8WorkerPool = cacheItem?.workPoll;
     if (cacheItem) cacheItem.status = 'resume';
 
-    this.downloading++;
+    const defaultItem: CacheItem = { options: dlOptions, status: 'resume', url };
     m3u8Download(url, {
       ...dlOptions,
       showProgress: dlOptions.debug || this.options.debug,
@@ -218,7 +247,7 @@ export class DLServer {
         workPoll = wp;
       },
       onProgress: (_finished, _total, current, stats) => {
-        const item = this.downloadCache.get(url) || { options: dlOptions, status: 'resume', url };
+        const item = this.downloadCache.get(url) || defaultItem;
         const status = item?.status || 'resume';
 
         Object.assign(item, { ...stats, current, options: dlOptions, status, workPoll, url });
@@ -227,7 +256,7 @@ export class DLServer {
         this.wsSend('progress', url);
       },
     }).then(r => {
-      const item = this.downloadCache.get(url);
+      const item = this.downloadCache.get(url) || defaultItem;
       if (r.filepath && existsSync(r.filepath)) {
         item.localVideo = r.filepath;
         item.downloadedSize = statSync(r.filepath).size;
@@ -242,7 +271,6 @@ export class DLServer {
 
       this.wsSend('progress', url);
       this.saveCache();
-      this.downloading--;
 
       // 找到一个 pending 的任务，开始下载
       for (const [url, item] of this.downloadCache.entries()) {
