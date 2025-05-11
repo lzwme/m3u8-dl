@@ -4,6 +4,7 @@ WORKDIR /app
 COPY ./ ./
 RUN npm i -g pnpm
 RUN pnpm install
+RUN pnpm add -P express ws
 RUN pnpm build
 
 # 生产环境镜像
@@ -31,11 +32,11 @@ VOLUME ["/app/cache", "/app/downloads"]
 
 EXPOSE ${DS_PORT}
 
+COPY --from=builder /app/package.json /app/package.json
+COPY --from=builder /app/client /app/client
 COPY --from=builder /app/cjs /app/cjs
-COPY package.json client /app/
 
 RUN npm install --production
-RUN npm add express ws
 
 # Install FFmpeg
 RUN apk update && apk add ffmpeg

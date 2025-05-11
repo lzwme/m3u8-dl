@@ -1,6 +1,6 @@
 services:
   web:
-    image: renxia/m3u8-dl:latest # 基于 Debian 的版本：whyour/qinglong:debian
+    image: renxia/m3u8-dl:latest
     volumes:
       - ./downloads:/app/downloads
       - ./cache:/app/cache

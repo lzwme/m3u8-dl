@@ -105,21 +105,6 @@ m3u8dl server -p 6600
 
 ![](examples/img/m3u8dl-server-webui.jpg)
 
-## 基于 Docker 部署
-
-基于 docker 命令：
-
-```bash
-docker run
-```
-
-基于 `docker-compose.yml`：
-
-```bash
-m3u8dl:
-
-```
-
 ### API 调用
 
 ```ts
@@ -134,6 +119,42 @@ for (const filepath of fileList) {
   const r = await m3u8Download(filepath, { debug: true, filenmae: '测试视频' });
   console.log('文件已下载：', r.filepath);
 }
+```
+
+## 基于 Docker 部署
+
+基于 docker 命令：
+
+```bash
+# docker pull ghcr.io/lzwme/m3u8-dl:latest
+docker pull lzwme/m3u8dl-dl:latest
+
+docker run --rm -it \
+  -v ./cache:/app/cache \
+  -v ./downloads:/app/downloads \
+  -p 6600:6600 \
+  lzwme/m3u8dl-server:latest
+```
+
+也可以基于 [docker-compose.yml](./docker/docker-compose.yml) 部署：
+
+```yml
+services:
+  web:
+    image: renxia/m3u8-dl:latest
+    volumes:
+      - ./downloads:/app/downloads
+      - ./cache:/app/cache
+    ports:
+      - '6600:6600'
+    environment:
+      DS_PORT: '6600'
+      DS_SAVE_DIR: '/app/downloads'
+      DS_CACHE_DIR: '/app/cache'
+      DS_DEBUG: ''
+    # command: >
+    #   sh -c "node cjs/server/index.js"
+    restart: unless-stopped
 ```
 
 ## 开发(Development)
