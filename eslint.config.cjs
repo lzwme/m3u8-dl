@@ -37,6 +37,7 @@ module.exports = [
         '@typescript-eslint/no-floating-promises': 'off',
         '@typescript-eslint/no-unnecessary-type-assertions': 'off',
         '@typescript-eslint/no-unsafe-return': 'off',
+        '@typescript-eslint/no-require-imports': 'off',
       },
       files: ['src/**/*.ts'],
     },

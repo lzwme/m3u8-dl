@@ -24,8 +24,9 @@
 - 支持缓存续传。下载失败会保留缓存，重试时只下载失败的片段。
 - 支持常见的 AES 加密视频流解密。
 - 自动转换为 mp4。**需全局安装 [ffmpeg](https://ffmpeg.org/download.html)**
-- `[NEW!]`支持指定采集站标准 API，以命令行交互的方式搜索和下载。
-- `[NEW!]` 新增下载中心，支持启动为 webui 服务方式进行下载管理
+- 支持指定采集站标准 API，以命令行交互的方式搜索和下载。
+- `[NEW!]` 新增下载中心，支持启动为 webui 服务方式进行下载管理。
+- `[NEW!]` 新增支持抖音、微博视频分享地址解析及无水印下载。
 
 ## 安装(Install)
 
@@ -156,6 +157,10 @@ services:
     #   sh -c "node cjs/server/index.js"
     restart: unless-stopped
 ```
+
+部署成功后，浏览器访问 http://dockerip:6600 即可。
+
+**注：** docker 部署模式同时包含了 [AriaNg](https://github.com/mayswind/AriaNg) 静态资源。
 
 ## 开发(Development)
 

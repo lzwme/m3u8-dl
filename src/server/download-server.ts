@@ -2,7 +2,6 @@
  * @Author: renxia lzwy0820@qq.com
  * @Date: 2025-05-07 21:03:09
  * @LastEditors: renxia
- * @LastEditTime: 2025-05-09 20:04:36
  */
 import { readFileSync, writeFileSync, existsSync, rmSync, statSync, unlinkSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
@@ -12,6 +11,8 @@ import type { Server } from 'ws';
 import type { M3u8DLOptions, M3u8DLProgressStats, M3u8WorkerPool, TsItemInfo } from '../types/m3u8.js';
 import { m3u8DLStop, m3u8Download } from '../lib/m3u8-download.js';
 import { logger } from '../lib/utils.js';
+import { VideoParser } from '../video-parser/index.js';
+import { cyan, gray, red } from 'console-log-colors';
 
 interface DLServerOptions {
   port?: number;
@@ -31,7 +32,6 @@ interface CacheItem extends Partial<M3u8DLProgressStats> {
 }
 
 export class DLServer {
-  version = '';
   app: Express = null;
   wss: Server = null;
   /** DS 参数 */
@@ -40,6 +40,10 @@ export class DLServer {
     cacheDir: resolve(process.cwd(), './cache'),
     token: process.env.DS_TOKEN || '',
     debug: process.env.DS_DEBUG == '1',
+  };
+  private serverInfo = {
+    version: '',
+    ariang: existsSync(resolve(__dirname, '../../client/ariang/index.html')),
   };
   private cfg = {
     /** 支持 web 设置修改的参数 */
@@ -58,10 +62,10 @@ export class DLServer {
     } as M3u8DLOptions,
   };
   /** 下载任务缓存 */
-  private downloadCache = new Map<string, CacheItem>();
+  private dlCache = new Map<string, CacheItem>();
   /** 正在下载的任务数量 */
   private get downloading() {
-    return Array.from(this.downloadCache.values()).filter(item => item.status === 'resume').length;
+    return Array.from(this.dlCache.values()).filter(item => item.status === 'resume').length;
   }
 
   constructor(opts: DLServerOptions = {}) {
@@ -70,7 +74,7 @@ export class DLServer {
     const pkgFile = resolve(__dirname, '../../package.json');
     if (existsSync(pkgFile)) {
       const pkg = JSON.parse(readFileSync(pkgFile, 'utf8'));
-      this.version = pkg.version;
+      this.serverInfo.version = pkg.version;
     }
 
     this.init();
@@ -98,14 +102,14 @@ export class DLServer {
           }
         }
 
-        this.downloadCache.set(url, item);
+        this.dlCache.set(url, item);
       });
     }
   }
   private cacheSaveTimer: NodeJS.Timeout = null;
-  downloadCacheClone() {
+  dlCacheClone() {
     const info: [string, CacheItem][] = [];
-    for (const [url, v] of this.downloadCache) {
+    for (const [url, v] of this.dlCache) {
       const { workPoll, ...item } = v;
       for (const [key, value] of Object.entries(item)) {
         if (typeof value === 'function') delete item[key as keyof typeof item];
@@ -119,7 +123,7 @@ export class DLServer {
     return new Promise<void>(rs => {
       this.cacheSaveTimer = setTimeout(() => {
         const cacheFile = resolve(this.options.cacheDir, 'cache.json');
-        const info = this.downloadCacheClone();
+        const info = this.dlCacheClone();
 
         mkdirp(dirname(cacheFile));
         writeFileSync(cacheFile, JSON.stringify(info));
@@ -199,8 +203,9 @@ export class DLServer {
         }
       }
 
-      ws.send(JSON.stringify({ type: 'version', data: this.version }));
-      ws.send(JSON.stringify({ type: 'tasks', data: Object.fromEntries(this.downloadCacheClone()) }));
+      ws.send(JSON.stringify({ type: 'serverInfo', data: this.serverInfo }));
+
+      ws.send(JSON.stringify({ type: 'tasks', data: Object.fromEntries(this.dlCacheClone()) }));
 
       // ws.on('message', (message, _isBinary) => {
       //   logger.info('Received message from client:', (message as Buffer).toString('utf8'));
@@ -219,7 +224,7 @@ export class DLServer {
     return { app, wss };
   }
   private startDownload(url: string, options?: M3u8DLOptions) {
-    const cacheItem = this.downloadCache.get(url);
+    const cacheItem = this.dlCache.get(url);
     const dlOptions: M3u8DLOptions = {
       ...this.cfg.dlOptions,
       ...options,
@@ -231,64 +236,81 @@ export class DLServer {
 
     if (this.downloading >= this.cfg.webOptions.maxDownloads) {
       if (cacheItem) cacheItem.status = 'pending';
-      else this.downloadCache.set(url, { options: dlOptions, status: 'pending', url });
+      else this.dlCache.set(url, { options: dlOptions, status: 'pending', url });
 
       return cacheItem?.options || dlOptions;
     }
 
     let workPoll: M3u8WorkerPool = cacheItem?.workPoll;
-    if (cacheItem) cacheItem.status = 'resume';
-
+    const useVideoParser = VideoParser.getPlatform(url) !== null;
     const defaultItem: CacheItem = { options: dlOptions, status: 'resume', url };
-    m3u8Download(url, {
+    const opts: M3u8DLOptions = {
       ...dlOptions,
       showProgress: dlOptions.debug || this.options.debug,
-      onInited: (_m3u8Info, wp) => {
-        workPoll = wp;
-      },
+      onInited: (_s, _i, wp) => (workPoll = wp),
       onProgress: (_finished, _total, current, stats) => {
-        const item = this.downloadCache.get(url) || defaultItem;
+        const item = this.dlCache.get(url) || defaultItem;
         const status = item?.status || 'resume';
 
         Object.assign(item, { ...stats, current, options: dlOptions, status, workPoll, url });
-        this.downloadCache.set(url, item);
+        this.dlCache.set(url, item);
         this.saveCache();
         this.wsSend('progress', url);
       },
-    }).then(r => {
-      const item = this.downloadCache.get(url) || defaultItem;
-      if (r.filepath && existsSync(r.filepath)) {
-        item.localVideo = r.filepath;
-        item.downloadedSize = statSync(r.filepath).size;
-      }
+    };
+    const afterDownload = ({ filepath = '', errmsg = '' }) => {
+      const item = this.dlCache.get(url) || defaultItem;
+
+      if (filepath && existsSync(filepath)) {
+        item.localVideo = filepath;
+        item.downloadedSize = statSync(filepath).size;
+      } else if (!errmsg && opts.convert !== false) errmsg = '下载失败';
 
       item.endTime = Date.now();
-      item.status = 'done';
-      if ('error' in r) {
-        item.status = 'error';
-        item.errmsg = (r.error.cause as string) || r.error.message;
-      }
+      item.status = errmsg ? 'error' : 'done';
+      item.errmsg = errmsg;
+      logger.info('Download complete:', item.status, red(item.errmsg), gray(url), cyan(filepath));
 
+      this.dlCache.set(url, item);
       this.wsSend('progress', url);
       this.saveCache();
 
       // 找到一个 pending 的任务，开始下载
-      for (const [url, item] of this.downloadCache.entries()) {
+      for (const [url, item] of this.dlCache.entries()) {
         if (item.status === 'pending') {
           this.startDownload(url, item.options);
           this.wsSend('progress', url);
           break;
         }
       }
-    });
+    };
+
+    if (cacheItem) cacheItem.status = 'resume';
+
+    try {
+      if (useVideoParser) {
+        const vp = new VideoParser();
+        vp.download(url, opts).then(r => {
+          afterDownload({ filepath: r.data?.filepath, errmsg: r.code ? r.message : '' });
+        });
+      } else {
+        m3u8Download(url, opts).then(r => {
+          const errmsg = 'error' in r ? (r.error.cause as string) || r.error.message : '';
+          afterDownload({ filepath: r.filepath, errmsg });
+        });
+      }
+    } catch (error) {
+      afterDownload({ filepath: '', errmsg: (error as Error).message });
+      logger.error('下载失败:', error);
+    }
 
     return dlOptions;
   }
   private wsSend(type = 'progress', data?: unknown) {
     if (type === 'tasks' && !data) {
-      data = Object.fromEntries(this.downloadCacheClone());
+      data = Object.fromEntries(this.dlCacheClone());
     } else if (type === 'progress' && typeof data === 'string') {
-      const item = this.downloadCache.get(data);
+      const item = this.dlCache.get(data);
       if (item) {
         const { workPoll, ...stats } = item;
         data = { ...stats, url: data };
@@ -322,13 +344,13 @@ export class DLServer {
 
     // API to get all download progress
     app.get('/tasks', (_req, res) => {
-      res.json(Object.fromEntries(this.downloadCacheClone()));
+      res.json(Object.fromEntries(this.dlCacheClone()));
     });
 
     // API to get queue status
     app.get('/queue/status', (_req, res) => {
-      const pendingTasks = Array.from(this.downloadCache.entries()).filter(([_, item]) => item.status === 'pending');
-      const activeTasks = Array.from(this.downloadCache.entries()).filter(([_, item]) => item.status === 'resume');
+      const pendingTasks = Array.from(this.dlCache.entries()).filter(([_, item]) => item.status === 'pending');
+      const activeTasks = Array.from(this.dlCache.entries()).filter(([_, item]) => item.status === 'resume');
 
       res.json({
         queueLength: pendingTasks.length,
@@ -340,9 +362,9 @@ export class DLServer {
     // API to clear queue
     app.post('/queue/clear', (_req, res) => {
       let count = 0;
-      for (const [url, item] of this.downloadCache.entries()) {
+      for (const [url, item] of this.dlCache.entries()) {
         if (item.status === 'pending') {
-          this.downloadCache.delete(url);
+          this.dlCache.delete(url);
           count++;
         }
       }
@@ -354,7 +376,7 @@ export class DLServer {
     // API to update task priority
     app.post('/priority', (req, res) => {
       const { url, priority } = req.body;
-      const item = this.downloadCache.get(url);
+      const item = this.dlCache.get(url);
       if (!item) {
         res.json({ message: '任务不存在', code: 1 });
         return;
@@ -386,87 +408,73 @@ export class DLServer {
 
     // API to pause download
     app.post('/pause', (req, res) => {
-      const { url } = req.body;
-      const item = this.downloadCache.get(url);
-      if (!item) {
-        res.json({ message: 'Download not found', code: 1 });
-        return;
-      } else {
-        const count = m3u8DLStop(url, item.workPoll);
-        item.status = item.tsSuccess === item.tsCount ? 'done' : 'pause';
-        res.json({ message: `Download paused: ${count}`, code: 0, count });
-        this.wsSend('progress', url);
-      }
-    });
+      const { urls, all = false } = req.body;
+      const urlsToPause: string[] = all ? [...this.dlCache.keys()] : urls;
+      const list: CacheItem[] = [];
 
-    app.post('/pauseAll', (_req, res) => {
-      let count = 0;
-      for (const [url, item] of this.downloadCache.entries()) {
-        if (item.status === 'resume') {
+      for (const url of urlsToPause) {
+        const item = this.dlCache.get(url);
+        if (item?.status === 'resume') {
           m3u8DLStop(url, item.workPoll);
           item.status = item.tsSuccess === item.tsCount ? 'done' : 'pause';
-          count++;
+          list.push(item);
         }
       }
 
-      if (count) this.wsSend('tasks');
-      res.json({ message: `All downloads paused: ${count}`, code: 0, count });
+      if (list.length) this.wsSend('progress', list);
+      res.json({ message: `已暂停 ${list.length} 个下载任务`, code: 0, count: list.length });
     });
 
     // API to resume download
     app.post('/resume', (req, res) => {
-      const { url } = req.body;
-      const item = this.downloadCache.get(url);
-      if (['pause', 'error'].includes(item?.status)) {
-        this.startDownload(url, item.options);
-        res.json({ message: 'Download resumed', code: 0 });
-        this.wsSend('progress', url);
-      } else {
-        res.json({ message: '没有找到下载的任务', code: 1 });
-      }
-    });
+      const { urls, all = false } = req.body;
+      const urlsToResume: string[] = all ? [...this.dlCache.keys()] : urls;
+      const list: CacheItem[] = [];
 
-    app.post('/resumeAll', (_req, res) => {
-      let count = 0;
-      for (const [url, item] of this.downloadCache.entries()) {
+      for (const url of urlsToResume) {
+        const item = this.dlCache.get(url);
         if (['pause', 'error'].includes(item?.status)) {
           this.startDownload(url, item.options);
-          count++;
-        }
+          list.push(item);
+        } else console.log(item?.status, url);
       }
 
-      if (count) this.wsSend('tasks');
-      res.json({ message: `All downloads resumed: ${count}`, code: 0, count });
+      const count = list.length;
+      if (count) this.wsSend('progress', list);
+      res.json({ message: count ? `已恢复 ${count} 个下载任务` : '没有找到可恢复的下载任务', code: count ? 0 : 1 });
     });
 
     // API to delete download
     app.post('/delete', (req, res) => {
-      const { url, deleteCache = false, deleteVideo = false } = req.body;
-      const item = this.downloadCache.get(url);
+      const { urls, deleteCache = false, deleteVideo = false } = req.body;
+      const urlsToDelete = urls;
+      const list: CacheItem[] = [];
 
-      if (item) {
-        m3u8DLStop(url, item.workPoll);
-        this.downloadCache.delete(url);
+      for (const url of urlsToDelete) {
+        const item = this.dlCache.get(url);
+        if (item) {
+          m3u8DLStop(url, item.workPoll);
+          this.dlCache.delete(url);
 
-        if (deleteCache) {
-          const cacheDir = dirname(item.current.tsOut);
-          if (existsSync(cacheDir)) rmSync(cacheDir, { recursive: true });
+          if (deleteCache && item.current?.tsOut) {
+            const cacheDir = dirname(item.current.tsOut);
+            if (existsSync(cacheDir)) rmSync(cacheDir, { recursive: true });
+          }
+
+          if (deleteVideo) {
+            ['.ts', '.mp4'].forEach(ext => {
+              const filepath = resolve(item.options.saveDir, item.options.filename + ext);
+              if (existsSync(filepath)) unlinkSync(filepath);
+            });
+          }
+
+          list.push(item);
         }
-
-        if (deleteVideo) {
-          ['.ts', '.m3u8'].forEach(ext => {
-            const filepath = resolve(item.options.saveDir, item.options.filename + ext);
-            if (existsSync(filepath)) unlinkSync(filepath);
-          });
-        }
-
-        this.wsSend('progress', url);
-      } else {
-        res.json({ message: 'Download not found', code: 1 });
-        return;
       }
 
-      res.json({ message: 'Download deleted', code: 0 });
+      const count = list.length;
+      if (count) this.wsSend('progress', list);
+      res.json({ message: `已删除 ${count} 个下载任务`, code: 0, count });
     });
 
     app.get(/^\/localplay\/(.*)$/, (req, res) => {

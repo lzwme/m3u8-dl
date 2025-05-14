@@ -10,7 +10,6 @@ export const apiManage = {
     const files: string[] = findFiles(apidir, (filepath, s) => !s.isFile() || /\.c?js/.test(filepath));
 
     for (const filepath of files) {
-      /* eslint-disable @typescript-eslint/no-var-requires */
       const sApi = require(filepath);
       this.add(sApi.default || sApi, force);
     }

@@ -1,18 +1,17 @@
 import { dirname, resolve, sep } from 'node:path';
 import { existsSync } from 'node:fs';
-import { cpus } from 'node:os';
 import type { IncomingHttpHeaders } from 'node:http';
 import { Barrier, formatTimeCost, md5, rmrfAsync } from '@lzwme/fe-utils';
 import { formatByteSize } from '@lzwme/fe-utils/cjs/common/helper';
 import { green, cyanBright, cyan, magenta, magentaBright, yellowBright, blueBright, greenBright } from 'console-log-colors';
-import { isSupportFfmpeg, logger, request } from './utils.js';
+import { formatOptions, isSupportFfmpeg, logger } from './utils.js';
 import { WorkerPool } from './worker_pool.js';
 import { parseM3U8 } from './parseM3u8.js';
 import { m3u8Convert } from './m3u8-convert.js';
 import type { M3u8DLOptions, M3u8DLProgressStats, M3u8WorkerPool, TsItemInfo } from '../types/m3u8.js';
 import { localPlay, toLocalM3u8 } from './local-play.js';
 
-// 下载队列管理
+/** 下载队列管理 */
 export class DownloadQueue {
   private queue: Array<{ url: string; options: M3u8DLOptions; priority: number }> = [];
   private activeDownloads = new Set<string>();
@@ -81,7 +80,7 @@ export class DownloadQueue {
   }
 }
 
-// 创建全局下载队列实例
+/** 创建全局下载队列实例 */
 export const downloadQueue = new DownloadQueue();
 
 const cache = {
@@ -90,45 +89,6 @@ const cache = {
 };
 const tsDlFile = resolve(__dirname, './ts-download.js');
 export const workPollPublic: M3u8WorkerPool = new WorkerPool(tsDlFile);
-
-function formatOptions(url: string, opts: M3u8DLOptions) {
-  const options: M3u8DLOptions = {
-    delCache: !opts.debug,
-    saveDir: process.cwd(),
-    showProgress: true,
-    ...opts,
-  };
-
-  if (!url.startsWith('http')) {
-    url = url.replace(/\$+/, '|').replace(/\|\|+/, '|');
-    if (url.includes('|')) {
-      const r = url.split('|');
-      url = r[1];
-
-      if (!options.filename) options.filename = r[0];
-      else options.filename = `${options.filename.replace(/\.(ts|mp4)$/, '')}-${r[0]}`;
-    }
-  }
-  const urlMd5 = md5(url, false);
-
-  if (!options.threadNum || +options.threadNum <= 0) options.threadNum = Math.min(cpus().length * 2, 8);
-  if (!options.filename) options.filename = urlMd5;
-  if (!options.filename.endsWith('.mp4')) options.filename += '.mp4';
-  if (!options.cacheDir) options.cacheDir = `cache`;
-  if (options.headers) {
-    let headers = options.headers;
-    if (typeof headers === 'string') {
-      headers = Object.fromEntries(headers.split('\n').map(line => line.split(':').map(d => d.trim())));
-    }
-    request.setHeaders(headers as IncomingHttpHeaders);
-  }
-
-  if (options.debug) {
-    logger.updateOptions({ levelType: 'debug' });
-    logger.debug('[m3u8-DL]options', options, url);
-  }
-  return [url, options] as const;
-}
 
 async function m3u8InfoParse(url: string, options: M3u8DLOptions = {}) {
   [url, options] = formatOptions(url, options);
@@ -147,7 +107,9 @@ async function m3u8InfoParse(url: string, options: M3u8DLOptions = {}) {
 
   if (!options.force && existsSync(filepath)) return result;
 
-  const m3u8Info = await parseM3U8(url, resolve(options.cacheDir, md5(url, false))).catch(e => logger.error('[parseM3U8][failed]', e));
+  const m3u8Info = await parseM3U8(url, resolve(options.cacheDir, md5(url, false)), options.headers as IncomingHttpHeaders).catch(e =>
+    logger.error('[parseM3U8][failed]', e)
+  );
   if (m3u8Info && m3u8Info?.tsCount > 0) result.m3u8Info = m3u8Info;
 
   return result;
@@ -227,6 +189,7 @@ export async function m3u8Download(url: string, options: M3u8DLOptions = {}) {
     /** 本地开始播放最少需要下载的 ts 文件数量 */
     const playStart = Math.min(options.threadNum + 2, result.m3u8Info.tsCount);
     const stats: M3u8DLProgressStats = {
+      url,
       startTime,
       progress: 0,
       tsCount: m3u8Info.tsCount,
@@ -327,7 +290,7 @@ export async function m3u8Download(url: string, options: M3u8DLOptions = {}) {
     }
 
     toLocalM3u8(m3u8Info.data, options.filename);
-    if (options.onInited) options.onInited(m3u8Info, workPoll);
+    if (options.onInited) options.onInited(stats, m3u8Info, workPoll);
     runTask(m3u8Info.data);
 
     await barrier.wait();

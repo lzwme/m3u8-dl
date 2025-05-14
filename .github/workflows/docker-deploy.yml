@@ -1,4 +1,5 @@
-# doc: https://docs.github.com/en/actions/use-cases-and-examples/publishing-packages/publishing-docker-images
+# doc: https://docs.github.com/zh/actions/use-cases-and-examples/publishing-packages/publishing-docker-images
+# doc: https://docs.github.com/zh/packages/managing-github-packages-using-github-actions-workflows/publishing-and-installing-a-package-with-github-actions
 name: 'Publish Container Image'
 
 on:

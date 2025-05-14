@@ -4,13 +4,14 @@ import { md5 } from '@lzwme/fe-utils';
 import { Parser } from 'm3u8-parser';
 import type { M3u8Crypto, M3u8Info, TsItemInfo } from '../types/m3u8';
 import { logger, getRetry } from './utils';
+import { IncomingHttpHeaders } from 'node:http';
 
 /**
  * 解析 m3u8 文件
  * @param content m3u8 文件的内容，可为 http 远程地址、本地文件路径
  * @param cacheDir 缓存文件保存目录
  */
-export async function parseM3U8(content: string, cacheDir = './cache') {
+export async function parseM3U8(content: string, cacheDir = './cache', headers?: IncomingHttpHeaders) {
   let url = process.cwd();
 
   if (content.startsWith('http')) {
@@ -34,7 +35,7 @@ export async function parseM3U8(content: string, cacheDir = './cache') {
   if (parser.manifest.playlists?.length > 0) {
     url = new URL(parser.manifest.playlists[0].uri, url).toString();
 
-    content = (await getRetry<string>(url)).data;
+    content = (await getRetry<string>(url, headers)).data;
     parser = new Parser();
     parser.push(content);
     parser.end();
@@ -92,7 +93,7 @@ export async function parseM3U8(content: string, cacheDir = './cache') {
       duration: tsList[i].duration,
       timeline: tsList[i].timeline,
       uri: tsList[i].uri,
-      tsOut: `${cacheDir}/${md5(tsList[i].uri)}.ts`,
+      tsOut: resolve(cacheDir, `${md5(tsList[i].uri)}.ts`),
     });
     result.duration += tsList[i].duration;
   }

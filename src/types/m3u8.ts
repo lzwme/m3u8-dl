@@ -1,13 +1,3 @@
-/*
- * @Author: renxia
- * @Date: 2024-08-02 09:58:56
- * @LastEditors: renxia
- * @LastEditTime: 2025-05-09 20:24:46
- * @Description:
- */
-/* eslint-disable @typescript-eslint/triple-slash-reference */
-/// <reference path="../../global.d.ts"/>
-
 import type { AnyObject } from '@lzwme/fe-utils';
 import type { IncomingHttpHeaders } from 'node:http';
 import type { WorkerPool } from '../lib/worker_pool';
@@ -75,6 +65,8 @@ export interface M3u8DLProgressStats {
   duration: number;
   /** 已下载的视频时长 */
   durationDownloaded: number;
+  /** 视频总大小 */
+  size?: number;
   /** 已下载的大小 */
   downloadedSize: number;
   /** 平均下载速度 */
@@ -87,8 +79,10 @@ export interface M3u8DLProgressStats {
   speedDesc: string;
   /** 预估剩余时间 */
   remainingTime: number;
+  /** 实际下载的 URL */
+  url: string;
   /** 本地 m3u8 文件路径 */
-  localM3u8: string;
+  localM3u8?: string;
   /** 本地视频文件路径（合并后的视频文件） */
   localVideo?: string;
   /** 本地保存的文件名 */
@@ -104,7 +98,7 @@ export interface M3u8DLOptions {
   /** 是否显示内置的进度信息。默认为 true */
   showProgress?: boolean;
   /** 当初始化完成、下载开始时回调 */
-  onInited?: (m3u8Info: M3u8Info, workPoll: M3u8WorkerPool) => void;
+  onInited?: (stats: M3u8DLProgressStats, m3u8Info: M3u8Info, workPoll: M3u8WorkerPool) => void;
   /** 每当 ts 文件下载完成时回调，可用于自定义进度控制 */
   onProgress?: (finished: number, total: number, currentInfo: TsItemInfo, stats: M3u8DLProgressStats) => void;
   /** 下载完成时回调，主要用于内部多任务管理 */

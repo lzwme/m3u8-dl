@@ -7,13 +7,10 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <title>M3U8 下载管理</title>
-  <!-- 引入 Tailwind CSS CDN -->
+  <link rel="icon" type="image/svg+xml" href="logo.svg">
   <script src="https://cdn.tailwindcss.com"></script>
-  <!-- 引入 Vue.js 2 CDN -->
-  <script src="https://cdn.jsdelivr.net/npm/vue@2.7.16/dist/vue.js"></script>
-  <!-- 引入 SweetAlert2 -->
+  <script src="https://cdn.jsdelivr.net/npm/vue@2.7.16/dist/vue.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-  <!-- 引入图标库 -->
   <link href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.7.2/css/all.min.css" rel="stylesheet">
 
   <style>
@@ -56,6 +53,7 @@
 
     .nav-item:hover {
       background-color: #f0f0f0;
+      transform: translateX(4px);
     }
 
     .nav-item.active {
@@ -92,6 +90,9 @@
       background: white;
       border-radius: 0.5rem;
       box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+      box-shadow: 0 2px 4px #9bdff5;
+      width: 42px;
+      height: 42px;
     }
 
     .main-content {
@@ -109,7 +110,10 @@
     </button>
     <div class="sidebar p-4" :class="{ 'show': !sidebarCollapsed }">
       <div class="mb-8">
-        <h1 class="text-xl font-bold text-gray-800 mb-4">M3U8 下载器</h1>
+        <div class="flex items-center mb-4">
+          <img src="logo.svg" alt="M3U8 下载器" class="w-8 h-8 mr-2">
+          <h1 class="text-xl font-bold text-gray-800">M3U8 下载器</h1>
+        </div>
         <button @click="showNewDownloadDialog"
           class="w-full bg-blue-500 hover:bg-blue-600 text-white p-2 rounded-lg flex items-center justify-center">
           <i class="fas fa-plus mr-2"></i>新建下载
@@ -127,6 +131,10 @@
         <button @click="switchSection('about')" class="nav-item w-full p-3 rounded-lg flex items-center"
           :class="{ 'active': activeSection === 'about' }">
           <i class="fas fa-info-circle mr-3"></i>关于项目
+        </button>
+        <!-- 跳转 ariang 链接 -->
+        <button @click="switchSection('ariang')" class="nav-item w-full p-3 rounded-lg flex items-center">
+          <i class="fas fa-link mr-3"></i>Ariang
         </button>
       </nav>
     </div>
@@ -147,12 +155,14 @@
                   class="text-blue-500 hover:text-blue-600">https://github.com/lzwme/m3u8-dl.git</a>
               </p>
               <p class="text-gray-600"><strong>问题反馈：</strong>
-                <a href="https://github.com/lzwme/m3u8-dl/issues" target="_blank" rel="noopener" class="text-blue-500 hover:text-blue-600">
+                <a href="https://github.com/lzwme/m3u8-dl/issues" target="_blank" rel="noopener"
+                  class="text-blue-500 hover:text-blue-600">
                   https://github.com/lzwme/m3u8-dl/issues</a>
               </p>
               <p class="text-gray-600"><strong>当前版本：</strong>
-                <a href="https://github.com/lzwme/m3u8-dl/release" target="_blank" rel="noopener" class="text-blue-500 hover:text-blue-600">
-                  {{version}}</a>
+                <a href="https://github.com/lzwme/m3u8-dl/release" target="_blank" rel="noopener"
+                  class="text-blue-500 hover:text-blue-600">
+                  {{serverInfo.version}}</a>
               </p>
             </div>
           </div>
@@ -182,7 +192,8 @@
             <h3 class="text-lg font-medium text-gray-900 mb-2">安装使用</h3>
             <div class="bg-gray-50 p-4 rounded-lg">
               <p class="text-gray-600 mb-2">全局安装：</p>
-              <pre class="bg-gray-800 text-gray-100 p-3 rounded-lg overflow-x-auto">npm i -g @lzwme/m3u8-dl<br>m3u8dl -h</pre>
+              <pre
+                class="bg-gray-800 text-gray-100 p-3 rounded-lg overflow-x-auto">npm i -g @lzwme/m3u8-dl<br>m3u8dl -h</pre>
               <p class="text-gray-600 mt-4 mb-2">使用 npx：</p>
               <pre class="bg-gray-800 text-gray-100 p-3 rounded-lg overflow-x-auto">npx @lzwme/m3u8-dl -h</pre>
             </div>
@@ -248,7 +259,8 @@ services:
               <label class="block text-sm font-bold text-gray-700 mb-1">下载完成后删除ts分片缓存</label>
               <div class="flex items-center mt-2">
                 <label class="inline-flex items-center">
-                  <input type="checkbox" v-model="config.delCache" class="form-checkbox h-5 w-5 text-blue-500 rounded focus:ring-blue-500">
+                  <input type="checkbox" v-model="config.delCache"
+                    class="form-checkbox h-5 w-5 text-blue-500 rounded focus:ring-blue-500">
                   <span class="ml-2 text-gray-700">删除分片文件</span>
                 </label>
               </div>
@@ -260,7 +272,8 @@ services:
               <label class="block text-sm font-bold text-gray-700 mb-1">下载完成后转换格式</label>
               <div class="flex items-center mt-2">
                 <label class="inline-flex items-center">
-                  <input type="checkbox" v-model="config.convert" class="form-checkbox h-5 w-5 text-blue-500 rounded focus:ring-blue-500">
+                  <input type="checkbox" v-model="config.convert"
+                    class="form-checkbox h-5 w-5 text-blue-500 rounded focus:ring-blue-500">
                   <span class="ml-2 text-gray-700">合并转换为 MP4/TS 文件</span>
                 </label>
               </div>
@@ -311,8 +324,8 @@ services:
             <div>
               <label class="block text-sm font-bold text-gray-700 mb-1">访问密码</label>
               <div class="flex">
-                <input v-model="token" type="password" maxlength="256" class="w-full p-2 border rounded-lg focus:ring-blue-500"
-                  placeholder="请输入访问密码" />
+                <input v-model="token" type="password" maxlength="256"
+                  class="w-full p-2 border rounded-lg focus:ring-blue-500" placeholder="请输入访问密码" />
               </div>
               <p class="mt-1 text-sm text-gray-500">若服务端设置了访问密码(token)，请在此输入</p>
             </div>
@@ -336,16 +349,32 @@ services:
             <div class="flex justify-between items-center">
               <h2 class="text-xl font-semibold">下载任务</h2>
               <div class="flex space-x-2">
-                <button @click="showNewDownloadDialog" class="px-3 py-1 text-sm bg-blue-500 hover:bg-blue-600 text-white rounded">
+                <button @click="showNewDownloadDialog"
+                  class="px-3 py-1 text-sm bg-blue-500 hover:bg-blue-600 text-white rounded">
                   <i class="fas fa-plus mr-1"></i>新建
                 </button>
-                <button @click="pauseAll" class="px-3 py-1 text-sm bg-yellow-500 text-white rounded hover:bg-yellow-600">
+                <button v-if="selectedTasks.length > 0" @click="pauseDownload(selectedTasks)"
+                  class="px-3 py-1 text-sm bg-yellow-500 text-white rounded hover:bg-yellow-600">
+                  <i class="fas fa-pause mr-1"></i>暂停选中
+                </button>
+                <button v-if="selectedTasks.length > 0" @click="resumeDownload(selectedTasks)"
+                  class="px-3 py-1 text-sm bg-green-500 text-white rounded hover:bg-green-600">
+                  <i class="fas fa-play mr-1"></i>开始选中
+                </button>
+                <button v-if="selectedTasks.length > 0" @click="deleteDownload(selectedTasks)"
+                  class="px-3 py-1 text-sm bg-red-500 text-white rounded hover:bg-red-600">
+                  <i class="fas fa-trash mr-1"></i>删除选中
+                </button>
+                <button v-if="selectedTasks.length === 0" @click="pauseDownload('all')"
+                  class="px-3 py-1 text-sm bg-yellow-500 text-white rounded hover:bg-yellow-600">
                   <i class="fas fa-pause mr-1"></i>全部暂停
                 </button>
-                <button @click="resumeAll" class="px-3 py-1 text-sm bg-green-500 text-white rounded hover:bg-green-600">
+                <button v-if="selectedTasks.length === 0" @click="resumeDownload('all')"
+                  class="px-3 py-1 text-sm bg-green-500 text-white rounded hover:bg-green-600">
                   <i class="fas fa-play mr-1"></i>全部开始
                 </button>
-                <button @click="clearQueue" class="px-3 py-1 text-sm bg-red-500 text-white rounded hover:bg-red-600">
+                <button v-if="selectedTasks.length === 0" @click="clearQueue"
+                  class="px-3 py-1 text-sm bg-red-500 text-white rounded hover:bg-red-600">
                   <i class="fas fa-trash mr-1"></i>清空队列
                 </button>
               </div>
@@ -354,13 +383,14 @@ services:
               <div class="flex-1">
                 <div class="relative">
                   <input type="text" v-model="searchQuery"
-                    class="w-full pl-10 pr-4 py-2 border rounded-lg focus:ring-blue-500 focus:border-blue-500" placeholder="搜索任务名称或URL"
-                    aria-label="搜索任务">
+                    class="w-full pl-10 pr-4 py-2 border rounded-lg focus:ring-blue-500 focus:border-blue-500"
+                    placeholder="搜索任务名称或URL" aria-label="搜索任务">
                   <i class="fas fa-search absolute left-3 top-3 text-gray-400"></i>
                 </div>
               </div>
               <div class="flex items-center space-x-2">
-                <select v-model="statusFilter" class="px-3 py-2 border rounded-lg focus:ring-blue-500 focus:border-blue-500" title="按状态筛选"
+                <select v-model="statusFilter"
+                  class="px-3 py-2 border rounded-lg focus:ring-blue-500 focus:border-blue-500" title="按状态筛选"
                   aria-label="按状态筛选">
                   <option value="">全部状态</option>
                   <option value="resume">下载中</option>
@@ -368,7 +398,8 @@ services:
                   <option value="pause">已暂停</option>
                   <option value="done">已完成</option>
                 </select>
-                <button @click="clearFilters" class="px-3 py-2 text-gray-600 hover:text-gray-800" title="清除筛选条件" aria-label="清除筛选条件">
+                <button @click="clearFilters" class="px-3 py-2 text-gray-600 hover:text-gray-800" title="清除筛选条件"
+                  aria-label="清除筛选条件">
                   <i class="fas fa-times"></i>
                 </button>
               </div>
@@ -400,32 +431,42 @@ services:
               <div class="flex items-center justify-between mb-2">
                 <div class="flex-1">
                   <div class="flex items-center">
+                    <input type="checkbox" :checked="selectedTasks.includes(task.url)"
+                      @change="toggleTaskSelection(task.url)"
+                      class="form-checkbox h-5 w-5 text-blue-500 rounded focus:ring-blue-500 mr-2"
+                      :aria-label="'选择任务：' + (task.localVideo || task.filename || task.url)">
                     <h3 class="font-bold text-green-600 truncate" :title="task.url">
                       {{ task.localVideo || task.filename || task.url }}
                     </h3>
-                    <span v-if="task.status === 'pending'" class="ml-2 px-2 py-0.5 text-xs bg-yellow-100 text-yellow-800 rounded">等待中</span>
+                    <span v-if="task.status === 'pending'"
+                      class="ml-2 px-2 py-0.5 text-xs bg-yellow-100 text-yellow-800 rounded">等待中</span>
                     <span v-else-if="task.status === 'resume'"
                       class="ml-2 px-2 py-0.5 text-xs bg-green-100 text-green-800 rounded">下载中</span>
-                    <span v-else-if="task.status === 'pause'" class="ml-2 px-2 py-0.5 text-xs bg-gray-100 text-gray-800 rounded">已暂停</span>
-                    <span v-else-if="task.status === 'done'" class="ml-2 px-2 py-0.5 text-xs bg-blue-100 text-blue-800 rounded">已完成</span>
-                    <span v-else-if="task.status === 'error'" class="ml-2 px-2 py-0.5 text-xs bg-red-100 text-red-600 rounded"
-                      :title="task.errmsg">异常<i class="fas fa-info-circle ml-1"></i></span>
+                    <span v-else-if="task.status === 'pause'"
+                      class="ml-2 px-2 py-0.5 text-xs bg-gray-100 text-gray-800 rounded">已暂停</span>
+                    <span v-else-if="task.status === 'done'"
+                      class="ml-2 px-2 py-0.5 text-xs bg-blue-100 text-blue-800 rounded">已完成</span>
+                    <span v-else-if="task.status === 'error'"
+                      class="ml-2 px-2 py-0.5 text-xs bg-red-100 text-red-600 rounded" :title="task.errmsg">异常<i
+                        class="fas fa-info-circle ml-1"></i></span>
                   </div>
                   <div class="flex items-center text-sm text-gray-500 mt-1 flex-wrap gap-2">
-                    <span v-if="config.showPreview" class="text-blue-500 hover:text-blue-600 cursor-pointer" @click="preview(task.url)">
+                    <span v-if="config.showPreview" class="text-blue-500 hover:text-blue-600 cursor-pointer"
+                      @click="preview(task.url)">
                       <i class="fas fa-eye mr-1"></i>预览
                     </span>
-                    <span v-if="config.showLocalPlay" class="text-green-500 hover:text-green-600 cursor-pointer" @click="localPlay(task)">
+                    <span v-if="config.showLocalPlay" class="text-green-500 hover:text-green-600 cursor-pointer"
+                      @click="localPlay(task)">
                       <i class="fas fa-play-circle mr-1"></i>{{ task.localVideo ? '播放' : '边下边播' }}
                     </span>
-                    <span class="flex items-center">
+                    <span v-if="task.duration" class="flex items-center">
                       <i class="fas fa-clock mr-1"></i>
                       <span>时长: {{ T.formatTime(task.duration * 1000) }}</span>
                     </span><span class="flex items-center">
                       <i class="fas fa-clock mr-1"></i>
-                      <span>大小: {{ T.formatSize(task.downloadedSize) }}</span>
+                      <span>大小: {{ T.formatSize(task.size || task.downloadedSize) }}</span>
                     </span>
-                    <span class="flex items-center">
+                    <span v-if="task.tsCount" class="flex items-center">
                       <i class="fas fa-file-alt mr-1"></i>
                       <span>分片: {{ task.tsSuccess + task.tsFailed }}/{{ task.tsCount }}</span>
                     </span>
@@ -433,7 +474,7 @@ services:
                       <i class="fas fa-tachometer-alt mr-1"></i>
                       <span>速度: {{ task.speedDesc }}</span>
                     </span>
-                    <span class="flex items-center">
+                    <span v-if="task.status === 'resume'" class="flex items-center">
                       <i class="fas fa-hourglass-half mr-1"></i>
                       <span>剩余: {{ T.formatTime(task.remainingTime || 0) }}</span>
                     </span>
@@ -450,15 +491,17 @@ services:
                   </div>
                 </div>
                 <div class="flex space-x-2">
-                  <button v-if="task.status === 'resume' || task.status === 'pending'" @click="pauseDownload(task.url)"
-                    class="p-2 text-yellow-500 hover:bg-yellow-50 rounded" title="暂停">
+                  <button v-if="task.status === 'resume' || task.status === 'pending'"
+                    @click="pauseDownload([task.url])" class="p-2 text-yellow-500 hover:bg-yellow-50 rounded"
+                    title="暂停">
                     <i class="fas fa-pause"></i>
                   </button>
-                  <button v-if="task.status === 'pause' || task.status === 'error'" @click="resumeDownload(task.url)"
+                  <button v-if="task.status === 'pause' || task.status === 'error'" @click="resumeDownload([task.url])"
                     class="p-2 text-green-500 hover:bg-green-50 rounded" title="继续">
                     <i class="fas fa-play"></i>
                   </button>
-                  <button @click="deleteDownload(task.url)" class="p-2 text-red-500 hover:bg-red-50 rounded" title="删除">
+                  <button @click="deleteDownload([task.url])" class="p-2 text-red-500 hover:bg-red-50 rounded"
+                    title="删除">
                     <i class="fas fa-trash"></i>
                   </button>
                 </div>
@@ -481,7 +524,8 @@ services:
             <div v-if="filteredTasks.length === 0" class="p-8 text-center text-gray-500">
               <i class="fas fa-download text-4xl mb-4"></i>
               <p>暂无下载任务</p>
-              <button @click="showNewDownloadDialog" class="mt-4 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600">
+              <button @click="showNewDownloadDialog"
+                class="mt-4 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600">
                 <i class="fas fa-plus mr-1"></i>添加下载任务
               </button>
             </div>
@@ -503,9 +547,13 @@ services:
           body: data ? JSON.stringify(data) : null,
           headers: { ...this.reqHeaders, ...headers }
         }).then(d => d.json())
+          .then(d => {
+            if (d.code) T.alert(d.message || `[${url}] 请求失败`, { icon: 'error' });
+            return d;
+          })
           .catch(e => {
             T.alert(`请求失败: ${e.message}`, { icon: 'error' });
-            return e.message;
+            return { code: -1, message: e.message };
           });
       },
       post(url, data) {
@@ -516,7 +564,7 @@ services:
       },
       alert(msg, p) {
         p = typeof msg === 'object' ? msg : Object.assign({ text: msg }, p);
-        Swal.fire(Object.assign({ icon: 'info', showConfirmButton: false }, p));
+        Swal.fire(Object.assign({ icon: 'info', showConfirmButton: false, showCloseButton: true, allowOutsideClick: false }, p));
       },
       toast(msg, p) {
         p = typeof msg === 'object' ? msg : Object.assign({ text: msg }, p);
@@ -574,7 +622,10 @@ services:
       el: '#app',
       data: {
         ws: null,
-        version: '',
+        serverInfo: {
+          version: '',
+          ariang: false,
+        },
         config: {
           /** 并发下载线程数。取决于服务器限制，过多可能会容易下载失败。一般建议不超过 8 个。默认为 cpu数 * 2，但不超过 8 */
           threadNum: 0,
@@ -595,6 +646,8 @@ services:
         token: T.reqHeaders.authorization,
         /** 下载任务列表，以 url 为 key */
         tasks: {},
+        /** 选中的任务列表 */
+        selectedTasks: [],
         /** 队列状态 */
         queueStatus: {
           queueLength: 0,
@@ -670,16 +723,16 @@ services:
             const { type, data } = T.safeJSONParse(e.data);
 
             switch (type) {
-              case 'version':
-                this.version = data;
+              case 'serverInfo':
+                this.serverInfo = data;
                 break;
               case 'tasks':
                 this.tasks = data;
                 break;
               case 'progress':
-                if (!data.url) return;
+                if (!Array.isArray(data)) data = [data];
                 this.$nextTick(() => {
-                  this.tasks[data.url] = data;
+                  data.forEach(item => item.url && (this.tasks[item.url] = item));
                   // this.forceUpdate();
                 });
                 break;
@@ -718,13 +771,8 @@ services:
         },
         /** 更新配置 */
         updateConfig: async function () {
-          try {
-            const result = await T.post('/config', this.config);
-            T.toast(result.message || '配置已更新', { icon: result.code ? 'error' : 'success' });
-          } catch (error) {
-            console.error('更新配置失败:', error);
-            T.alert('更新配置失败: ' + error.message);
-          }
+          const result = await T.post('/config', this.config);
+          T.toast(result.message || '配置已更新', { icon: result.code ? 'error' : 'success' });
         },
         updateLocalConfig: async function () {
           this.updateToken();
@@ -748,13 +796,13 @@ services:
             width: '800px',
             html: `
               <div class="text-left">
-                <label class="block text-sm font-bold text-gray-700 mb-1">M3U8 链接（支持批量，每行一个）</label>
+                <label class="block text-sm font-bold text-gray-700 mb-1">视频链接（每行一个，支持m3u8地址及抖音、微博、皮皮虾视频分享链接）</label>
                 <textarea id="downloadUrls" class="w-full p-2 border rounded-lg focus:ring-blue-500" rows="3" placeholder="格式： URL | 名称(可选)、名称 | URL"></textarea>
 
                 <div class="mt-4">
                   <label class="block text-sm font-bold text-gray-700 mb-1">视频名称（可选）</label>
                   <input id="filename" class="w-full p-2 border rounded-lg focus:border-blue-500" placeholder="请输入视频名称">
-                  <p class="mt-1 text-sm text-gray-500">如果输入多个链接，将依次以“视频名称+第N集”命名</p>
+                  <p class="mt-1 text-sm text-gray-500">如果输入多个链接，将依次以"视频名称+第N集"命名</p>
                 </div>
 
                 <div class="mt-4">
@@ -764,7 +812,7 @@ services:
 
                 <div class="mt-4">
                   <label class="block text-sm font-bold text-gray-700 mb-1">自定义请求头</label>
-                  <textarea id="headers" class="w-full p-2 border rounded-lg focus:ring-blue-500" rows="4" placeholder="每行一个请求头，格式：Key: Value&#10;例如：&#10;User-Agent: Mozilla/5.0&#10;Referer: https://example.com"></textarea>
+                  <textarea id="headers" class="w-full p-2 border rounded-lg focus:ring-blue-500" rows="4" placeholder="每行一个请求头（微博视频必须设置 Cookie），格式：Key: Value&#10;例如：&#10;Referer: https://example.com&#10;Cookie: token=123"></textarea>
                 </div>
               </div>
             `,
@@ -772,6 +820,8 @@ services:
             confirmButtonText: '开始下载',
             cancelButtonText: '取消',
             focusConfirm: false,
+            showCloseButton: true,
+            allowOutsideClick: false,
             preConfirm: () => {
               const urlsText = document.getElementById('downloadUrls').value.trim();
               const filename = document.getElementById('filename').value.trim();
@@ -814,35 +864,114 @@ services:
               this.tasks[item.url] = { status: 'resume', progress: 0, speed: 0, remainingTime: 0, size: 0 };
             });
             const r = await T.post('/download', { list });
-            T.toast(r.message || '批量下载已开始');
+            if (!r.code) T.toast(r.message || '批量下载已开始');
             this.forceUpdate();
           } catch (error) {
             console.error('批量下载失败:', error);
-            T.alert('下载失败: ' + error.message);
+            T.alert('下载失败: ' + error.message, { icon: 'error' });
           }
         },
         /** 暂停下载 */
-        pauseDownload: async function (url) {
-          try {
-            const r = await T.post(`/pause`, { url });
-            T.toast(r.message || '已暂停下载');
-            this.tasks[url].status = 'pause';
-          } catch (error) {
-            console.error('暂停下载失败:', error);
-          }
+        pauseDownload: async function (urls) {
+          if (!urls) urls = this.selectedTasks;
+          if (typeof urls === 'string') urls = [urls];
+          const r = await T.post(`/pause`, { urls, all: urls[0] === 'all' });
+          if (!r.code) T.toast(r.message || '已暂停下载');
+          this.tasks[url].status = 'pause';
         },
         /** 恢复下载 */
-        resumeDownload: async function (url) {
-          try {
-            const r = await T.post(`/resume`, { url });
-            T.toast(r.message || '已恢复下载');
-            this.tasks[url].status = 'resume';
-          } catch (error) {
-            console.error('恢复下载失败:', error);
+        resumeDownload: async function (urls) {
+          if (!urls) urls = this.selectedTasks;
+          if (typeof urls === 'string') urls = [urls];
+          const r = await T.post(`/resume`, { urls, all: urls[0] === 'all' });
+          if (!r.code) T.toast(r.message || '已恢复下载');
+        },
+        getTasks: async function () {
+          this.tasks = await T.get('/tasks');
+        },
+        /** 边下边播 */
+        localPlay: function (task) {
+          const url = location.origin + '/localplay/' + encodeURIComponent(task.localVideo || task.localM3u8);
+          console.log(task);
+          if (task.localVideo) {
+            Swal.fire({
+              title: task?.options.filename || task.url,
+              width: '1000px',
+              showCloseButton: true,
+              showConfirmButton: false,
+              html: `<video autoplay width="100%" style="max-width: 1000px; min-height: 300px; max-height: 90vh" src="${url}" controls></video> `,
+            });
+          } else {
+            window.open(`http://lzw.me/x/m3u8-player/?url=${encodeURIComponent(url)}`);
           }
         },
-        /** 删除下载 */
-        deleteDownload: async function (url) {
+        // 预览
+        preview: function (url) {
+          window.open(`https://lzw.me/x/m3u8-player/?url=${encodeURIComponent(url)}`);
+        },
+        // 切换侧栏状态
+        toggleSidebar() {
+          this.sidebarCollapsed = !this.sidebarCollapsed;
+        },
+        // 切换页面并自动收起侧栏
+        switchSection(section) {
+          if (section === 'ariang') {
+            window.open(this.serverInfo.ariang ? './ariang/' : 'http://lzw.me/x/ariang/');
+            return;
+          }
+          this.activeSection = section;
+          if (window.innerWidth <= 768) {
+            this.sidebarCollapsed = true;
+          }
+        },
+        // 监听窗口大小变化
+        handleResize() {
+          this.sidebarCollapsed = window.innerWidth <= 768;
+        },
+        // 更新任务优先级
+        updatePriority: async function (url, priority) {
+          const r = await T.post('/priority', { url, priority: parseInt(priority) });
+          T.toast(r.message || '已更新优先级');
+        },
+        // 获取队列状态
+        getQueueStatus: async function () {
+          const status = await T.get('/queue/status');
+          if (status?.maxConcurrent) this.queueStatus = status;
+        },
+        // 清空下载队列
+        clearQueue: async function () {
+          const result = await Swal.fire({
+            title: '确认清空队列',
+            text: '这将取消并删除所有等待中的下载任务，已开始下载的任务将继续进行。',
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonText: '确认清空',
+            cancelButtonText: '取消',
+            confirmButtonColor: '#ef4444'
+          });
+
+          if (result.isConfirmed) {
+            const r = await T.post('/queue/clear');
+            T.toast(r.message || '已清空下载队列');
+            this.getQueueStatus();
+          }
+        },
+        clearFilters: function () {
+          this.searchQuery = '';
+          this.statusFilter = '';
+        },
+        /** 切换任务选中状态 */
+        toggleTaskSelection(url) {
+          const index = this.selectedTasks.indexOf(url);
+          if (index === -1) {
+            this.selectedTasks.push(url);
+          } else {
+            this.selectedTasks.splice(index, 1);
+          }
+        },
+        /** 删除选中的任务 */
+        async deleteDownload(urls = this.selectedTasks) {
+          if (!urls.length) return;
           try {
             const result = await Swal.fire({
               title: '确认删除',
@@ -877,121 +1006,21 @@ services:
 
             if (result.isConfirmed) {
               const r = await T.post(`/delete`, {
-                url,
+                urls,
                 deleteCache: result.value.deleteCache,
                 deleteVideo: result.value.deleteVideo
               });
-              T.toast(r.message || '已删除下载');
-              delete this.tasks[url];
-              this.forceUpdate();
+              if (!r.code) {
+                T.toast(r.message || '已删除选中的下载');
+                urls.forEach(url => (delete this.tasks[url]));
+                this.selectedTasks = [];
+                this.forceUpdate();
+              }
             }
           } catch (error) {
             console.error('删除下载失败:', error);
             T.alert('删除下载失败: ' + error.message);
           }
-        },
-        /** 暂停所有下载 */
-        pauseAll: async function () {
-          try {
-            const r = await T.post('/pauseAll');
-            T.toast(r.message || '已暂停所有下载');
-          } catch (error) {
-            console.error('暂停所有下载失败:', error);
-          }
-        },
-        // 恢复所有下载
-        resumeAll: async function () {
-          try {
-            const r = await T.post('/resumeAll');
-            T.toast(r.message || '已恢复所有下载');
-          } catch (error) {
-            console.error('恢复所有下载失败:', error);
-          }
-        },
-
-        getTasks: async function () {
-          this.tasks = await T.get('/tasks');
-        },
-        /** 边下边播 */
-        localPlay: function (task) {
-          const url = location.origin + '/localplay/' + encodeURIComponent(task.localVideo || task.localM3u8);
-          console.log(task);
-          if (task.localVideo) {
-            Swal.fire({
-              title: task?.options.filename || task.url,
-              width: '1000px',
-              showConfirmButton: false,
-              html: `<video autoplay width="100%" style="max-width: 1000px; min-height: 300px; max-height: 90vh" src="${url}" controls></video> `,
-            });
-          } else {
-            window.open(`http://lzw.me/x/m3u8-player/?url=${encodeURIComponent(url)}`);
-          }
-        },
-        // 预览
-        preview: function (url) {
-          window.open(`https://lzw.me/x/m3u8-player/?url=${encodeURIComponent(url)}`);
-        },
-        // 切换侧栏状态
-        toggleSidebar() {
-          this.sidebarCollapsed = !this.sidebarCollapsed;
-        },
-        // 切换页面并自动收起侧栏
-        switchSection(section) {
-          this.activeSection = section;
-          if (window.innerWidth <= 768) {
-            this.sidebarCollapsed = true;
-          }
-        },
-        // 监听窗口大小变化
-        handleResize() {
-          this.sidebarCollapsed = window.innerWidth <= 768;
-        },
-        // 更新任务优先级
-        updatePriority: async function (url, priority) {
-          try {
-            const r = await T.post('/priority', { url, priority: parseInt(priority) });
-            T.toast(r.message || '已更新优先级');
-          } catch (error) {
-            console.error('更新优先级失败:', error);
-            T.alert('更新优先级失败: ' + error.message);
-          }
-        },
-        // 获取队列状态
-        getQueueStatus: async function () {
-          try {
-            const status = await T.get('/queue/status');
-            this.queueStatus = status;
-          } catch (error) {
-            console.error('获取队列状态失败:', error);
-          }
-        },
-        // 清空下载队列
-        clearQueue: async function () {
-          try {
-            const result = await Swal.fire({
-              title: '确认清空队列',
-              text: '这将取消所有等待中的下载任务，已开始下载的任务将继续进行。',
-              icon: 'warning',
-              showCancelButton: true,
-              confirmButtonText: '确认清空',
-              cancelButtonText: '取消',
-              confirmButtonColor: '#ef4444'
-            });
-
-            if (result.isConfirmed) {
-              const r = await T.post('/queue/clear');
-              T.toast(r.message || '已清空下载队列');
-              this.getQueueStatus();
-            }
-          } catch (error) {
-            console.error('清空队列失败:', error);
-            T.alert('清空队列失败: ' + error.message);
-          }
-        },
-        // 清除筛选条件
-        clearFilters: function () {
-          this.searchQuery = '';
-          this.statusFilter = '';
         },
       },
       mounted() {

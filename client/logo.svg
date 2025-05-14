@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="512" height="512" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- 背景圆形 -->
+  <circle cx="256" cy="256" r="240" fill="#1890ff" opacity="0.1"/>
+
+  <!-- 下载箭头 -->
+  <path d="M256 128v192M208 256l48 48 48-48" stroke="#1890ff" stroke-width="24" stroke-linecap="round" stroke-linejoin="round"/>
+
+  <!-- M3U8 文字 -->
+  <text x="256" y="384" font-family="Arial, sans-serif" font-size="64" font-weight="bold" fill="#1890ff" text-anchor="middle">M3U8</text>
+
+  <!-- 速度线条 -->
+  <path d="M128 192c32-32 64-32 96 0s64 32 96 0" stroke="#1890ff" stroke-width="16" stroke-linecap="round" opacity="0.6"/>
+  <path d="M128 224c32-32 64-32 96 0s64 32 96 0" stroke="#1890ff" stroke-width="16" stroke-linecap="round" opacity="0.4"/>
+  <path d="M128 256c32-32 64-32 96 0s64 32 96 0" stroke="#1890ff" stroke-width="16" stroke-linecap="round" opacity="0.2"/>
+</svg>

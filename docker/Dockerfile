@@ -2,10 +2,17 @@
 FROM node:22-alpine AS builder
 WORKDIR /app
 COPY ./ ./
+
+RUN apk update && apk add wget unzip
+
 RUN npm i -g pnpm
 RUN pnpm install
 RUN pnpm add -P express ws
 RUN pnpm build
+# 下载ariang
+RUN wget https://github.com/mayswind/AriaNg/releases/download/1.3.10/AriaNg-1.3.10-AllInOne.zip -O ariang.zip
+RUN unzip ariang.zip -d /app/client/ariang
+RUN rm ariang.zip
 
 # 生产环境镜像
 FROM node:22-alpine

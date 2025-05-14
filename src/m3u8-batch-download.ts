@@ -11,6 +11,8 @@ import { basename } from 'node:path';
 import { m3u8Download, preDownLoad } from './lib/m3u8-download';
 import { M3u8DLOptions, M3u8WorkerPool } from './types/m3u8';
 import { logger } from './lib/utils';
+import { VideoParser } from './video-parser';
+import { gray, red } from 'console-log-colors';
 
 async function formatUrls(urls: string[], options: M3u8DLOptions): Promise<Map<string, M3u8DLOptions>> {
   const taskset = new Map<string, M3u8DLOptions>();
@@ -48,17 +50,23 @@ export async function m3u8BatchDownload(urls: string[], options: M3u8DLOptions) 
   return new Promise<boolean>(rs => {
     let preDLing = false;
     const run = () => {
-      const [key, keyNext] = [...tasks.keys()];
+      const [url, urlNext] = [...tasks.keys()];
 
-      if (key) {
-        const o = { ...tasks.get(key) };
+      if (url) {
+        const o = { ...tasks.get(url) };
         const onProgress = o.onProgress;
+        const useVideoParser = VideoParser.getPlatform(url) !== null;
 
-        tasks.delete(key);
-        o.onInited = (_m3u8Info, wp) => (workPoll = wp);
+        tasks.delete(url);
+        o.onInited = (s, _i, wp) => {
+          if (workPoll) workPoll = wp;
+          if (useVideoParser) {
+            logger.info('视频解析完成：', s.filename, gray(s.url));
+          }
+        };
         o.onProgress = (finished, total, info, stats) => {
           if (onProgress) onProgress(finished, total, info, stats);
-          if (!preDLing && keyNext && tasks.size && workPoll.freeNum > 1 && total - finished < options.threadNum) {
+          if (!useVideoParser && !preDLing && urlNext && tasks.size && workPoll.freeNum > 1 && total - finished < options.threadNum) {
             logger.debug(
               '\n[预下载下一集]',
               'freeNum:',
@@ -70,16 +78,33 @@ export async function m3u8BatchDownload(urls: string[], options: M3u8DLOptions) 
               tasks.size
             );
             preDLing = true;
-            preDownLoad(keyNext, options, workPoll).then(() => (preDLing = false));
+            preDownLoad(urlNext, options, workPoll).then(() => (preDLing = false));
           }
         };
 
-        m3u8Download(key, o).then(r => (tasks.size === 0 ? rs(existsSync(r.filepath)) : run()));
+        if (useVideoParser) {
+          const vp = new VideoParser();
+          vp.download(url, o).then(r => {
+            if (r.code !== 0) {
+              logger.error('下载失败：', red(r.message), gray(url));
+            } else {
+              if (r.data?.isExist) logger.info('文件已存在：', gray(r.data.filepath));
+              logger.debug('下载完成：', gray(url), gray(r.data.filepath));
+            }
+            if (tasks.size === 0) {
+              rs(r.data.filepath && existsSync(r.data.filepath));
+            } else {
+              run();
+            }
+          });
+        } else {
+          m3u8Download(url, o).then(r => (tasks.size === 0 ? rs(existsSync(r.filepath)) : run()));
+        }
       }
     };
     run();
   }).then(d => {
-    if (workPoll.freeNum === workPoll.numThreads) workPoll.close();
+    if (workPoll && workPoll.freeNum === workPoll.numThreads) workPoll.close();
     return d;
   });
 }

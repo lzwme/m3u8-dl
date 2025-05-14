@@ -9,8 +9,9 @@ import { VideoSerachAndDL } from './lib/video-search.js';
 
 const pkg = readJsonFileSync<PackageJson>(resolve(__dirname, '../package.json'));
 
-process.on('unhandledRejection', (r, p) => {
-  logger.info('[退出][unhandledRejection]', r, p);
+process.on('unhandledRejection', r => {
+  console.error(r);
+  logger.info('[退出][unhandledRejection]', (r as Error).message);
   process.exit();
 });
 
@@ -34,6 +35,7 @@ program
   .option('-S, --save-dir <dirpath>', `下载文件保存的路径。默认为当前目录`)
   .option('--no-del-cache', `下载成功后是否删除临时文件。默认为 true。保存临时文件可以在重复下载时识别缓存`)
   .option('--no-convert', '下载成功后，是否不合并转换为 mp4 文件。默认为 true。')
+  .option('-H, --headers <headers>', `自定义请求头。格式为 key1=value1\nkey2=value2`)
   .action(async (urls: string[]) => {
     const options = getOptions();
     logger.debug(urls, options);
@@ -41,7 +43,7 @@ program
     delete options.progress;
 
     if (urls.length > 0) {
-      await m3u8BatchDownload(urls, options);
+      await m3u8BatchDownload(urls, options).then(r => process.exit(r ? 0 : 1));
     } else program.help();
   });
 
