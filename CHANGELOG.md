@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [1.1.0](https://github.com/lzwme/m3u8-dl/compare/v1.0.0...v1.1.0) (2025-05-17)
+
+
+### Features
+
+* 新增 video-parser 模块，支持抖音、微博视频分享地址解析 ([5f7a9fe](https://github.com/lzwme/m3u8-dl/commit/5f7a9febd850021c37b28627478fd003811e20a3))
+* **server:** 支持设置访问密码(token) ([574a9f8](https://github.com/lzwme/m3u8-dl/commit/574a9f80b3403a7f9e1fd8c67b4021a8a5f2e6b3))
+
 ## [1.0.0](https://github.com/lzwme/m3u8-dl/compare/v0.0.10...v1.0.0) (2025-05-10)
 
 

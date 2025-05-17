@@ -1,6 +1,6 @@
 {
   "name": "@lzwme/m3u8-dl",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Batch download of m3u8 files and convert to mp4",
   "main": "cjs/index.js",
   "types": "cjs/index.d.ts",
@@ -43,14 +43,14 @@
     "registry": "https://registry.npmjs.com"
   },
   "devDependencies": {
-    "@eslint/js": "^9.26.0",
+    "@eslint/js": "^9.27.0",
     "@lzwme/fed-lint-helper": "^2.6.6",
-    "@types/express": "^5.0.1",
-    "@types/node": "^22.15.17",
+    "@types/express": "^5.0.2",
+    "@types/node": "^22.15.18",
     "@types/ws": "^8.18.1",
-    "@typescript-eslint/eslint-plugin": "^8.32.0",
-    "@typescript-eslint/parser": "^8.32.0",
-    "eslint": "^9.26.0",
+    "@typescript-eslint/eslint-plugin": "^8.32.1",
+    "@typescript-eslint/parser": "^8.32.1",
+    "eslint": "^9.27.0",
     "eslint-config-prettier": "^10.1.5",
     "eslint-plugin-prettier": "^5.4.0",
     "express": "^5.1.0",
@@ -58,11 +58,11 @@
     "prettier": "^3.5.3",
     "standard-version": "^9.5.0",
     "typescript": "^5.8.3",
-    "typescript-eslint": "^8.32.0",
+    "typescript-eslint": "^8.32.1",
     "ws": "^8.18.2"
   },
   "dependencies": {
-    "@lzwme/fe-utils": "^1.8.3",
+    "@lzwme/fe-utils": "^1.9.0",
     "commander": "^13.1.0",
     "console-log-colors": "^0.5.0",
     "enquirer": "^2.4.1",
