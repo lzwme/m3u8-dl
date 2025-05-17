@@ -155,13 +155,11 @@
                   class="text-blue-500 hover:text-blue-600">https://github.com/lzwme/m3u8-dl.git</a>
               </p>
               <p class="text-gray-600"><strong>问题反馈：</strong>
-                <a href="https://github.com/lzwme/m3u8-dl/issues" target="_blank" rel="noopener"
-                  class="text-blue-500 hover:text-blue-600">
+                <a href="https://github.com/lzwme/m3u8-dl/issues" target="_blank" rel="noopener" class="text-blue-500 hover:text-blue-600">
                   https://github.com/lzwme/m3u8-dl/issues</a>
               </p>
               <p class="text-gray-600"><strong>当前版本：</strong>
-                <a href="https://github.com/lzwme/m3u8-dl/release" target="_blank" rel="noopener"
-                  class="text-blue-500 hover:text-blue-600">
+                <a href="https://github.com/lzwme/m3u8-dl/release" target="_blank" rel="noopener" class="text-blue-500 hover:text-blue-600">
                   {{serverInfo.version}}</a>
               </p>
             </div>
@@ -192,8 +190,7 @@
             <h3 class="text-lg font-medium text-gray-900 mb-2">安装使用</h3>
             <div class="bg-gray-50 p-4 rounded-lg">
               <p class="text-gray-600 mb-2">全局安装：</p>
-              <pre
-                class="bg-gray-800 text-gray-100 p-3 rounded-lg overflow-x-auto">npm i -g @lzwme/m3u8-dl<br>m3u8dl -h</pre>
+              <pre class="bg-gray-800 text-gray-100 p-3 rounded-lg overflow-x-auto">npm i -g @lzwme/m3u8-dl<br>m3u8dl -h</pre>
               <p class="text-gray-600 mt-4 mb-2">使用 npx：</p>
               <pre class="bg-gray-800 text-gray-100 p-3 rounded-lg overflow-x-auto">npx @lzwme/m3u8-dl -h</pre>
             </div>
@@ -259,8 +256,7 @@ services:
               <label class="block text-sm font-bold text-gray-700 mb-1">下载完成后删除ts分片缓存</label>
               <div class="flex items-center mt-2">
                 <label class="inline-flex items-center">
-                  <input type="checkbox" v-model="config.delCache"
-                    class="form-checkbox h-5 w-5 text-blue-500 rounded focus:ring-blue-500">
+                  <input type="checkbox" v-model="config.delCache" class="form-checkbox h-5 w-5 text-blue-500 rounded focus:ring-blue-500">
                   <span class="ml-2 text-gray-700">删除分片文件</span>
                 </label>
               </div>
@@ -272,8 +268,7 @@ services:
               <label class="block text-sm font-bold text-gray-700 mb-1">下载完成后转换格式</label>
               <div class="flex items-center mt-2">
                 <label class="inline-flex items-center">
-                  <input type="checkbox" v-model="config.convert"
-                    class="form-checkbox h-5 w-5 text-blue-500 rounded focus:ring-blue-500">
+                  <input type="checkbox" v-model="config.convert" class="form-checkbox h-5 w-5 text-blue-500 rounded focus:ring-blue-500">
                   <span class="ml-2 text-gray-700">合并转换为 MP4/TS 文件</span>
                 </label>
               </div>
@@ -324,8 +319,8 @@ services:
             <div>
               <label class="block text-sm font-bold text-gray-700 mb-1">访问密码</label>
               <div class="flex">
-                <input v-model="token" type="password" maxlength="256"
-                  class="w-full p-2 border rounded-lg focus:ring-blue-500" placeholder="请输入访问密码" />
+                <input v-model="token" type="password" maxlength="256" class="w-full p-2 border rounded-lg focus:ring-blue-500"
+                  placeholder="请输入访问密码" />
               </div>
               <p class="mt-1 text-sm text-gray-500">若服务端设置了访问密码(token)，请在此输入</p>
             </div>
@@ -349,8 +344,7 @@ services:
             <div class="flex justify-between items-center">
               <h2 class="text-xl font-semibold">下载任务</h2>
               <div class="flex space-x-2">
-                <button @click="showNewDownloadDialog"
-                  class="px-3 py-1 text-sm bg-blue-500 hover:bg-blue-600 text-white rounded">
+                <button @click="showNewDownloadDialog" class="px-3 py-1 text-sm bg-blue-500 hover:bg-blue-600 text-white rounded">
                   <i class="fas fa-plus mr-1"></i>新建
                 </button>
                 <button v-if="selectedTasks.length > 0" @click="pauseDownload(selectedTasks)"
@@ -383,14 +377,13 @@ services:
               <div class="flex-1">
                 <div class="relative">
                   <input type="text" v-model="searchQuery"
-                    class="w-full pl-10 pr-4 py-2 border rounded-lg focus:ring-blue-500 focus:border-blue-500"
-                    placeholder="搜索任务名称或URL" aria-label="搜索任务">
+                    class="w-full pl-10 pr-4 py-2 border rounded-lg focus:ring-blue-500 focus:border-blue-500" placeholder="搜索任务名称或URL"
+                    aria-label="搜索任务">
                   <i class="fas fa-search absolute left-3 top-3 text-gray-400"></i>
                 </div>
               </div>
               <div class="flex items-center space-x-2">
-                <select v-model="statusFilter"
-                  class="px-3 py-2 border rounded-lg focus:ring-blue-500 focus:border-blue-500" title="按状态筛选"
+                <select v-model="statusFilter" class="px-3 py-2 border rounded-lg focus:ring-blue-500 focus:border-blue-500" title="按状态筛选"
                   aria-label="按状态筛选">
                   <option value="">全部状态</option>
                   <option value="resume">下载中</option>
@@ -398,8 +391,7 @@ services:
                   <option value="pause">已暂停</option>
                   <option value="done">已完成</option>
                 </select>
-                <button @click="clearFilters" class="px-3 py-2 text-gray-600 hover:text-gray-800" title="清除筛选条件"
-                  aria-label="清除筛选条件">
+                <button @click="clearFilters" class="px-3 py-2 text-gray-600 hover:text-gray-800" title="清除筛选条件" aria-label="清除筛选条件">
                   <i class="fas fa-times"></i>
                 </button>
               </div>
@@ -431,32 +423,25 @@ services:
               <div class="flex items-center justify-between mb-2">
                 <div class="flex-1">
                   <div class="flex items-center">
-                    <input type="checkbox" :checked="selectedTasks.includes(task.url)"
-                      @change="toggleTaskSelection(task.url)"
+                    <input type="checkbox" :checked="selectedTasks.includes(task.url)" @change="toggleTaskSelection(task.url)"
                       class="form-checkbox h-5 w-5 text-blue-500 rounded focus:ring-blue-500 mr-2"
                       :aria-label="'选择任务：' + (task.localVideo || task.filename || task.url)">
                     <h3 class="font-bold text-green-600 truncate" :title="task.url">
                       {{ task.localVideo || task.filename || task.url }}
                     </h3>
-                    <span v-if="task.status === 'pending'"
-                      class="ml-2 px-2 py-0.5 text-xs bg-yellow-100 text-yellow-800 rounded">等待中</span>
+                    <span v-if="task.status === 'pending'" class="ml-2 px-2 py-0.5 text-xs bg-yellow-100 text-yellow-800 rounded">等待中</span>
                     <span v-else-if="task.status === 'resume'"
                       class="ml-2 px-2 py-0.5 text-xs bg-green-100 text-green-800 rounded">下载中</span>
-                    <span v-else-if="task.status === 'pause'"
-                      class="ml-2 px-2 py-0.5 text-xs bg-gray-100 text-gray-800 rounded">已暂停</span>
-                    <span v-else-if="task.status === 'done'"
-                      class="ml-2 px-2 py-0.5 text-xs bg-blue-100 text-blue-800 rounded">已完成</span>
-                    <span v-else-if="task.status === 'error'"
-                      class="ml-2 px-2 py-0.5 text-xs bg-red-100 text-red-600 rounded" :title="task.errmsg">异常<i
-                        class="fas fa-info-circle ml-1"></i></span>
+                    <span v-else-if="task.status === 'pause'" class="ml-2 px-2 py-0.5 text-xs bg-gray-100 text-gray-800 rounded">已暂停</span>
+                    <span v-else-if="task.status === 'done'" class="ml-2 px-2 py-0.5 text-xs bg-blue-100 text-blue-800 rounded">已完成</span>
+                    <span v-else-if="task.status === 'error'" class="ml-2 px-2 py-0.5 text-xs bg-red-100 text-red-600 rounded"
+                      :title="task.errmsg">异常<i class="fas fa-info-circle ml-1"></i></span>
                   </div>
                   <div class="flex items-center text-sm text-gray-500 mt-1 flex-wrap gap-2">
-                    <span v-if="config.showPreview" class="text-blue-500 hover:text-blue-600 cursor-pointer"
-                      @click="preview(task.url)">
+                    <span v-if="config.showPreview" class="text-blue-500 hover:text-blue-600 cursor-pointer" @click="preview(task.url)">
                       <i class="fas fa-eye mr-1"></i>预览
                     </span>
-                    <span v-if="config.showLocalPlay" class="text-green-500 hover:text-green-600 cursor-pointer"
-                      @click="localPlay(task)">
+                    <span v-if="config.showLocalPlay" class="text-green-500 hover:text-green-600 cursor-pointer" @click="localPlay(task)">
                       <i class="fas fa-play-circle mr-1"></i>{{ task.localVideo ? '播放' : '边下边播' }}
                     </span>
                     <span v-if="task.duration" class="flex items-center">
@@ -491,17 +476,15 @@ services:
                   </div>
                 </div>
                 <div class="flex space-x-2">
-                  <button v-if="task.status === 'resume' || task.status === 'pending'"
-                    @click="pauseDownload([task.url])" class="p-2 text-yellow-500 hover:bg-yellow-50 rounded"
-                    title="暂停">
+                  <button v-if="task.status === 'resume' || task.status === 'pending'" @click="pauseDownload([task.url])"
+                    class="p-2 text-yellow-500 hover:bg-yellow-50 rounded" title="暂停">
                     <i class="fas fa-pause"></i>
                   </button>
                   <button v-if="task.status === 'pause' || task.status === 'error'" @click="resumeDownload([task.url])"
                     class="p-2 text-green-500 hover:bg-green-50 rounded" title="继续">
                     <i class="fas fa-play"></i>
                   </button>
-                  <button @click="deleteDownload([task.url])" class="p-2 text-red-500 hover:bg-red-50 rounded"
-                    title="删除">
+                  <button @click="deleteDownload([task.url])" class="p-2 text-red-500 hover:bg-red-50 rounded" title="删除">
                     <i class="fas fa-trash"></i>
                   </button>
                 </div>
@@ -524,8 +507,7 @@ services:
             <div v-if="filteredTasks.length === 0" class="p-8 text-center text-gray-500">
               <i class="fas fa-download text-4xl mb-4"></i>
               <p>暂无下载任务</p>
-              <button @click="showNewDownloadDialog"
-                class="mt-4 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600">
+              <button @click="showNewDownloadDialog" class="mt-4 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600">
                 <i class="fas fa-plus mr-1"></i>添加下载任务
               </button>
             </div>
@@ -720,7 +702,7 @@ services:
           const ws = new WebSocket(`ws://${location.host}/ws?token=${this.token}`);
           this.ws = ws;
           ws.onmessage = (e) => {
-            const { type, data } = T.safeJSONParse(e.data);
+            let { type, data } = T.safeJSONParse(e.data);
 
             switch (type) {
               case 'serverInfo':

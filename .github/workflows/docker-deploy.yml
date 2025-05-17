@@ -58,7 +58,7 @@ jobs:
           # generate Docker tags based on the following events/attributes
           #   nightly, main, pr-2, 1.2.3, 1.2, 1
           flavor: |
-            latest=false
+            latest=true
           tags: |
             type=schedule,pattern=nightly
             type=edge
