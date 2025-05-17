@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [1.1.1](https://github.com/lzwme/m3u8-dl/compare/v1.1.0...v1.1.1) (2025-05-17)
+
+
+### Bug Fixes
+
+* 修复页面进度不更新的问题 ([ba57a7d](https://github.com/lzwme/m3u8-dl/commit/ba57a7d69877b79217e2291db2fdfca3b965e890))
+
 ## [1.1.0](https://github.com/lzwme/m3u8-dl/compare/v1.0.0...v1.1.0) (2025-05-17)
 
 
