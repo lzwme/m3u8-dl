@@ -412,9 +412,9 @@ export class DLServer {
       const list: CacheItem[] = [];
 
       for (const url of urlsToPause) {
-        const item = this.dlCache.get(url);
+        const { workPoll, ...item } = this.dlCache.get(url);
         if (item?.status === 'resume') {
-          m3u8DLStop(url, item.workPoll);
+          m3u8DLStop(url, workPoll);
           item.status = item.tsSuccess === item.tsCount ? 'done' : 'pause';
           list.push(item);
         }
@@ -431,7 +431,7 @@ export class DLServer {
       const list: CacheItem[] = [];
 
       for (const url of urlsToResume) {
-        const item = this.dlCache.get(url);
+        const { workPoll, ...item } = this.dlCache.get(url);
         if (['pause', 'error'].includes(item?.status)) {
           this.startDownload(url, item.options);
           list.push(item);
@@ -447,13 +447,14 @@ export class DLServer {
     app.post('/delete', (req, res) => {
       const { urls, deleteCache = false, deleteVideo = false } = req.body;
       const urlsToDelete = urls;
-      const list: CacheItem[] = [];
+      const list: string[] = [];
 
       for (const url of urlsToDelete) {
         const item = this.dlCache.get(url);
         if (item) {
           m3u8DLStop(url, item.workPoll);
           this.dlCache.delete(url);
+          list.push(item.url);
 
           if (deleteCache && item.current?.tsOut) {
             const cacheDir = dirname(item.current.tsOut);
@@ -466,13 +467,11 @@ export class DLServer {
               if (existsSync(filepath)) unlinkSync(filepath);
             });
           }
-
-          list.push(item);
         }
       }
 
       const count = list.length;
-      if (count) this.wsSend('progress', list);
+      if (count) this.wsSend('delete', list);
       res.json({ message: `已删除 ${count} 个下载任务`, code: 0, count });
     });
 

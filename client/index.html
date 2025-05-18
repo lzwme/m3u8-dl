@@ -719,6 +719,9 @@ services:
                   // this.forceUpdate();
                 });
                 break;
+              case 'delete':
+                if (Array.isArray(data)) data.forEach(url => delete this.tasks[url]);
+                break;
               case 'queueStatus':
                 this.queueStatus = data;
                 break;
@@ -928,7 +931,7 @@ services:
         },
         /** 边下边播 */
         localPlay: function (task) {
-          const url = location.origin + '/localplay/' + encodeURIComponent(task.localVideo || task.localM3u8);
+          const url = location.origin + '/localplay/' + (task.localVideo || task.localM3u8);
           console.log(task);
           // return window.open(`./play.html?url=${encodeURIComponent(url)}`);
           Swal.fire({
