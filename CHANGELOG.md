@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [1.1.3](https://github.com/lzwme/m3u8-dl/compare/v1.1.2...v1.1.3) (2025-05-18)
+
+
+### Bug Fixes
+
+* 修复web界面删除视频后列表不会立即更新的问题 ([a9d6c50](https://github.com/lzwme/m3u8-dl/commit/a9d6c509f2476a25d325a4f213706ea7c428e3b6))
+
 ### [1.1.2](https://github.com/lzwme/m3u8-dl/compare/v1.1.1...v1.1.2) (2025-05-18)
 
 ### [1.1.1](https://github.com/lzwme/m3u8-dl/compare/v1.1.0...v1.1.1) (2025-05-17)
