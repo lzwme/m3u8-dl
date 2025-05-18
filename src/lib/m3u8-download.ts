@@ -205,6 +205,7 @@ export async function m3u8Download(url: string, options: M3u8DLOptions = {}) {
       remainingTime: 0,
       localM3u8: toLocalM3u8(m3u8Info.data).replace(options.cacheDir, '').replaceAll(sep, '/').slice(1),
       filename: options.filename,
+      threadNum: options.threadNum,
     };
     const runTask = (data: TsItemInfo[]) => {
       for (const info of data) {
@@ -256,6 +257,7 @@ export async function m3u8Download(url: string, options: M3u8DLOptions = {}) {
             stats.remainingTime = (timeCost / downloadedDuration) * (m3u8Info.duration - stats.durationDownloaded);
             if (stats.speed > stats.avgSpeed) stats.remainingTime = stats.remainingTime * (stats.avgSpeed / stats.speed);
             stats.remainingTime = Math.ceil(stats.remainingTime);
+            stats.size = stats.downloadedSize * (stats.duration / stats.durationDownloaded);
           }
 
           if (options.showProgress) {

@@ -94,11 +94,10 @@ export class DLServer {
         if (item.status === 'resume' || item.tsSuccess !== item.tsCount) {
           item.status = 'pause';
         } else {
-          const isError = item.status === 'done' && item.options?.convert && (!item.localVideo || !existsSync(item.localVideo));
+          const isError = item.status === 'done' && item.options?.convert !== false && (!item.localVideo || !existsSync(item.localVideo));
           if (isError) {
             item.status = 'error';
             item.errmsg = '本地视频文件不存在';
-            item.localVideo = '';
           }
         }
 

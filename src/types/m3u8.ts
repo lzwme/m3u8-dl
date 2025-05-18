@@ -87,6 +87,8 @@ export interface M3u8DLProgressStats {
   localVideo?: string;
   /** 本地保存的文件名 */
   filename?: string;
+  /** 并发下载线程数 */
+  threadNum?: number;
   /** 最新的错误信息 */
   errmsg?: string;
 }

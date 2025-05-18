@@ -17,10 +17,10 @@ export async function m3u8Convert(options: M3u8DLOptions, data: TsItemInfo[]) {
 
   if (ffmpegSupport) {
     const ffconcatFile = resolve(dirname(data[0].tsOut), 'ffconcat.txt');
-    let filesAllArr = data.map(d => resolve(d.tsOut)).filter(d => existsSync(d));
+    let filesAllArr = data.filter(d => existsSync(d.tsOut)).map(d => `file '${d.tsOut}'\nduration ${d.duration}`);
 
     if (process.platform === 'win32') filesAllArr = filesAllArr.map(d => d.replaceAll('\\', '/'));
-    writeFileSync(ffconcatFile, 'ffconcat version 1.0\nfile ' + filesAllArr.join('\nfile '));
+    writeFileSync(ffconcatFile, 'ffconcat version 1.0\n' + filesAllArr.join('\n'));
 
     let headersString = '';
     if (options.headers) {
@@ -30,12 +30,13 @@ export async function m3u8Convert(options: M3u8DLOptions, data: TsItemInfo[]) {
     }
 
     // ffmpeg -i nz.ts -c copy -map 0:v -map 0:a -bsf:a aac_adtstoasc nz.mp4
-    const cmd = `ffmpeg -y -f concat -safe 0 -i "${ffconcatFile}" -acodec copy -vcodec copy -bsf:a aac_adtstoasc ${headersString} "${filepath}"`;
+    // const cmd = `ffmpeg -async 1 -y -f concat -safe 0 -i "${ffconcatFile}" -acodec copy -vcodec copy -bsf:a aac_adtstoasc ${headersString} "${filepath}"`;
+    const cmd = `ffmpeg -async 1 -y -f concat -safe 0 -i "${ffconcatFile}" -c:v copy -c:a copy -movflags +faststart -fflags +genpts -bsf:a aac_adtstoasc ${headersString} "${filepath}"`;
     logger.debug('[convert to mp4]cmd:', cyan(cmd));
     const r = execSync(cmd);
     ffmpegSupport = !r.error;
     if (r.error) logger.error('Conversion to mp4 failed. Please confirm that `ffmpeg` is installed!', r.stderr);
-    unlinkSync(ffconcatFile);
+    else unlinkSync(ffconcatFile);
   }
 
   if (!ffmpegSupport) {

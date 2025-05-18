@@ -389,6 +389,7 @@ services:
                   <option value="resume">下载中</option>
                   <option value="pending">等待中</option>
                   <option value="pause">已暂停</option>
+                  <option value="error">异常</option>
                   <option value="done">已完成</option>
                 </select>
                 <button @click="clearFilters" class="px-3 py-2 text-gray-600 hover:text-gray-800" title="清除筛选条件" aria-label="清除筛选条件">
@@ -859,7 +860,7 @@ services:
           if (typeof urls === 'string') urls = [urls];
           const r = await T.post(`/pause`, { urls, all: urls[0] === 'all' });
           if (!r.code) T.toast(r.message || '已暂停下载');
-          this.tasks[url].status = 'pause';
+          if (urls === this.selectedTasks) this.selectedTasks = [];
         },
         /** 恢复下载 */
         resumeDownload: async function (urls) {
@@ -867,6 +868,60 @@ services:
           if (typeof urls === 'string') urls = [urls];
           const r = await T.post(`/resume`, { urls, all: urls[0] === 'all' });
           if (!r.code) T.toast(r.message || '已恢复下载');
+          if (urls === this.selectedTasks) this.selectedTasks = [];
+        },
+        /** 删除选中的任务 */
+        async deleteDownload(urls = this.selectedTasks) {
+          if (!urls.length) return;
+          try {
+            const result = await Swal.fire({
+              title: '确认删除',
+              html: `
+                <div class="text-left">
+                  <div class="mb-4">
+                    <label class="inline-flex items-center">
+                      <input type="checkbox" id="deleteCache" class="form-checkbox h-5 w-5 text-blue-500 rounded focus:ring-blue-500" checked>
+                      <span class="ml-2 text-gray-700">同时删除已下载的缓存</span>
+                    </label>
+                  </div>
+                  <div>
+                    <label class="inline-flex items-center">
+                      <input type="checkbox" id="deleteVideo" class="form-checkbox h-5 w-5 text-blue-500 rounded focus:ring-blue-500" checked>
+                      <span class="ml-2 text-red-700">同时删除已下载的视频</span>
+                    </label>
+                  </div>
+                </div>
+              `,
+              showCancelButton: true,
+              confirmButtonText: '确认删除',
+              cancelButtonText: '取消',
+              confirmButtonColor: '#ef4444',
+              focusConfirm: false,
+              preConfirm: () => {
+                return {
+                  deleteCache: document.getElementById('deleteCache').checked,
+                  deleteVideo: document.getElementById('deleteVideo').checked
+                };
+              }
+            });
+
+            if (result.isConfirmed) {
+              const r = await T.post(`/delete`, {
+                urls,
+                deleteCache: result.value.deleteCache,
+                deleteVideo: result.value.deleteVideo
+              });
+              if (!r.code) {
+                T.toast(r.message || '已删除选中的下载');
+                urls.forEach(url => (delete this.tasks[url]));
+                if (urls === this.selectedTasks) this.selectedTasks = [];
+                this.forceUpdate();
+              }
+            }
+          } catch (error) {
+            console.error('删除下载失败:', error);
+            T.alert('删除下载失败: ' + error.message);
+          }
         },
         getTasks: async function () {
           this.tasks = await T.get('/tasks');
@@ -875,17 +930,17 @@ services:
         localPlay: function (task) {
           const url = location.origin + '/localplay/' + encodeURIComponent(task.localVideo || task.localM3u8);
           console.log(task);
-          if (task.localVideo) {
-            Swal.fire({
-              title: task?.options.filename || task.url,
-              width: '1000px',
-              showCloseButton: true,
-              showConfirmButton: false,
-              html: `<video autoplay width="100%" style="max-width: 1000px; min-height: 300px; max-height: 90vh" src="${url}" controls></video> `,
-            });
-          } else {
-            window.open(`http://lzw.me/x/m3u8-player/?url=${encodeURIComponent(url)}`);
-          }
+          // return window.open(`./play.html?url=${encodeURIComponent(url)}`);
+          Swal.fire({
+            title: task?.options.filename || task.url,
+            width: '1000px',
+            padding: 0,
+            allowOutsideClick: false,
+            showCloseButton: true,
+            showConfirmButton: false,
+            html: `<iframe src="./play.html?url=${encodeURIComponent(url)}" style="width: 100%; height: 550px; max-width: 1000px; max-height: 90vh" frameborder="0" allowfullscreen></iframe>`,
+            // html: `<video autoplay width="100%" style="max-width: 1000px; min-height: 300px; max-height: 90vh" src="${url}" controls></video> `,
+          });
         },
         // 预览
         preview: function (url) {
@@ -949,59 +1004,6 @@ services:
             this.selectedTasks.push(url);
           } else {
             this.selectedTasks.splice(index, 1);
-          }
-        },
-        /** 删除选中的任务 */
-        async deleteDownload(urls = this.selectedTasks) {
-          if (!urls.length) return;
-          try {
-            const result = await Swal.fire({
-              title: '确认删除',
-              html: `
-                <div class="text-left">
-                  <div class="mb-4">
-                    <label class="inline-flex items-center">
-                      <input type="checkbox" id="deleteCache" class="form-checkbox h-5 w-5 text-blue-500 rounded focus:ring-blue-500" checked>
-                      <span class="ml-2 text-gray-700">同时删除已下载的缓存</span>
-                    </label>
-                  </div>
-                  <div>
-                    <label class="inline-flex items-center">
-                      <input type="checkbox" id="deleteVideo" class="form-checkbox h-5 w-5 text-blue-500 rounded focus:ring-blue-500" checked>
-                      <span class="ml-2 text-red-700">同时删除已下载的视频</span>
-                    </label>
-                  </div>
-                </div>
-              `,
-              showCancelButton: true,
-              confirmButtonText: '确认删除',
-              cancelButtonText: '取消',
-              confirmButtonColor: '#ef4444',
-              focusConfirm: false,
-              preConfirm: () => {
-                return {
-                  deleteCache: document.getElementById('deleteCache').checked,
-                  deleteVideo: document.getElementById('deleteVideo').checked
-                };
-              }
-            });
-
-            if (result.isConfirmed) {
-              const r = await T.post(`/delete`, {
-                urls,
-                deleteCache: result.value.deleteCache,
-                deleteVideo: result.value.deleteVideo
-              });
-              if (!r.code) {
-                T.toast(r.message || '已删除选中的下载');
-                urls.forEach(url => (delete this.tasks[url]));
-                this.selectedTasks = [];
-                this.forceUpdate();
-              }
-            }
-          } catch (error) {
-            console.error('删除下载失败:', error);
-            T.alert('删除下载失败: ' + error.message);
           }
         },
       },
