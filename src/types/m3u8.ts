@@ -1,4 +1,4 @@
-import type { AnyObject } from '@lzwme/fe-utils';
+import type { AnyObject, DownloadResult } from '@lzwme/fe-utils';
 import type { IncomingHttpHeaders } from 'node:http';
 import type { WorkerPool } from '../lib/worker_pool';
 
@@ -102,9 +102,9 @@ export interface M3u8DLOptions {
   /** 当初始化完成、下载开始时回调 */
   onInited?: (stats: M3u8DLProgressStats, m3u8Info: M3u8Info, workPoll: M3u8WorkerPool) => void;
   /** 每当 ts 文件下载完成时回调，可用于自定义进度控制 */
-  onProgress?: (finished: number, total: number, currentInfo: TsItemInfo, stats: M3u8DLProgressStats) => void;
+  onProgress?: (finished: number, total: number, currentInfo: TsItemInfo, stats: M3u8DLProgressStats) => void | boolean;
   /** 下载完成时回调，主要用于内部多任务管理 */
-  onComplete?: (result: { error?: Error; filepath?: string }) => void;
+  onComplete?: (result: M3u8DLResult) => void;
   /** 并发下载线程数。取决于服务器限制，过多可能会容易下载失败。一般建议不超过 8 个。默认为 cpu数 * 2，但不超过 8 */
   threadNum?: number;
   /** 最大并发下载任务数 */
@@ -127,6 +127,22 @@ export interface M3u8DLOptions {
   play?: boolean;
   /** 下载完毕后，是否合并转换为 mp4 或 ts 文件。默认为 true */
   convert?: boolean;
+  /**
+   * 下载类型。默认自动识别
+   * - 'm3u8'：下载 m3u8 文件
+   * - 'file'：下载普通文件
+   * - 'parser'：下载 VideoParser 支持解析的平台视频文件
+   */
+  type?: 'm3u8' | 'file' | 'parser';
+}
+
+export interface M3u8DLResult extends Partial<DownloadResult> {
+  /** 下载进度统计 */
+  stats?: M3u8DLProgressStats;
+  /** 下载选项 */
+  options?: M3u8DLOptions;
+  /** m3u8 文件信息 */
+  m3u8Info?: M3u8Info;
 }
 
 export interface WorkerTaskInfo {

@@ -2,21 +2,23 @@
  * @Author: renxia lzwy0820@qq.com
  * @Date: 2024-07-30 08:57:58
  * @LastEditors: renxia
- * @LastEditTime: 2025-05-09 16:59:23
+ * @LastEditTime: 2025-05-19 17:03:50
  * @FilePath: \m3u8-dl\src\m3u8-batch-download.ts
  * @Description: 这是默认设置,请设置`customMade`, 打开koroFileHeader查看配置 进行设置: https://github.com/OBKoro1/koro1FileHeader/wiki/%E9%85%8D%E7%BD%AE
  */
 import { existsSync, promises } from 'node:fs';
 import { basename } from 'node:path';
 import { m3u8Download, preDownLoad } from './lib/m3u8-download';
-import { M3u8DLOptions, M3u8WorkerPool } from './types/m3u8';
+import { M3u8DLOptions, M3u8DLResult, M3u8WorkerPool } from './types/m3u8';
 import { logger } from './lib/utils';
 import { VideoParser } from './video-parser';
 import { gray, red } from 'console-log-colors';
+import { fileDownload } from './lib/file-download';
+import { formatOptions } from './lib/format-options';
 
 async function formatUrls(urls: string[], options: M3u8DLOptions): Promise<Map<string, M3u8DLOptions>> {
   const taskset = new Map<string, M3u8DLOptions>();
-  for (const url of urls) {
+  for (let url of urls) {
     if (!url) continue;
     if (existsSync(url)) {
       const content = await promises.readFile(url, 'utf8');
@@ -37,6 +39,7 @@ async function formatUrls(urls: string[], options: M3u8DLOptions): Promise<Map<s
       }
     }
 
+    [url, options] = formatOptions(url, options);
     taskset.set(url, options);
   }
 
@@ -49,24 +52,35 @@ export async function m3u8BatchDownload(urls: string[], options: M3u8DLOptions) 
 
   return new Promise<boolean>(rs => {
     let preDLing = false;
+    const afterDownload = (r: M3u8DLResult, url: string) => {
+      const success = r.filepath && existsSync(r.filepath);
+
+      if (success) {
+        if (r.isExist) logger.info('文件已存在：', gray(r.filepath));
+        logger.debug('下载完成：', gray(url), gray(r.filepath));
+      } else {
+        logger.error('下载失败：', red(r.errmsg || '未知错误'), gray(url));
+      }
+      if (tasks.size === 0) rs(r.filepath && existsSync(r.filepath));
+      else run();
+    };
     const run = () => {
       const [url, urlNext] = [...tasks.keys()];
 
       if (url) {
-        const o = { ...tasks.get(url) };
+        const o = tasks.get(url);
         const onProgress = o.onProgress;
-        const useVideoParser = VideoParser.getPlatform(url) !== null;
 
         tasks.delete(url);
         o.onInited = (s, _i, wp) => {
           if (workPoll) workPoll = wp;
-          if (useVideoParser) {
+          if (o.type === 'parser') {
             logger.info('视频解析完成：', s.filename, gray(s.url));
           }
         };
         o.onProgress = (finished, total, info, stats) => {
           if (onProgress) onProgress(finished, total, info, stats);
-          if (!useVideoParser && !preDLing && urlNext && tasks.size && workPoll.freeNum > 1 && total - finished < options.threadNum) {
+          if (o.type === 'm3u8' && !preDLing && urlNext && tasks.size && workPoll.freeNum > 1 && total - finished < options.threadNum) {
             logger.debug(
               '\n[预下载下一集]',
               'freeNum:',
@@ -82,23 +96,13 @@ export async function m3u8BatchDownload(urls: string[], options: M3u8DLOptions) 
           }
         };
 
-        if (useVideoParser) {
+        if (o.type === 'parser') {
           const vp = new VideoParser();
-          vp.download(url, o).then(r => {
-            if (r.code !== 0) {
-              logger.error('下载失败：', red(r.message), gray(url));
-            } else {
-              if (r.data?.isExist) logger.info('文件已存在：', gray(r.data.filepath));
-              logger.debug('下载完成：', gray(url), gray(r.data.filepath));
-            }
-            if (tasks.size === 0) {
-              rs(r.data.filepath && existsSync(r.data.filepath));
-            } else {
-              run();
-            }
-          });
+          vp.download(url, o).then(r => afterDownload(r, url));
+        } else if (o.type === 'file') {
+          fileDownload(url, o).then(r => afterDownload(r, url));
         } else {
-          m3u8Download(url, o).then(r => (tasks.size === 0 ? rs(existsSync(r.filepath)) : run()));
+          m3u8Download(url, o).then(r => afterDownload(r, url));
         }
       }
     };

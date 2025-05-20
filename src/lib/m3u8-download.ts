@@ -1,14 +1,15 @@
 import { dirname, resolve, sep } from 'node:path';
 import { existsSync } from 'node:fs';
 import type { IncomingHttpHeaders } from 'node:http';
-import { Barrier, formatTimeCost, md5, rmrfAsync } from '@lzwme/fe-utils';
+import { Barrier, formatTimeCost, rmrfAsync } from '@lzwme/fe-utils';
 import { formatByteSize } from '@lzwme/fe-utils/cjs/common/helper';
 import { green, cyanBright, cyan, magenta, magentaBright, yellowBright, blueBright, greenBright } from 'console-log-colors';
-import { formatOptions, isSupportFfmpeg, logger } from './utils.js';
+import { isSupportFfmpeg, logger } from './utils.js';
+import { formatOptions } from './format-options.js';
 import { WorkerPool } from './worker_pool.js';
 import { parseM3U8 } from './parseM3u8.js';
 import { m3u8Convert } from './m3u8-convert.js';
-import type { M3u8DLOptions, M3u8DLProgressStats, M3u8WorkerPool, TsItemInfo } from '../types/m3u8.js';
+import type { M3u8DLOptions, M3u8DLProgressStats, M3u8DLResult, M3u8WorkerPool, TsItemInfo } from '../types/m3u8.js';
 import { localPlay, toLocalM3u8 } from './local-play.js';
 
 /** 下载队列管理 */
@@ -45,10 +46,11 @@ export class DownloadQueue {
     try {
       const { maxDownloads, ...options } = next.options;
       const result = await m3u8Download(next.url, options);
-      next.options.onComplete?.({ filepath: result.filepath });
+      next.options.onComplete?.(result);
     } catch (error) {
       next.options.onComplete?.({
-        error: error instanceof Error ? error : new Error(error ? JSON.stringify(error) : 'Unknown error'),
+        errmsg: error instanceof Error ? error.message : error ? JSON.stringify(error) : 'Unknown error',
+        options: next.options,
       });
     } finally {
       this.activeDownloads.delete(next.url);
@@ -91,7 +93,8 @@ const tsDlFile = resolve(__dirname, './ts-download.js');
 export const workPollPublic: M3u8WorkerPool = new WorkerPool(tsDlFile);
 
 async function m3u8InfoParse(url: string, options: M3u8DLOptions = {}) {
-  [url, options] = formatOptions(url, options);
+  let urlMd5 = '';
+  [url, options, urlMd5] = formatOptions(url, options);
 
   const ext = isSupportFfmpeg() ? '.mp4' : '.ts';
   /** 最终合并转换后的文件路径 */
@@ -107,7 +110,7 @@ async function m3u8InfoParse(url: string, options: M3u8DLOptions = {}) {
 
   if (!options.force && existsSync(filepath)) return result;
 
-  const m3u8Info = await parseM3U8(url, resolve(options.cacheDir, md5(url, false)), options.headers as IncomingHttpHeaders).catch(e =>
+  const m3u8Info = await parseM3U8(url, resolve(options.cacheDir, urlMd5), options.headers as IncomingHttpHeaders).catch(e =>
     logger.error('[parseM3U8][failed]', e)
   );
   if (m3u8Info && m3u8Info?.tsCount > 0) result.m3u8Info = m3u8Info;
@@ -157,11 +160,12 @@ export async function m3u8Download(url: string, options: M3u8DLOptions = {}) {
   // 如果设置了最大并发数，则使用队列管理
   if (options.maxDownloads) {
     downloadQueue.maxConcurrent = options.maxDownloads;
-    return new Promise<{ filepath?: string; error?: Error }>(resolve => {
-      const newOptions = {
+    return new Promise<M3u8DLResult>(resolve => {
+      const newOptions: M3u8DLOptions = {
         ...options,
-        onComplete: (result: { error?: Error; filepath?: string }) => {
-          resolve(result);
+        onComplete: r => {
+          if (options.onComplete) options.onComplete(r);
+          resolve(r);
         },
       };
       downloadQueue.add(url, newOptions, options.priority || 0);
@@ -170,11 +174,12 @@ export async function m3u8Download(url: string, options: M3u8DLOptions = {}) {
 
   // 原有的下载逻辑
   logger.info('Starting download for', cyanBright(url));
-  const result = await m3u8InfoParse(url, options);
+  const result: M3u8DLResult = await m3u8InfoParse(url, options);
   options = result.options;
 
   if (!options.force && existsSync(result.filepath) && !result.m3u8Info) {
     logger.info('file already exist:', result.filepath);
+    result.isExist = true;
     return result;
   }
 
@@ -291,6 +296,7 @@ export async function m3u8Download(url: string, options: M3u8DLOptions = {}) {
       );
     }
 
+    result.stats = stats;
     toLocalM3u8(m3u8Info.data, options.filename);
     if (options.onInited) options.onInited(stats, m3u8Info, workPoll);
     runTask(m3u8Info.data);

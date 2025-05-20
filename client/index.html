@@ -426,7 +426,7 @@ services:
                   <div class="flex items-center">
                     <input type="checkbox" :checked="selectedTasks.includes(task.url)" @change="toggleTaskSelection(task.url)"
                       class="form-checkbox h-5 w-5 text-blue-500 rounded focus:ring-blue-500 mr-2"
-                      :aria-label="'选择任务：' + (task.localVideo || task.filename || task.url)">
+                      title="'选择任务：' + (task.localVideo || task.filename || task.url)">
                     <h3 class="font-bold text-green-600 truncate" :title="task.url">
                       {{ task.localVideo || task.filename || task.url }}
                     </h3>
@@ -601,7 +601,7 @@ services:
     };
 
     Vue.prototype.T = T;
-    new Vue({
+    window.APP = new Vue({
       el: '#app',
       data: {
         ws: null,
@@ -691,9 +691,12 @@ services:
         forceUpdate: function () {
           const now = Date.now();
           if (now - this.forceUpdateTime > 500) {
-            this.$forceUpdate();
             this.forceUpdateTime = now;
-          } else this.forceUpdate();
+            this.$forceUpdate();
+          } else {
+            if (this.forceUpdateTimeout) clearTimeout(this.forceUpdateTimeout);
+            this.forceUpdateTimeout = setTimeout(() => this.forceUpdate(), 500);
+          }
         },
         wsConnect: function (reconnectDelay = 3000) {
           if (this.ws && this.ws.readyState === WebSocket.OPEN) {
@@ -716,11 +719,14 @@ services:
                 if (!Array.isArray(data)) data = [data];
                 this.$nextTick(() => {
                   data.forEach(item => item.url && (this.tasks[item.url] = item));
-                  // this.forceUpdate();
+                  this.forceUpdate();
                 });
                 break;
               case 'delete':
-                if (Array.isArray(data)) data.forEach(url => delete this.tasks[url]);
+                if (Array.isArray(data)) {
+                  data.forEach(url => delete this.tasks[url]);
+                  this.forceUpdate();
+                }
                 break;
               case 'queueStatus':
                 this.queueStatus = data;

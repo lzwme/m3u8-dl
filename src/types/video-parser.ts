@@ -1,12 +1,12 @@
 export interface VideoInfo {
-  author: string;
-  uid: string;
-  avatar: string;
-  like: number;
-  time: number;
-  title: string;
-  cover: string;
   url: string;
+  title: string;
+  author?: string;
+  avatar?: string;
+  time?: number;
+  cover?: string;
+  uid?: string;
+  like?: number;
   /** 来源页面 */
   referer?: string;
   music?: {

@@ -128,13 +128,13 @@ for (const filepath of fileList) {
 
 ```bash
 # docker pull ghcr.io/lzwme/m3u8-dl:latest
-docker pull lzwme/m3u8dl-dl:latest
+docker pull renxia/m3u8dl-dl:latest
 
 docker run --rm -it \
   -v ./cache:/app/cache \
   -v ./downloads:/app/downloads \
   -p 6600:6600 \
-  lzwme/m3u8dl-server:latest
+  renxia/m3u8dl-dl:latest
 ```
 
 也可以基于 [docker-compose.yml](./docker/docker-compose.yml) 部署：

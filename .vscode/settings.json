@@ -5,7 +5,7 @@
     "source.fixAll.eslint": "explicit"
   },
   "editor.defaultFormatter": "esbenp.prettier-vscode",
-  "editor.formatOnSave": true,
+  "editor.formatOnSave": false,
   "editor.renderWhitespace": "all",
   "javascript.validate.enable": false,
   "jest.autoRun": "off",

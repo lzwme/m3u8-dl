@@ -1,9 +1,7 @@
 import type { IncomingHttpHeaders } from 'node:http';
-import { cpus } from 'node:os';
 import { existsSync, readdirSync, Stats, statSync } from 'node:fs';
 import { resolve } from 'node:path';
-import { execSync, NLogger, color, Request, retry, toLowcaseKeyObject, md5 } from '@lzwme/fe-utils';
-import { M3u8DLOptions } from '../types';
+import { execSync, NLogger, color, Request, retry, toLowcaseKeyObject } from '@lzwme/fe-utils';
 
 export const request = new Request({
   headers: { 'content-type': 'application/x-www-form-urlencoded; charset=UTF-8' },
@@ -73,37 +71,4 @@ export function formatHeaders(headers: string | IncomingHttpHeaders) {
   } else if (!headers) return {};
 
   return toLowcaseKeyObject(headers as Record<string, string>);
-}
-
-export function formatOptions(url: string, opts: M3u8DLOptions) {
-  const options: M3u8DLOptions = {
-    delCache: !opts.debug,
-    saveDir: process.cwd(),
-    showProgress: true,
-    ...opts,
-  };
-
-  if (!url.startsWith('http')) {
-    url = url.replace(/\$+/, '|').replace(/\|\|+/, '|');
-    if (url.includes('|')) {
-      const r = url.split('|');
-      url = r[1];
-
-      if (!options.filename) options.filename = r[0];
-      else options.filename = `${options.filename.replace(/\.(ts|mp4)$/, '')}-${r[0]}`;
-    }
-  }
-  const urlMd5 = md5(url, false);
-
-  if (!options.threadNum || +options.threadNum <= 0) options.threadNum = Math.min(cpus().length * 2, 8);
-  if (!options.filename) options.filename = urlMd5;
-  if (!options.filename.endsWith('.mp4')) options.filename += '.mp4';
-  if (!options.cacheDir) options.cacheDir = `cache`;
-  if (options.headers) options.headers = formatHeaders(options.headers);
-
-  if (options.debug) {
-    logger.updateOptions({ levelType: 'debug' });
-    logger.debug('[m3u8-DL]options', options, url);
-  }
-  return [url, options] as const;
 }

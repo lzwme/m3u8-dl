@@ -43,7 +43,7 @@ export class WeiboParser extends BaseParser {
 
       const videoUrl = this.fixUrl(videoUrls[Object.keys(videoUrls)[0]]);
 
-      return this.success({
+      return this.success<VideoInfo>({
         title: item.title || '',
         author: item.author || '',
         url: videoUrl,

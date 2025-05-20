@@ -21,7 +21,7 @@ export class PipixiaParser extends BaseParser {
 
       if (!videoUrl) return this.error(201, '未找到视频URL');
 
-      return this.success({
+      return this.success<VideoInfo>({
         referer: headers.referer,
         title: item.content,
         author: item.author.name,

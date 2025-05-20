@@ -31,7 +31,7 @@ export class DouyinParser extends BaseParser {
 
       const videoUrl = `https://www.iesdouyin.com/aweme/v1/play/?video_id=${videoId}&ratio=1080p&line=0`;
 
-      return this.success({
+      return this.success<VideoInfo>({
         author: item.author.nickname,
         uid: item.author.unique_id,
         avatar: item.author.avatar_medium.url_list[0],
