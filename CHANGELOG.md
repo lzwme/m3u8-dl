@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [1.2.0](https://github.com/lzwme/m3u8-dl/compare/v1.1.3...v1.2.0) (2025-05-20)
+
+
+### Features
+
+* 支持 mp4、mkv 等格式文件下载 ([a5ce1e6](https://github.com/lzwme/m3u8-dl/commit/a5ce1e6c3b71802a518c90f95a1bc5d209f060f3))
+
 ### [1.1.3](https://github.com/lzwme/m3u8-dl/compare/v1.1.2...v1.1.3) (2025-05-18)
 
 
