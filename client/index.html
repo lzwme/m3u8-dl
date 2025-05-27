@@ -9,9 +9,11 @@
   <title>M3U8 下载管理</title>
   <link rel="icon" type="image/svg+xml" href="logo.svg">
   <script src="https://cdn.tailwindcss.com"></script>
-  <script src="https://cdn.jsdelivr.net/npm/vue@2.7.16/dist/vue.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-  <link href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.7.2/css/all.min.css" rel="stylesheet">
+  <script src="https://s4.zstatic.net/ajax/libs/vue/2.7.16/vue.min.js" integrity="sha512-Wx8niGbPNCD87mSuF0sBRytwW2+2ZFr7HwVDF8krCb3egstCc4oQfig+/cfg2OHd82KcUlOYxlSDAqdHqK5TCw==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+  <script src="https://s4.zstatic.net/ajax/libs/sweetalert2/11.16.1/sweetalert2.min.js" integrity="sha512-LGHBR+kJ5jZSIzhhdfytPoEHzgaYuTRifq9g5l6ja6/k9NAOsAi5dQh4zQF6JIRB8cAYxTRedERUF+97/KuivQ==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+  <script src="https://s4.zstatic.net/ajax/libs/blueimp-md5/2.19.0/js/md5.min.js" integrity="sha512-8pbzenDolL1l5OPSsoURCx9TEdMFTaeFipASVrMYKhuYtly+k3tcsQYliOEKTmuB1t7yuzAiVo+yd7SJz+ijFQ==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+  <link rel="stylesheet" href="https://s4.zstatic.net/ajax/libs/sweetalert2/11.16.1/sweetalert2.min.css" integrity="sha512-WnmDqbbAeHb7Put2nIAp7KNlnMup0FXVviOctducz1omuXB/hHK3s2vd3QLffK/CvvFUKrpioxdo+/Jo3k/xIw==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+  <link rel="stylesheet" href="https://s4.zstatic.net/ajax/libs/font-awesome/6.7.2/css/all.min.css" integrity="sha512-Evv84Mr4kqVGRNSgIGL/F/aIDqQb7xQ2vcrdIwxfjThSH8CSR7PBEakCr51Ck+w+/U6swU2Im1vVX0SVk9ABhg==" crossorigin="anonymous" referrerpolicy="no-referrer" />
 
   <style>
     #app {
@@ -139,7 +141,7 @@
       </nav>
     </div>
 
-    <div class="main-content p-6"
+    <div class="main-content p-1 md:p-6"
       :style="{ marginLeft: sidebarCollapsed ? '0' : '16rem', width: sidebarCollapsed ? '100%' : 'calc(100% - 16rem)' }">
       <div v-if="activeSection === 'about'" class="bg-white rounded-lg shadow p-6">
         <h2 class="text-xl font-semibold mb-6">关于项目</h2>
@@ -427,8 +429,8 @@ services:
                     <input type="checkbox" :checked="selectedTasks.includes(task.url)" @change="toggleTaskSelection(task.url)"
                       class="form-checkbox h-5 w-5 text-blue-500 rounded focus:ring-blue-500 mr-2"
                       title="'选择任务：' + (task.localVideo || task.filename || task.url)">
-                    <h3 class="font-bold text-green-600 truncate" :title="task.url">
-                      {{ task.localVideo || task.filename || task.url }}
+                    <h3 class="font-bold text-green-600 truncate max-w-[calc(100vw-100px)]" :title="task.url">
+                      {{ task.filename || task.localVideo || task.url }}
                     </h3>
                     <span v-if="task.status === 'pending'" class="ml-2 px-2 py-0.5 text-xs bg-yellow-100 text-yellow-800 rounded">等待中</span>
                     <span v-else-if="task.status === 'resume'"
@@ -449,7 +451,7 @@ services:
                       <i class="fas fa-clock mr-1"></i>
                       <span>时长: {{ T.formatTime(task.duration * 1000) }}</span>
                     </span><span class="flex items-center">
-                      <i class="fas fa-clock mr-1"></i>
+                      <i class="fas fa-file-video mr-1"></i>
                       <span>大小: {{ T.formatSize(task.size || task.downloadedSize) }}</span>
                     </span>
                     <span v-if="task.tsCount" class="flex items-center">
@@ -547,7 +549,8 @@ services:
       },
       alert(msg, p) {
         p = typeof msg === 'object' ? msg : Object.assign({ text: msg }, p);
-        Swal.fire(Object.assign({ icon: 'info', showConfirmButton: false, showCloseButton: true, allowOutsideClick: false }, p));
+        if (!p.toast) p.allowOutsideClick = false;
+        Swal.fire(Object.assign({ icon: 'info', showConfirmButton: false, showCloseButton: true }, p));
       },
       toast(msg, p) {
         p = typeof msg === 'object' ? msg : Object.assign({ text: msg }, p);
@@ -772,6 +775,8 @@ services:
         updateToken() {
           const isUpdated = this.token !== T.reqHeaders.authorization;
           if (!isUpdated) return;
+
+          if (this.token) this.token = md5(this.token).slice(0, 8);
 
           T.reqHeaders.authorization = this.token || '';
           if (this.token) {

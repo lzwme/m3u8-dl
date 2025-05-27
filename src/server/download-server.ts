@@ -1,6 +1,6 @@
 import { readFileSync, writeFileSync, existsSync, rmSync, statSync, unlinkSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
-import { assign, getUrlParams, mkdirp } from '@lzwme/fe-utils';
+import { assign, getUrlParams, md5, mkdirp } from '@lzwme/fe-utils';
 import type { Express } from 'express';
 import type { Server } from 'ws';
 import type { M3u8DLOptions, M3u8DLProgressStats, M3u8DLResult, M3u8WorkerPool, TsItemInfo } from '../types/m3u8.js';
@@ -16,7 +16,7 @@ interface DLServerOptions {
   cacheDir?: string;
   configPath?: string;
   debug?: boolean;
-  /** 登录 token，默认取环境变量 DS_TOKEN */
+  /** 登录 token，默认取环境变量 DS_SECRET */
   token?: string;
 }
 
@@ -38,7 +38,7 @@ export class DLServer {
   options: DLServerOptions = {
     port: Number(process.env.DS_PORT) || 6600,
     cacheDir: resolve(process.cwd(), './cache'),
-    token: process.env.DS_TOKEN || '',
+    token: process.env.DS_SECRET || process.env.DS_TOKEN || '',
     debug: process.env.DS_DEBUG == '1',
   };
   private serverInfo = {
@@ -77,6 +77,7 @@ export class DLServer {
       this.serverInfo.version = pkg.version;
     }
 
+    if (opts.token) opts.token = md5(opts.token.trim()).slice(0, 8);
     this.init();
   }
   private async init() {

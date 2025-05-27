@@ -52,10 +52,11 @@ program
   .command('server')
   .description('启动下载中心web服务')
   .option('-P, --port <port>', '指定web服务端口。默认为6600')
-  .option('--token <token>', '指定web服务密码（请求头authorization）。默认为空')
+  .option('-t, --token <token>', '指定web服务密码（请求头authorization）。默认为空')
   .action((options: { port?: number; token?: string; debug?: boolean }) => {
     const opts = getOptions();
     if (opts.debug) options.debug = true;
+    console.log(opts, options);
 
     import('./server/download-server.js').then(m => {
       new m.DLServer(options);
