@@ -9,11 +9,21 @@
   <title>M3U8 下载管理</title>
   <link rel="icon" type="image/svg+xml" href="logo.svg">
   <script src="https://cdn.tailwindcss.com"></script>
-  <script src="https://s4.zstatic.net/ajax/libs/vue/2.7.16/vue.min.js" integrity="sha512-Wx8niGbPNCD87mSuF0sBRytwW2+2ZFr7HwVDF8krCb3egstCc4oQfig+/cfg2OHd82KcUlOYxlSDAqdHqK5TCw==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
-  <script src="https://s4.zstatic.net/ajax/libs/sweetalert2/11.16.1/sweetalert2.min.js" integrity="sha512-LGHBR+kJ5jZSIzhhdfytPoEHzgaYuTRifq9g5l6ja6/k9NAOsAi5dQh4zQF6JIRB8cAYxTRedERUF+97/KuivQ==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
-  <script src="https://s4.zstatic.net/ajax/libs/blueimp-md5/2.19.0/js/md5.min.js" integrity="sha512-8pbzenDolL1l5OPSsoURCx9TEdMFTaeFipASVrMYKhuYtly+k3tcsQYliOEKTmuB1t7yuzAiVo+yd7SJz+ijFQ==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
-  <link rel="stylesheet" href="https://s4.zstatic.net/ajax/libs/sweetalert2/11.16.1/sweetalert2.min.css" integrity="sha512-WnmDqbbAeHb7Put2nIAp7KNlnMup0FXVviOctducz1omuXB/hHK3s2vd3QLffK/CvvFUKrpioxdo+/Jo3k/xIw==" crossorigin="anonymous" referrerpolicy="no-referrer" />
-  <link rel="stylesheet" href="https://s4.zstatic.net/ajax/libs/font-awesome/6.7.2/css/all.min.css" integrity="sha512-Evv84Mr4kqVGRNSgIGL/F/aIDqQb7xQ2vcrdIwxfjThSH8CSR7PBEakCr51Ck+w+/U6swU2Im1vVX0SVk9ABhg==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+  <script src="https://s4.zstatic.net/ajax/libs/vue/2.7.16/vue.min.js"
+    integrity="sha512-Wx8niGbPNCD87mSuF0sBRytwW2+2ZFr7HwVDF8krCb3egstCc4oQfig+/cfg2OHd82KcUlOYxlSDAqdHqK5TCw==" crossorigin="anonymous"
+    referrerpolicy="no-referrer"></script>
+  <script src="https://s4.zstatic.net/ajax/libs/sweetalert2/11.16.1/sweetalert2.min.js"
+    integrity="sha512-LGHBR+kJ5jZSIzhhdfytPoEHzgaYuTRifq9g5l6ja6/k9NAOsAi5dQh4zQF6JIRB8cAYxTRedERUF+97/KuivQ==" crossorigin="anonymous"
+    referrerpolicy="no-referrer"></script>
+  <script src="https://s4.zstatic.net/ajax/libs/blueimp-md5/2.19.0/js/md5.min.js"
+    integrity="sha512-8pbzenDolL1l5OPSsoURCx9TEdMFTaeFipASVrMYKhuYtly+k3tcsQYliOEKTmuB1t7yuzAiVo+yd7SJz+ijFQ==" crossorigin="anonymous"
+    referrerpolicy="no-referrer"></script>
+  <link rel="stylesheet" href="https://s4.zstatic.net/ajax/libs/sweetalert2/11.16.1/sweetalert2.min.css"
+    integrity="sha512-WnmDqbbAeHb7Put2nIAp7KNlnMup0FXVviOctducz1omuXB/hHK3s2vd3QLffK/CvvFUKrpioxdo+/Jo3k/xIw==" crossorigin="anonymous"
+    referrerpolicy="no-referrer" />
+  <link rel="stylesheet" href="https://s4.zstatic.net/ajax/libs/font-awesome/6.7.2/css/all.min.css"
+    integrity="sha512-Evv84Mr4kqVGRNSgIGL/F/aIDqQb7xQ2vcrdIwxfjThSH8CSR7PBEakCr51Ck+w+/U6swU2Im1vVX0SVk9ABhg==" crossorigin="anonymous"
+    referrerpolicy="no-referrer" />
 
   <style>
     #app {
@@ -428,9 +438,9 @@ services:
                   <div class="flex items-center">
                     <input type="checkbox" :checked="selectedTasks.includes(task.url)" @change="toggleTaskSelection(task.url)"
                       class="form-checkbox h-5 w-5 text-blue-500 rounded focus:ring-blue-500 mr-2"
-                      title="'选择任务：' + (task.localVideo || task.filename || task.url)">
+                      :title="'选择任务：' + (task.localVideo || task.filename || task.url)">
                     <h3 class="font-bold text-green-600 truncate max-w-[calc(100vw-100px)]" :title="task.url">
-                      {{ task.filename || task.localVideo || task.url }}
+                      {{ task.localVideo || task.filename || task.url }}
                     </h3>
                     <span v-if="task.status === 'pending'" class="ml-2 px-2 py-0.5 text-xs bg-yellow-100 text-yellow-800 rounded">等待中</span>
                     <span v-else-if="task.status === 'resume'"
@@ -441,6 +451,10 @@ services:
                       :title="task.errmsg">异常<i class="fas fa-info-circle ml-1"></i></span>
                   </div>
                   <div class="flex items-center text-sm text-gray-500 mt-1 flex-wrap gap-2">
+                    <span class="cursor-pointer" @click="showTaskDetail(task)">
+                      <i class="fas fa-info-circle mr-1"></i>
+                      <span>详情</span>
+                    </span>
                     <span v-if="config.showPreview" class="text-blue-500 hover:text-blue-600 cursor-pointer" @click="preview(task.url)">
                       <i class="fas fa-eye mr-1"></i>预览
                     </span>
@@ -449,7 +463,7 @@ services:
                     </span>
                     <span v-if="task.duration" class="flex items-center">
                       <i class="fas fa-clock mr-1"></i>
-                      <span>时长: {{ T.formatTime(task.duration * 1000) }}</span>
+                      <span>时长: {{ T.formatTimeCost(task.duration * 1000) }}</span>
                     </span><span class="flex items-center">
                       <i class="fas fa-file-video mr-1"></i>
                       <span>大小: {{ T.formatSize(task.size || task.downloadedSize) }}</span>
@@ -458,13 +472,9 @@ services:
                       <i class="fas fa-file-alt mr-1"></i>
                       <span>分片: {{ task.tsSuccess + task.tsFailed }}/{{ task.tsCount }}</span>
                     </span>
-                    <span class="flex items-center">
-                      <i class="fas fa-tachometer-alt mr-1"></i>
-                      <span>速度: {{ task.speedDesc }}</span>
-                    </span>
                     <span v-if="task.status === 'resume'" class="flex items-center">
                       <i class="fas fa-hourglass-half mr-1"></i>
-                      <span>剩余: {{ T.formatTime(task.remainingTime || 0) }}</span>
+                      <span>剩余: {{ T.formatTimeCost(task.remainingTime || 0) }}</span>
                     </span>
                     <!-- <span class="flex items-center">
                       <i class="fas fa-sort-amount-up mr-1"></i>
@@ -494,9 +504,15 @@ services:
               </div>
               <div class="relative pt-1">
                 <div class="flex mb-2 items-center justify-between">
-                  <div>
+                  <div class="flex items-center">
                     <span class="text-xs font-semibold inline-block text-blue-600">
                       {{ task.progress || 0 }}%
+                    </span>
+                  </div>
+                  <div>
+                    <span class="text-xs font-semibold inline-block py-1 px-2 rounded text-green-600">
+                      <!-- <i class="fas fa-tachometer-alt mr-1"></i> -->
+                      {{ task.speedDesc }}
                     </span>
                   </div>
                 </div>
@@ -522,6 +538,13 @@ services:
   <script>
     const T = {
       token: '',
+      taskStatus: {
+        resume: '下载中',
+        pending: '等待中',
+        pause: '已暂停',
+        error: '异常',
+        done: '已完成',
+      },
       reqHeaders: {
         'content-type': 'application/json',
         authorization: localStorage.getItem('token') || '',
@@ -581,7 +604,7 @@ services:
         }
       },
       // 格式化时间
-      formatTime: function (seconds) {
+      formatTimeCost: function (seconds) {
         seconds /= 1000;
         if (seconds < 60) {
           return seconds + '秒';
@@ -670,7 +693,7 @@ services:
 
           // 排序：resume > pending > pause > error > done
           const statusOrder = { resume: 0, pending: 1, pause: 2, error: 3, done: 4 };
-          tasks.sort((a, b) => (statusOrder[a.status] - statusOrder[b.status]) || (b.endTime - a.endTime));
+          tasks.sort((a, b) => (statusOrder[a.status] - statusOrder[b.status]) || a.status === 'done' ? (b.filename - a.filename) : (b.endTime - a.endTime));
 
           // 更新 queueStatus
           const queueStatus = {
@@ -939,6 +962,35 @@ services:
         },
         getTasks: async function () {
           this.tasks = await T.get('/tasks');
+        },
+        showTaskDetail(task) {
+          console.log(task);
+          const taskInfo = {
+            名称: task.filename || task.localVideo,
+            状态: T.taskStatus[task.status] || task.status,
+            大小: `${T.formatSize(task.downloadedSize)} / ${T.formatSize(task.size)}`,
+            分片: `${task.tsSuccess} / ${task.tsCount}`,
+            // 进度: `${task.progress}%`,
+            平均速度: `${task.avgSpeedDesc}/s`,
+            并发线程: task.threadNum,
+            下载地址: task.url,
+            保存位置: task.localVideo || task.options?.saveDir,
+            开始时间: new Date(task.startTime).toLocaleString(),
+            结束时间: task.endTime && new Date(task.endTime).toLocaleString(),
+            剩余时间: !task.endTime && task.remainingTime && T.formatTimeCost(task.remainingTime),
+          };
+          Swal.fire({
+            title: '任务详情',
+            width: 1000,
+            html: [
+              '<div class="flex-col full-width text-left">',
+              Object.entries(taskInfo).filter(d => d[1]).map(
+                ([key, value]) => `<div class="flex"><label class="font-bold text-right inline-block" style="min-width:80px">${key}:</label>
+                  <span class="ml-2 text-green-600 word-break">${value}</span></div>`
+              ).join(''),
+              '</div>'
+            ].join(''),
+          })
         },
         /** 边下边播 */
         localPlay: function (task) {
