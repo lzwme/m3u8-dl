@@ -32,8 +32,17 @@ export async function parseM3U8(content: string, cacheDir = './cache', headers?:
   parser.push(content);
   parser.end();
   logger.debug('parser.manifest', parser.manifest);
+
   if (parser.manifest.playlists?.length > 0) {
-    url = new URL(parser.manifest.playlists[0].uri, url).toString();
+    let maxBandwidthItem = parser.manifest.playlists[0];
+    for (const item of parser.manifest.playlists) {
+      if (!maxBandwidthItem || (item.attributes?.BANDWIDTH || 0) > (maxBandwidthItem.attributes?.BANDWIDTH || 0)) {
+        maxBandwidthItem = item;
+      }
+    }
+
+    url = new URL((maxBandwidthItem as unknown as { uri: string }).uri, url).toString();
+    logger.debug('maxBandwidthItem', maxBandwidthItem, url);
 
     content = (await getRetry<string>(url, headers)).data;
     parser = new Parser();
@@ -41,12 +50,7 @@ export async function parseM3U8(content: string, cacheDir = './cache', headers?:
     parser.end();
   }
 
-  const tsList: {
-    uri: string;
-    key: { uri: string; method: string; iv?: string | Uint32Array };
-    duration: number;
-    timeline: number;
-  }[] = parser.manifest.segments || [];
+  const tsList = parser.manifest.segments || [];
   const result: M3u8Info = {
     manifest: parser.manifest,
     /** ts 文件数量 */

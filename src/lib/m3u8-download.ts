@@ -297,7 +297,7 @@ export async function m3u8Download(url: string, options: M3u8DLOptions = {}) {
     }
 
     result.stats = stats;
-    toLocalM3u8(m3u8Info.data, options.filename);
+    toLocalM3u8(m3u8Info.data);
     if (options.onInited) options.onInited(stats, m3u8Info, workPoll);
     runTask(m3u8Info.data);
 
