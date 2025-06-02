@@ -1,12 +1,12 @@
-import { URL } from 'url';
 import { extname } from 'node:path';
+import { URL } from 'node:url';
+import { fileDownload } from '../lib/file-download';
+import { formatHeaders, logger } from '../lib/utils';
 import type { ApiResponse, M3u8DLOptions, M3u8DLResult, VideoInfo } from '../types';
+import { BaseParser } from './parsers/base-parser';
 import { DouyinParser } from './parsers/douyin-parser';
 import { PipixiaParser } from './parsers/pipixia-parser';
 import { WeiboParser } from './parsers/weibo-parser';
-import { BaseParser } from './parsers/base-parser';
-import { logger, formatHeaders } from '../lib/utils';
-import { fileDownload } from '../lib/file-download';
 
 type Platforms = {
   [key: string]: {

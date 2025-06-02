@@ -1,16 +1,16 @@
-import { dirname, resolve, sep } from 'node:path';
 import { existsSync } from 'node:fs';
 import type { IncomingHttpHeaders } from 'node:http';
+import { dirname, resolve, sep } from 'node:path';
 import { Barrier, formatTimeCost, rmrfAsync } from '@lzwme/fe-utils';
 import { formatByteSize } from '@lzwme/fe-utils/cjs/common/helper';
-import { green, cyanBright, cyan, magenta, magentaBright, yellowBright, blueBright, greenBright } from 'console-log-colors';
-import { isSupportFfmpeg, logger } from './utils.js';
-import { formatOptions } from './format-options.js';
-import { WorkerPool } from './worker_pool.js';
-import { parseM3U8 } from './parseM3u8.js';
-import { m3u8Convert } from './m3u8-convert.js';
+import { blueBright, cyan, cyanBright, green, greenBright, magenta, magentaBright, yellowBright } from 'console-log-colors';
 import type { M3u8DLOptions, M3u8DLProgressStats, M3u8DLResult, M3u8WorkerPool, TsItemInfo } from '../types/m3u8.js';
+import { formatOptions } from './format-options.js';
 import { localPlay, toLocalM3u8 } from './local-play.js';
+import { m3u8Convert } from './m3u8-convert.js';
+import { parseM3U8 } from './parseM3u8.js';
+import { isSupportFfmpeg, logger } from './utils.js';
+import { WorkerPool } from './worker_pool.js';
 
 /** 下载队列管理 */
 export class DownloadQueue {
@@ -252,10 +252,10 @@ export async function m3u8Download(url: string, options: M3u8DLOptions = {}) {
 
           stats.downloadedSize = m3u8Info.data.reduce((a, b) => a + (b.tsSize || 0), 0);
           stats.avgSpeed = (stats.downloadedSize / timeCost) * 1000;
-          stats.avgSpeedDesc = formatByteSize(stats.avgSpeed) + '/s';
+          stats.avgSpeedDesc = `${formatByteSize(stats.avgSpeed)}/s`;
           // 如果当前速度小于平均速度，则更新为平均速度
           if (stats.speed < stats.avgSpeed) stats.speed = stats.avgSpeed;
-          stats.speedDesc = formatByteSize(stats.speed) + '/s';
+          stats.speedDesc = `${formatByteSize(stats.speed)}/s`;
           stats.progress = Math.floor((finished / m3u8Info.tsCount) * 100);
 
           if (downloadedDuration) {
@@ -268,13 +268,13 @@ export async function m3u8Download(url: string, options: M3u8DLOptions = {}) {
           if (options.showProgress) {
             const processBar = '='.repeat(Math.floor(stats.progress * 0.2)).padEnd(20, '-');
             logger.logInline(
-              `${stats.progress}% [${greenBright(processBar)}] ${cyan(finished)} ${green(stats.durationDownloaded.toFixed(2) + 'sec')} ` +
-                `${blueBright(formatByteSize(stats.downloadedSize))} ${yellowBright(formatTimeCost(startTime))} ${magentaBright(stats.speedDesc)} ` +
-                (finished === m3u8Info.tsCount
+              `${stats.progress}% [${greenBright(processBar)}] ${cyan(finished)} ${green(`${stats.durationDownloaded.toFixed(2)}sec`)} ${blueBright(formatByteSize(stats.downloadedSize))} ${yellowBright(formatTimeCost(startTime))} ${magentaBright(stats.speedDesc)} ${
+                finished === m3u8Info.tsCount
                   ? '\n'
                   : stats.remainingTime
                     ? `${cyan(formatTimeCost(Date.now() - stats.remainingTime))}`
-                    : '')
+                    : ''
+              }`
             );
           }
 
@@ -291,7 +291,7 @@ export async function m3u8Download(url: string, options: M3u8DLOptions = {}) {
     };
     if (options.showProgress) {
       console.info(
-        `\nTotal segments: ${cyan(m3u8Info.tsCount)}, duration: ${green(m3u8Info.duration + 'sec')}.`,
+        `\nTotal segments: ${cyan(m3u8Info.tsCount)}, duration: ${green(`${m3u8Info.duration}sec`)}.`,
         `Parallel jobs: ${magenta(options.threadNum)}`
       );
     }

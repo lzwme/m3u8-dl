@@ -1,15 +1,15 @@
-import { readFileSync, writeFileSync, existsSync, rmSync, statSync, unlinkSync } from 'node:fs';
+import { existsSync, readFileSync, rmSync, statSync, unlinkSync, writeFileSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import { assign, getUrlParams, md5, mkdirp } from '@lzwme/fe-utils';
+import { cyan, gray, green, red } from 'console-log-colors';
 import type { Express } from 'express';
 import type { Server } from 'ws';
-import type { M3u8DLOptions, M3u8DLProgressStats, M3u8DLResult, M3u8WorkerPool, TsItemInfo } from '../types/m3u8.js';
-import { m3u8DLStop, m3u8Download } from '../lib/m3u8-download.js';
-import { logger } from '../lib/utils.js';
-import { VideoParser } from '../video-parser/index.js';
-import { cyan, gray, green, red } from 'console-log-colors';
 import { fileDownload } from '../lib/file-download.js';
 import { formatOptions } from '../lib/format-options.js';
+import { m3u8DLStop, m3u8Download } from '../lib/m3u8-download.js';
+import { logger } from '../lib/utils.js';
+import type { M3u8DLOptions, M3u8DLProgressStats, M3u8DLResult, M3u8WorkerPool, TsItemInfo } from '../types/m3u8.js';
+import { VideoParser } from '../video-parser/index.js';
 
 interface DLServerOptions {
   port?: number;
@@ -39,7 +39,7 @@ export class DLServer {
     port: Number(process.env.DS_PORT) || 6600,
     cacheDir: resolve(process.cwd(), './cache'),
     token: process.env.DS_SECRET || process.env.DS_TOKEN || '',
-    debug: process.env.DS_DEBUG == '1',
+    debug: process.env.DS_DEBUG === '1',
   };
   private serverInfo = {
     version: '',
@@ -57,7 +57,7 @@ export class DLServer {
     },
     /** download 下载默认参数 */
     dlOptions: {
-      debug: process.env.DS_DEBUG == '1',
+      debug: process.env.DS_DEBUG === '1',
       saveDir: process.env.DS_SAVE_DIR || './downloads',
       threadNum: 4,
     } as M3u8DLOptions,
@@ -70,7 +70,9 @@ export class DLServer {
   }
   constructor(opts: DLServerOptions = {}) {
     opts = Object.assign(this.options, opts);
+    opts.cacheDir = resolve(opts.cacheDir);
     if (!opts.configPath) opts.configPath = resolve(opts.cacheDir, 'config.json');
+
     const pkgFile = resolve(__dirname, '../../package.json');
     if (existsSync(pkgFile)) {
       const pkg = JSON.parse(readFileSync(pkgFile, 'utf8'));
@@ -92,21 +94,31 @@ export class DLServer {
     const cacheFile = resolve(this.options.cacheDir, 'cache.json');
     if (existsSync(cacheFile)) {
       (JSON.parse(readFileSync(cacheFile, 'utf8')) as [string, CacheItem][]).forEach(([url, item]) => {
-        if (item.status === 'resume' || item.tsSuccess !== item.tsCount) {
-          item.status = 'pause';
-        } else {
-          const isError = item.status === 'done' && item.options?.convert !== false && (!item.localVideo || !existsSync(item.localVideo));
-          if (isError) {
-            item.status = 'error';
-            item.errmsg = '本地视频文件不存在';
-          }
-        }
-
+        if (item.status === 'resume') item.status = 'pause';
         this.dlCache.set(url, item);
       });
+      this.checkDLFileIsExists();
     }
   }
-  private cacheSaveTimer: NodeJS.Timeout = null;
+  private checkDLFileLaest = 0;
+  private checkDLFileTimer: NodeJS.Timeout = null;
+  private checkDLFileIsExists() {
+    const now = Date.now();
+    const interval = 1000 * 60;
+
+    clearTimeout(this.checkDLFileTimer);
+    if (now - this.checkDLFileLaest < interval) {
+      this.checkDLFileTimer = setTimeout(() => this.checkDLFileIsExists(), interval - (now - this.checkDLFileLaest));
+      return;
+    }
+
+    this.dlCache.forEach((item) => {
+      if (item.status === 'done' && item.localVideo && !existsSync(item.localVideo)) {
+        item.status = 'error';
+        item.errmsg = '已删除';
+      }
+    });
+  }
   dlCacheClone() {
     const info: [string, CacheItem][] = [];
     for (const [url, v] of this.dlCache) {
@@ -118,19 +130,16 @@ export class DLServer {
     }
     return info;
   }
+  private cacheSaveTimer: NodeJS.Timeout = null;
   public saveCache() {
     clearTimeout(this.cacheSaveTimer);
-    return new Promise<void>(rs => {
-      this.cacheSaveTimer = setTimeout(() => {
-        const cacheFile = resolve(this.options.cacheDir, 'cache.json');
-        const info = this.dlCacheClone();
+    this.cacheSaveTimer = setTimeout(() => {
+      const cacheFile = resolve(this.options.cacheDir, 'cache.json');
+      const info = this.dlCacheClone();
 
-        mkdirp(dirname(cacheFile));
-        writeFileSync(cacheFile, JSON.stringify(info));
-      }, 1000);
-
-      setTimeout(() => rs(), 1000);
-    });
+      mkdirp(dirname(cacheFile));
+      writeFileSync(cacheFile, JSON.stringify(info));
+    }, 1000);
   }
   private readConfig(configPath?: string): M3u8DLOptions {
     try {
@@ -158,9 +167,12 @@ export class DLServer {
   private async createApp() {
     const { default: express } = await import('express');
     const { WebSocketServer } = await import('ws');
-    const app = (this.app = express());
+    const app = express();
     const server = app.listen(this.options.port, () => logger.info(`Server running on port ${green(this.options.port)}`));
-    const wss = (this.wss = new WebSocketServer({ server }));
+    const wss = new WebSocketServer({ server });
+
+    this.app = app;
+    this.wss = wss;
 
     app.use(express.json());
     app.use(express.static(resolve(__dirname, '../../client')));
@@ -176,11 +188,11 @@ export class DLServer {
         return;
       }
 
-      if (this.options.token && req.headers['authorization'] !== this.options.token) {
+      if (this.options.token && req.headers.authorization !== this.options.token) {
         const ignorePaths = ['/healthcheck', '/localplay'];
         if (!ignorePaths.some(d => req.url.includes(d))) {
           const clientIp = req.headers['x-forwarded-for'] || req.socket.remoteAddress;
-          logger.warn('Unauthorized access:', clientIp, req.url, req.headers['authorization']);
+          logger.warn('Unauthorized access:', clientIp, req.url, req.headers.authorization);
           res.status(401).json({ message: '未授权，禁止访问', code: 401 });
           return;
         }
@@ -202,6 +214,7 @@ export class DLServer {
         }
       }
 
+      this.checkDLFileIsExists();
       ws.send(JSON.stringify({ type: 'serverInfo', data: this.serverInfo }));
       ws.send(JSON.stringify({ type: 'tasks', data: Object.fromEntries(this.dlCacheClone()) }));
     });
@@ -216,7 +229,7 @@ export class DLServer {
     const dlOptions: M3u8DLOptions = formatOptions(url, { ...this.cfg.dlOptions, ...options, cacheDir: this.options.cacheDir })[1];
     logger.debug('startDownload', url, dlOptions, cacheItem?.status);
 
-    if (cacheItem && cacheItem?.status === 'resume') return cacheItem.options;
+    if (cacheItem?.status === 'resume') return cacheItem.options;
 
     if (this.downloading >= this.cfg.webOptions.maxDownloads) {
       if (cacheItem) cacheItem.status = 'pending';
@@ -230,7 +243,9 @@ export class DLServer {
     const opts: M3u8DLOptions = {
       ...dlOptions,
       showProgress: dlOptions.debug || this.options.debug,
-      onInited: (_s, _i, wp) => (workPoll = wp),
+      onInited: (_s, _i, wp) => {
+        workPoll = wp;
+      },
       onProgress: (_finished, _total, current, stats) => {
         const item = this.dlCache.get(url) || defaultItem;
         const status = item?.status || 'resume';
@@ -271,6 +286,7 @@ export class DLServer {
     };
 
     if (cacheItem) cacheItem.status = 'resume';
+    else this.dlCache.set(url, defaultItem);
 
     try {
       if (dlOptions.type === 'parser') {
@@ -462,10 +478,25 @@ export class DLServer {
         let ext = filepath.split('.').pop();
         if (!ext) {
           ext = 'm3u8';
-          filepath += '.m3u8';
+          if (!existsSync(filepath)) filepath += '.m3u8';
         }
 
-        if (!existsSync(filepath)) filepath = resolve(this.options.cacheDir, filepath);
+        if (!existsSync(filepath)) {
+          for (const dir of [this.options.cacheDir, this.cfg.dlOptions.saveDir]) {
+            const tpath = resolve(dir, filepath);
+            if (existsSync(tpath)) {
+              filepath = tpath;
+              break;
+            }
+          }
+        } else {
+          filepath = resolve(filepath);
+
+          if ([this.options.cacheDir, this.cfg.dlOptions.saveDir].some(d => filepath.startsWith(resolve(d)))) {
+            res.send({ message: 'Access denied', code: 403 });
+            return;
+          }
+        }
 
         if (existsSync(filepath)) {
           const stats = statSync(filepath);
@@ -484,7 +515,7 @@ export class DLServer {
       }
 
       logger.error('Localplay file not found:', filepath);
-      res.status(404).send('Not Found');
+      res.status(404).send({ message: 'Not Found', code: 404 });
     });
   }
 }

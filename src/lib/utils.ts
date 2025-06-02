@@ -1,7 +1,7 @@
+import { type Stats, existsSync, readdirSync, statSync } from 'node:fs';
 import type { IncomingHttpHeaders } from 'node:http';
-import { existsSync, readdirSync, Stats, statSync } from 'node:fs';
 import { resolve } from 'node:path';
-import { execSync, NLogger, color, Request, retry, toLowcaseKeyObject } from '@lzwme/fe-utils';
+import { NLogger, Request, color, execSync, retry, toLowcaseKeyObject } from '@lzwme/fe-utils';
 
 export const request = new Request({
   headers: { 'content-type': 'application/x-www-form-urlencoded; charset=UTF-8' },
@@ -43,9 +43,9 @@ export function findFiles(apidir?: string, validate?: (filepath: string, stat: S
       if (stat.isFile()) {
         files.push(resolve(apidir));
       } else if (stat.isDirectory()) {
-        readdirSync(apidir).forEach(filename => {
-          findFiles(resolve(apidir, filename)).forEach(f => files.push(f));
-        });
+        for (const filename of readdirSync(apidir)) {
+          files.push(...findFiles(resolve(apidir, filename)));
+        }
       }
     }
   }
@@ -56,7 +56,7 @@ export function findFiles(apidir?: string, validate?: (filepath: string, stat: S
 /** 获取重定向后的 URL */
 export async function getLocation(url: string, method = 'HEAD'): Promise<string> {
   const { res } = await request.req(url, null, { method, headers: { 'content-type': 'text/html' } }, false);
-  const rurl = res.headers['location'] || res.headers['x-redirect'] || res.headers['x-location'];
+  const rurl = res.headers.location || res.headers['x-redirect'] || res.headers['x-location'];
   if (typeof rurl === 'string' && rurl !== url) return getLocation(rurl, method);
   return url;
 }

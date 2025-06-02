@@ -1,7 +1,7 @@
-import { readFileSync, existsSync, statSync, createWriteStream, writeFileSync, unlinkSync } from 'node:fs';
+import { createWriteStream, existsSync, readFileSync, statSync, unlinkSync, writeFileSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import { execSync, formatByteSize, mkdirp } from '@lzwme/fe-utils';
-import { greenBright, cyan, magentaBright } from 'console-log-colors';
+import { cyan, greenBright, magentaBright } from 'console-log-colors';
 import type { M3u8DLOptions, TsItemInfo } from '../types/m3u8';
 import { isSupportFfmpeg, logger } from './utils';
 
@@ -20,7 +20,7 @@ export async function m3u8Convert(options: M3u8DLOptions, data: TsItemInfo[]) {
     let filesAllArr = data.filter(d => existsSync(d.tsOut)).map(d => `file '${d.tsOut}'\nduration ${d.duration}`);
 
     if (process.platform === 'win32') filesAllArr = filesAllArr.map(d => d.replaceAll('\\', '/'));
-    writeFileSync(ffconcatFile, 'ffconcat version 1.0\n' + filesAllArr.join('\n'));
+    writeFileSync(ffconcatFile, `ffconcat version 1.0\n${filesAllArr.join('\n')}`);
 
     let headersString = '';
     if (options.headers) {

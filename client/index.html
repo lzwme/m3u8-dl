@@ -151,83 +151,203 @@
       </nav>
     </div>
 
-    <div class="main-content p-1 md:p-6"
+    <div class="main-content p-1 md:p-4"
       :style="{ marginLeft: sidebarCollapsed ? '0' : '16rem', width: sidebarCollapsed ? '100%' : 'calc(100% - 16rem)' }">
-      <div v-if="activeSection === 'about'" class="bg-white rounded-lg shadow p-6">
-        <h2 class="text-xl font-semibold mb-6">关于项目</h2>
-        <div class="space-y-6">
-          <div>
-            <h3 class="text-lg font-medium text-gray-900 mb-2">项目信息</h3>
-            <div class="bg-gray-50 p-4 rounded-lg">
-              <p class="text-gray-600 mb-2"><strong>许可证：</strong>MIT</p>
-              <p class="text-gray-600 mb-2"><strong>作者：</strong><a href="https://lzw.me" target="_blank" rel="noopener"
-                  class="text-blue-500 hover:text-blue-600">renxia</a (https://github.com/renxia)</p>
-              <p class="text-gray-600 mb-2"><strong>GitHub：</strong>
-                <a href="https://github.com/lzwme/m3u8-dl.git" target="_blank" rel="noopener"
-                  class="text-blue-500 hover:text-blue-600">https://github.com/lzwme/m3u8-dl.git</a>
-              </p>
-              <p class="text-gray-600"><strong>问题反馈：</strong>
-                <a href="https://github.com/lzwme/m3u8-dl/issues" target="_blank" rel="noopener" class="text-blue-500 hover:text-blue-600">
-                  https://github.com/lzwme/m3u8-dl/issues</a>
-              </p>
-              <p class="text-gray-600"><strong>当前版本：</strong>
-                <a href="https://github.com/lzwme/m3u8-dl/release" target="_blank" rel="noopener" class="text-blue-500 hover:text-blue-600">
-                  {{serverInfo.version}}</a>
-              </p>
+      <div v-if="activeSection === 'download'" class="space-y-6">
+        <div class="bg-white rounded-lg shadow">
+          <div class="p-4">
+            <div class="flex justify-between items-center">
+              <h2 class="text-xl font-semibold">下载任务</h2>
+              <div class="flex space-x-2">
+                <button @click="showNewDownloadDialog" class="px-3 py-1 text-sm bg-blue-500 hover:bg-blue-600 text-white rounded">
+                  <i class="fas fa-plus mr-1"></i>新建
+                </button>
+                <button v-if="selectedTasks.length > 0" @click="pauseDownload(selectedTasks)"
+                  class="px-3 py-1 text-sm bg-yellow-500 text-white rounded hover:bg-yellow-600">
+                  <i class="fas fa-pause mr-1"></i>暂停选中
+                </button>
+                <button v-if="selectedTasks.length > 0" @click="resumeDownload(selectedTasks)"
+                  class="px-3 py-1 text-sm bg-green-500 text-white rounded hover:bg-green-600">
+                  <i class="fas fa-play mr-1"></i>开始选中
+                </button>
+                <button v-if="selectedTasks.length > 0" @click="deleteDownload(selectedTasks)"
+                  class="px-3 py-1 text-sm bg-red-500 text-white rounded hover:bg-red-600">
+                  <i class="fas fa-trash mr-1"></i>删除选中
+                </button>
+                <button v-if="selectedTasks.length === 0" @click="pauseDownload('all')"
+                  class="px-3 py-1 text-sm bg-yellow-500 text-white rounded hover:bg-yellow-600">
+                  <i class="fas fa-pause mr-1"></i>全部暂停
+                </button>
+                <button v-if="selectedTasks.length === 0" @click="resumeDownload('all')"
+                  class="px-3 py-1 text-sm bg-green-500 text-white rounded hover:bg-green-600">
+                  <i class="fas fa-play mr-1"></i>全部开始
+                </button>
+                <button v-if="selectedTasks.length === 0" @click="clearQueue"
+                  class="px-3 py-1 text-sm bg-red-500 text-white rounded hover:bg-red-600">
+                  <i class="fas fa-trash mr-1"></i>清空队列
+                </button>
+              </div>
+            </div>
+            <div class="mt-4 flex items-center space-x-4">
+              <div class="flex-1">
+                <div class="relative">
+                  <input type="text" v-model="searchQuery"
+                    class="w-full pl-10 pr-4 py-2 border rounded-lg focus:ring-blue-500 focus:border-blue-500" placeholder="搜索任务名称或URL"
+                    aria-label="搜索任务">
+                  <i class="fas fa-search absolute left-3 top-3 text-gray-400"></i>
+                </div>
+              </div>
+              <div class="flex items-center space-x-2">
+                <select v-model="statusFilter" class="px-3 py-2 border rounded-lg focus:ring-blue-500 focus:border-blue-500" title="按状态筛选"
+                  aria-label="按状态筛选">
+                  <option value="">全部状态</option>
+                  <option value="resume">下载中</option>
+                  <option value="pending">等待中</option>
+                  <option value="pause">已暂停</option>
+                  <option value="error">异常</option>
+                  <option value="done">已完成</option>
+                </select>
+                <button @click="clearFilters" class="px-3 py-2 text-gray-600 hover:text-gray-800" title="清除筛选条件" aria-label="清除筛选条件">
+                  <i class="fas fa-times"></i>
+                </button>
+              </div>
             </div>
           </div>
 
-          <div>
-            <h3 class="text-lg font-medium text-gray-900 mb-2">项目简介</h3>
-            <p class="text-gray-600"><a href="https://github.com/lzwme/m3u8-dl" target="_blank" rel="noopener"
-                class="text-blue-500 hover:text-blue-600">@lzwme/m3u8-dl</a> 是一个功能强大的 m3u8
-              文件视频批量下载工具，支持多线程下载、边下边播、缓存续传等特性。</p>
-          </div>
+          <div class="text-sm text-gray-600 border-b bg-gray-50">
+            <div class="flex items-center space-x-4 px-4 py-2">
+              <!-- 全选/反选复选框 -->
+              <div class="flex items-center">
+                <input
+                  type="checkbox"
+                  :checked="selectedTasks.length === filteredTasks.length && filteredTasks.length > 0"
+                  :indeterminate.prop="selectedTasks.length > 0 && selectedTasks.length < filteredTasks.length"
+                  @change="toggleSelectAll"
+                  class="form-checkbox h-5 w-5 text-blue-500 rounded focus:ring-blue-500 mr-2"
+                  title="全选/反选"
+                >
+                <span class="text-gray-700 text-sm">全选/反选</span>
+                <span class="ml-4 text-gray-400 text-xs">已选 {{selectedTasks.length}} / {{filteredTasks.length}}</span>
+              </div>
 
-          <div>
-            <h3 class="text-lg font-medium text-gray-900 mb-2">主要特性</h3>
-            <ul class="list-disc list-inside text-gray-600 space-y-2">
-              <li>多线程下载：采用线程池模式的多线程下载</li>
-              <li>边下边播模式：支持使用已下载的 ts 缓存文件在线播放</li>
-              <li>批量下载：支持指定多个 m3u8 地址批量下载</li>
-              <li>缓存续传：下载失败会保留缓存，重试时只下载失败的片段</li>
-              <li>加密支持：支持常见的 AES 加密视频流解密</li>
-              <li>格式转换：支持自动转换为 mp4（需安装 ffmpeg）</li>
-              <li>搜索功能：支持指定采集站标准 API，以命令行交互的方式搜索和下载</li>
-              <li>WebUI：提供下载中心，支持启动为 webui 服务方式进行下载管理</li>
-            </ul>
-          </div>
-
-          <div>
-            <h3 class="text-lg font-medium text-gray-900 mb-2">安装使用</h3>
-            <div class="bg-gray-50 p-4 rounded-lg">
-              <p class="text-gray-600 mb-2">全局安装：</p>
-              <pre class="bg-gray-800 text-gray-100 p-3 rounded-lg overflow-x-auto">npm i -g @lzwme/m3u8-dl<br>m3u8dl -h</pre>
-              <p class="text-gray-600 mt-4 mb-2">使用 npx：</p>
-              <pre class="bg-gray-800 text-gray-100 p-3 rounded-lg overflow-x-auto">npx @lzwme/m3u8-dl -h</pre>
+              <div class="flex items-center">
+                <i class="fas fa-tasks text-blue-600 mr-1"></i>
+                <span>总数: {{ filteredTasks.length }}</span>
+              </div>
+              <div class="flex items-center">
+                <i class="fas fa-clock text-yellow-500 mr-1"></i>
+                <span>等待中: {{ queueStatus.queueLength }}</span>
+              </div>
+              <div class="flex items-center">
+                <i class="fas fa-download text-green-500 mr-1"></i>
+                <span>下载中: {{ queueStatus.activeDownloads.length }}</span>
+              </div>
+              <!-- <div class="flex items-center">
+                <i class="fas fa-sliders-h text-blue-500 mr-1"></i>
+                <span>最大并发: {{ queueStatus.maxConcurrent }}</span>
+              </div> -->
             </div>
           </div>
 
-          <div>
-            <h3 class="text-lg font-medium text-gray-900 mb-2">Docker 部署</h3>
-            <div class="bg-gray-50 p-4 rounded-lg">
-              <p class="text-gray-600 mb-2">使用 Docker 命令运行：</p>
-              <pre
-                class="bg-gray-800 text-gray-100 p-3 rounded-lg overflow-x-auto">docker run -d --name m3u8-dl -p 6600:6600 -v ./downloads:/app/downloads -v ./cache:/app/cache lzwme/m3u8-dl</pre>
-              <p class="text-gray-600 mt-4 mb-2">使用 docker-compose 运行：</p>
-              <pre class="bg-gray-800 text-gray-100 p-3 rounded-lg overflow-x-auto">version: '3'
-services:
-  m3u8-dl:
-    image: lzwme/m3u8-dl
-    container_name: m3u8-dl
-    ports:
-      - "6600:6600"
-    volumes:
-      - ./downloads:/app/downloads
-      - ./cache:/app/cache
-    restart: unless-stopped</pre>
-              <p class="text-gray-600 mt-4">部署完成后，访问 <a href="http://localhost:6600" target="_blank" rel="noopener"
-                  class="text-blue-500 hover:text-blue-600">http://localhost:6600</a> 即可使用 WebUI 界面。</p>
+          <div class="divide-y overflow-auto max-h-[calc(100vh-200px)]">
+            <div v-for="task in filteredTasks" :key="task.url" class="download-item p-4 hover:bg-gray-50 relative">
+              <div class="flex items-center justify-between mb-2">
+                <div class="flex-1">
+                  <div class="flex items-center">
+                    <input type="checkbox" :checked="selectedTasks.includes(task.url)" @change="toggleTaskSelection(task.url)"
+                      class="form-checkbox h-5 w-5 text-blue-500 rounded focus:ring-blue-500 mr-2"
+                      :title="'选择任务：' + (task.localVideo || task.filename || task.url)">
+                    <h3 class="font-bold text-green-600 truncate max-w-[calc(100vw-100px)]" :title="task.url">
+                      {{ task.localVideo || task.filename || task.url }}
+                    </h3>
+                    <div class="absolute right-1 top-1 text-xs rounded overflow-hidden">
+                      <span v-if="task.status === 'pending'" class="px-2 py-0.5 bg-yellow-100 text-yellow-800">等待中</span>
+                      <span v-else-if="task.status === 'resume'" class="px-2 py-0.5 bg-green-100 text-green-800">下载中</span>
+                      <span v-else-if="task.status === 'pause'" class="px-2 py-0.5 bg-gray-100 text-gray-800">已暂停</span>
+                      <span v-else-if="task.status === 'done'" class="px-2 py-0.5 bg-blue-100 text-blue-800">已完成</span>
+                      <span v-else-if="task.status === 'error'" class="px-2 py-0.5 bg-red-100 text-red-600"
+                        :title="task.errmsg">异常<i class="fas fa-info-circle ml-1"></i></span>
+                    </div>
+                  </div>
+                  <div class="flex items-center text-sm text-gray-500 mt-1 flex-wrap gap-2">
+                    <span class="cursor-pointer" @click="showTaskDetail(task)">
+                      <i class="fas fa-info-circle mr-1"></i>
+                      <span>详情</span>
+                    </span>
+                    <span v-if="config.showPreview" class="text-blue-500 hover:text-blue-600 cursor-pointer" @click="preview(task.url)">
+                      <i class="fas fa-eye mr-1"></i>预览
+                    </span>
+                    <span v-if="config.showLocalPlay" class="text-green-500 hover:text-green-600 cursor-pointer" @click="localPlay(task)">
+                      <i class="fas fa-play-circle mr-1"></i>{{ task.localVideo ? '播放' : '边下边播' }}
+                    </span>
+                    <span v-if="task.duration" class="flex items-center">
+                      <i class="fas fa-clock mr-1"></i>
+                      <span>时长: {{ T.formatTimeCost(task.duration * 1000) }}</span>
+                    </span><span class="flex items-center">
+                      <i class="fas fa-file-video mr-1"></i>
+                      <span>大小: {{ T.formatSize(task.size || task.downloadedSize) }}</span>
+                    </span>
+                    <span v-if="task.tsCount" class="flex items-center">
+                      <i class="fas fa-file-alt mr-1"></i>
+                      <span>分片: {{ task.tsSuccess + task.tsFailed }}/{{ task.tsCount }}</span>
+                    </span>
+                    <span v-if="task.status === 'resume'" class="flex items-center">
+                      <i class="fas fa-hourglass-half mr-1"></i>
+                      <span>剩余: {{ T.formatTimeCost(task.remainingTime || 0) }}</span>
+                    </span>
+                    <!-- <span class="flex items-center">
+                      <i class="fas fa-sort-amount-up mr-1"></i>
+                      <select v-model="task.priority" @change="updatePriority(url, task.priority)"
+                        class="text-sm border rounded px-1 py-0.5 focus:ring-blue-500 focus:border-blue-500"
+                        aria-label="设置下载优先级">
+                        <option value="0">普通优先级</option>
+                        <option value="1">高优先级</option>
+                        <option value="2">最高优先级</option>
+                      </select>
+                    </span> -->
+                  </div>
+                </div>
+                <div class="flex space-x-2">
+                  <button v-if="task.status === 'resume' || task.status === 'pending'" @click="pauseDownload([task.url])"
+                    class="p-2 text-yellow-500 hover:bg-yellow-50 rounded" title="暂停">
+                    <i class="fas fa-pause"></i>
+                  </button>
+                  <button v-if="task.status === 'pause' || task.status === 'error'" @click="resumeDownload([task.url])"
+                    class="p-2 text-green-500 hover:bg-green-50 rounded" title="继续">
+                    <i class="fas fa-play"></i>
+                  </button>
+                  <button @click="deleteDownload([task.url])" class="p-2 text-red-500 hover:bg-red-50 rounded" title="删除">
+                    <i class="fas fa-trash"></i>
+                  </button>
+                </div>
+              </div>
+              <div class="relative pt-1">
+                <div class="flex mb-2 items-center justify-between">
+                  <div class="flex items-center">
+                    <span class="text-xs font-semibold inline-block text-blue-600">
+                      {{ task.progress || 0 }}%
+                    </span>
+                  </div>
+                  <div>
+                    <span class="text-xs font-semibold inline-block py-1 px-2 rounded text-green-600">
+                      <!-- <i class="fas fa-tachometer-alt mr-1"></i> -->
+                      {{ task.speedDesc }}
+                    </span>
+                  </div>
+                </div>
+                <div class="overflow-hidden h-2 text-xs flex rounded bg-blue-200">
+                  <div :style="{ width: (task.progress || 0) + '%' }"
+                    class="progress-bar shadow-none flex flex-col text-center whitespace-nowrap text-white justify-center bg-blue-500">
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div v-if="filteredTasks.length === 0" class="p-8 text-center text-gray-500">
+              <i class="fas fa-download text-4xl mb-4"></i>
+              <p>暂无下载任务</p>
+              <button @click="showNewDownloadDialog" class="mt-4 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600">
+                <i class="fas fa-plus mr-1"></i>添加下载任务
+              </button>
             </div>
           </div>
         </div>
@@ -350,185 +470,81 @@ services:
         </form>
       </div>
 
-      <div v-if="activeSection === 'download'" class="space-y-6">
-        <div class="bg-white rounded-lg shadow">
-          <div class="p-4 border-b">
-            <div class="flex justify-between items-center">
-              <h2 class="text-xl font-semibold">下载任务</h2>
-              <div class="flex space-x-2">
-                <button @click="showNewDownloadDialog" class="px-3 py-1 text-sm bg-blue-500 hover:bg-blue-600 text-white rounded">
-                  <i class="fas fa-plus mr-1"></i>新建
-                </button>
-                <button v-if="selectedTasks.length > 0" @click="pauseDownload(selectedTasks)"
-                  class="px-3 py-1 text-sm bg-yellow-500 text-white rounded hover:bg-yellow-600">
-                  <i class="fas fa-pause mr-1"></i>暂停选中
-                </button>
-                <button v-if="selectedTasks.length > 0" @click="resumeDownload(selectedTasks)"
-                  class="px-3 py-1 text-sm bg-green-500 text-white rounded hover:bg-green-600">
-                  <i class="fas fa-play mr-1"></i>开始选中
-                </button>
-                <button v-if="selectedTasks.length > 0" @click="deleteDownload(selectedTasks)"
-                  class="px-3 py-1 text-sm bg-red-500 text-white rounded hover:bg-red-600">
-                  <i class="fas fa-trash mr-1"></i>删除选中
-                </button>
-                <button v-if="selectedTasks.length === 0" @click="pauseDownload('all')"
-                  class="px-3 py-1 text-sm bg-yellow-500 text-white rounded hover:bg-yellow-600">
-                  <i class="fas fa-pause mr-1"></i>全部暂停
-                </button>
-                <button v-if="selectedTasks.length === 0" @click="resumeDownload('all')"
-                  class="px-3 py-1 text-sm bg-green-500 text-white rounded hover:bg-green-600">
-                  <i class="fas fa-play mr-1"></i>全部开始
-                </button>
-                <button v-if="selectedTasks.length === 0" @click="clearQueue"
-                  class="px-3 py-1 text-sm bg-red-500 text-white rounded hover:bg-red-600">
-                  <i class="fas fa-trash mr-1"></i>清空队列
-                </button>
-              </div>
-            </div>
-            <div class="mt-4 flex items-center space-x-4">
-              <div class="flex-1">
-                <div class="relative">
-                  <input type="text" v-model="searchQuery"
-                    class="w-full pl-10 pr-4 py-2 border rounded-lg focus:ring-blue-500 focus:border-blue-500" placeholder="搜索任务名称或URL"
-                    aria-label="搜索任务">
-                  <i class="fas fa-search absolute left-3 top-3 text-gray-400"></i>
-                </div>
-              </div>
-              <div class="flex items-center space-x-2">
-                <select v-model="statusFilter" class="px-3 py-2 border rounded-lg focus:ring-blue-500 focus:border-blue-500" title="按状态筛选"
-                  aria-label="按状态筛选">
-                  <option value="">全部状态</option>
-                  <option value="resume">下载中</option>
-                  <option value="pending">等待中</option>
-                  <option value="pause">已暂停</option>
-                  <option value="error">异常</option>
-                  <option value="done">已完成</option>
-                </select>
-                <button @click="clearFilters" class="px-3 py-2 text-gray-600 hover:text-gray-800" title="清除筛选条件" aria-label="清除筛选条件">
-                  <i class="fas fa-times"></i>
-                </button>
-              </div>
-            </div>
-            <div class="mt-2 text-sm text-gray-600">
-              <div class="flex items-center space-x-4">
-                <div class="flex items-center">
-                  <i class="fas fa-tasks text-blue-600 mr-1"></i>
-                  <span>总数: {{ filteredTasks.length }}</span>
-                </div>
-                <div class="flex items-center">
-                  <i class="fas fa-clock text-yellow-500 mr-1"></i>
-                  <span>等待中: {{ queueStatus.queueLength }}</span>
-                </div>
-                <div class="flex items-center">
-                  <i class="fas fa-download text-green-500 mr-1"></i>
-                  <span>下载中: {{ queueStatus.activeDownloads.length }}</span>
-                </div>
-                <!-- <div class="flex items-center">
-                  <i class="fas fa-sliders-h text-blue-500 mr-1"></i>
-                  <span>最大并发: {{ queueStatus.maxConcurrent }}</span>
-                </div> -->
-              </div>
+      <div v-if="activeSection === 'about'" class="bg-white rounded-lg shadow p-6">
+        <h2 class="text-xl font-semibold mb-6 text-center">关于项目</h2>
+        <div class="space-y-6">
+          <div>
+            <h3 class="text-lg font-medium text-green-700 mb-2">项目信息</h3>
+            <div class="bg-gray-50 p-4 rounded-lg">
+              <p class="text-gray-600 mb-2"><strong>许可证：</strong>MIT</p>
+              <p class="text-gray-600 mb-2"><strong>作者：</strong><a href="https://lzw.me" target="_blank" rel="noopener"
+                  class="text-blue-500 hover:text-blue-600">renxia</a (https://github.com/renxia)</p>
+              <p class="text-gray-600 mb-2"><strong>GitHub：</strong>
+                <a href="https://github.com/lzwme/m3u8-dl.git" target="_blank" rel="noopener"
+                  class="text-blue-500 hover:text-blue-600">https://github.com/lzwme/m3u8-dl.git</a>
+              </p>
+              <p class="text-gray-600"><strong>问题反馈：</strong>
+                <a href="https://github.com/lzwme/m3u8-dl/issues" target="_blank" rel="noopener" class="text-blue-500 hover:text-blue-600">
+                  https://github.com/lzwme/m3u8-dl/issues</a>
+              </p>
+              <p class="text-gray-600"><strong>当前版本：</strong>
+                <a href="https://github.com/lzwme/m3u8-dl/release" target="_blank" rel="noopener" class="text-blue-500 hover:text-blue-600">
+                  {{serverInfo.version}}</a>
+              </p>
             </div>
           </div>
 
-          <div class="divide-y overflow-auto max-h-[calc(100vh-200px)]">
-            <div v-for="task in filteredTasks" :key="task.url" class="download-item p-4 hover:bg-gray-50">
-              <div class="flex items-center justify-between mb-2">
-                <div class="flex-1">
-                  <div class="flex items-center">
-                    <input type="checkbox" :checked="selectedTasks.includes(task.url)" @change="toggleTaskSelection(task.url)"
-                      class="form-checkbox h-5 w-5 text-blue-500 rounded focus:ring-blue-500 mr-2"
-                      :title="'选择任务：' + (task.localVideo || task.filename || task.url)">
-                    <h3 class="font-bold text-green-600 truncate max-w-[calc(100vw-100px)]" :title="task.url">
-                      {{ task.localVideo || task.filename || task.url }}
-                    </h3>
-                    <span v-if="task.status === 'pending'" class="ml-2 px-2 py-0.5 text-xs bg-yellow-100 text-yellow-800 rounded">等待中</span>
-                    <span v-else-if="task.status === 'resume'"
-                      class="ml-2 px-2 py-0.5 text-xs bg-green-100 text-green-800 rounded">下载中</span>
-                    <span v-else-if="task.status === 'pause'" class="ml-2 px-2 py-0.5 text-xs bg-gray-100 text-gray-800 rounded">已暂停</span>
-                    <span v-else-if="task.status === 'done'" class="ml-2 px-2 py-0.5 text-xs bg-blue-100 text-blue-800 rounded">已完成</span>
-                    <span v-else-if="task.status === 'error'" class="ml-2 px-2 py-0.5 text-xs bg-red-100 text-red-600 rounded"
-                      :title="task.errmsg">异常<i class="fas fa-info-circle ml-1"></i></span>
-                  </div>
-                  <div class="flex items-center text-sm text-gray-500 mt-1 flex-wrap gap-2">
-                    <span class="cursor-pointer" @click="showTaskDetail(task)">
-                      <i class="fas fa-info-circle mr-1"></i>
-                      <span>详情</span>
-                    </span>
-                    <span v-if="config.showPreview" class="text-blue-500 hover:text-blue-600 cursor-pointer" @click="preview(task.url)">
-                      <i class="fas fa-eye mr-1"></i>预览
-                    </span>
-                    <span v-if="config.showLocalPlay" class="text-green-500 hover:text-green-600 cursor-pointer" @click="localPlay(task)">
-                      <i class="fas fa-play-circle mr-1"></i>{{ task.localVideo ? '播放' : '边下边播' }}
-                    </span>
-                    <span v-if="task.duration" class="flex items-center">
-                      <i class="fas fa-clock mr-1"></i>
-                      <span>时长: {{ T.formatTimeCost(task.duration * 1000) }}</span>
-                    </span><span class="flex items-center">
-                      <i class="fas fa-file-video mr-1"></i>
-                      <span>大小: {{ T.formatSize(task.size || task.downloadedSize) }}</span>
-                    </span>
-                    <span v-if="task.tsCount" class="flex items-center">
-                      <i class="fas fa-file-alt mr-1"></i>
-                      <span>分片: {{ task.tsSuccess + task.tsFailed }}/{{ task.tsCount }}</span>
-                    </span>
-                    <span v-if="task.status === 'resume'" class="flex items-center">
-                      <i class="fas fa-hourglass-half mr-1"></i>
-                      <span>剩余: {{ T.formatTimeCost(task.remainingTime || 0) }}</span>
-                    </span>
-                    <!-- <span class="flex items-center">
-                      <i class="fas fa-sort-amount-up mr-1"></i>
-                      <select v-model="task.priority" @change="updatePriority(url, task.priority)"
-                        class="text-sm border rounded px-1 py-0.5 focus:ring-blue-500 focus:border-blue-500"
-                        aria-label="设置下载优先级">
-                        <option value="0">普通优先级</option>
-                        <option value="1">高优先级</option>
-                        <option value="2">最高优先级</option>
-                      </select>
-                    </span> -->
-                  </div>
-                </div>
-                <div class="flex space-x-2">
-                  <button v-if="task.status === 'resume' || task.status === 'pending'" @click="pauseDownload([task.url])"
-                    class="p-2 text-yellow-500 hover:bg-yellow-50 rounded" title="暂停">
-                    <i class="fas fa-pause"></i>
-                  </button>
-                  <button v-if="task.status === 'pause' || task.status === 'error'" @click="resumeDownload([task.url])"
-                    class="p-2 text-green-500 hover:bg-green-50 rounded" title="继续">
-                    <i class="fas fa-play"></i>
-                  </button>
-                  <button @click="deleteDownload([task.url])" class="p-2 text-red-500 hover:bg-red-50 rounded" title="删除">
-                    <i class="fas fa-trash"></i>
-                  </button>
-                </div>
-              </div>
-              <div class="relative pt-1">
-                <div class="flex mb-2 items-center justify-between">
-                  <div class="flex items-center">
-                    <span class="text-xs font-semibold inline-block text-blue-600">
-                      {{ task.progress || 0 }}%
-                    </span>
-                  </div>
-                  <div>
-                    <span class="text-xs font-semibold inline-block py-1 px-2 rounded text-green-600">
-                      <!-- <i class="fas fa-tachometer-alt mr-1"></i> -->
-                      {{ task.speedDesc }}
-                    </span>
-                  </div>
-                </div>
-                <div class="overflow-hidden h-2 text-xs flex rounded bg-blue-200">
-                  <div :style="{ width: (task.progress || 0) + '%' }"
-                    class="progress-bar shadow-none flex flex-col text-center whitespace-nowrap text-white justify-center bg-blue-500">
-                  </div>
-                </div>
-              </div>
+          <div>
+            <h3 class="text-lg font-medium text-green-700 mb-2">项目简介</h3>
+            <p class="text-gray-600"><a href="https://github.com/lzwme/m3u8-dl" target="_blank" rel="noopener"
+                class="text-blue-500 hover:text-blue-600">@lzwme/m3u8-dl</a> 是一个功能强大的 m3u8
+              文件视频批量下载工具，支持多线程下载、边下边播、缓存续传等特性。</p>
+          </div>
+
+          <div>
+            <h3 class="text-lg font-medium text-green-700 mb-2">主要特性</h3>
+            <ul class="list-disc list-inside text-gray-600 space-y-2">
+              <li>多线程下载：采用线程池模式的多线程下载</li>
+              <li>边下边播模式：支持使用已下载的 ts 缓存文件在线播放</li>
+              <li>批量下载：支持指定多个 m3u8 地址批量下载</li>
+              <li>缓存续传：下载失败会保留缓存，重试时只下载失败的片段</li>
+              <li>加密支持：支持常见的 AES 加密视频流解密</li>
+              <li>格式转换：支持自动转换为 mp4（需安装 ffmpeg）</li>
+              <li>搜索功能：支持指定采集站标准 API，以命令行交互的方式搜索和下载</li>
+              <li>WebUI：提供下载中心，支持启动为 webui 服务方式进行下载管理</li>
+            </ul>
+          </div>
+
+          <div>
+            <h3 class="text-lg font-medium text-green-700 mb-2">安装使用</h3>
+            <div class="bg-gray-50 p-4 rounded-lg">
+              <p class="text-gray-600 mb-2">全局安装：</p>
+              <pre class="bg-gray-800 text-gray-100 p-3 rounded-lg overflow-x-auto">npm i -g @lzwme/m3u8-dl<br>m3u8dl -h</pre>
+              <p class="text-gray-600 mt-4 mb-2">使用 npx：</p>
+              <pre class="bg-gray-800 text-gray-100 p-3 rounded-lg overflow-x-auto">npx @lzwme/m3u8-dl -h</pre>
             </div>
-            <div v-if="filteredTasks.length === 0" class="p-8 text-center text-gray-500">
-              <i class="fas fa-download text-4xl mb-4"></i>
-              <p>暂无下载任务</p>
-              <button @click="showNewDownloadDialog" class="mt-4 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600">
-                <i class="fas fa-plus mr-1"></i>添加下载任务
-              </button>
+          </div>
+
+          <div>
+            <h3 class="text-lg font-medium text-green-700 mb-2">Docker 部署</h3>
+            <div class="bg-gray-50 p-4 rounded-lg">
+              <p class="text-gray-600 mb-2">使用 Docker 命令运行：</p>
+              <pre
+                class="bg-gray-800 text-gray-100 p-3 rounded-lg overflow-x-auto">docker run -d --name m3u8-dl -p 6600:6600 -v ./downloads:/app/downloads -v ./cache:/app/cache lzwme/m3u8-dl</pre>
+              <p class="text-gray-600 mt-4 mb-2">使用 docker-compose 运行：</p>
+              <pre class="bg-gray-800 text-gray-100 p-3 rounded-lg overflow-x-auto">version: '3'
+services:
+  m3u8-dl:
+    image: lzwme/m3u8-dl
+    container_name: m3u8-dl
+    ports:
+      - "6600:6600"
+    volumes:
+      - ./downloads:/app/downloads
+      - ./cache:/app/cache
+    restart: unless-stopped</pre>
+              <p class="text-gray-600 mt-4">部署完成后，访问 <a href="http://localhost:6600" target="_blank" rel="noopener"
+                  class="text-blue-500 hover:text-blue-600">http://localhost:6600</a> 即可使用 WebUI 界面。</p>
             </div>
           </div>
         </div>
@@ -1070,6 +1086,14 @@ services:
             this.selectedTasks.push(url);
           } else {
             this.selectedTasks.splice(index, 1);
+          }
+        },
+        /** 全选/反选 */
+        toggleSelectAll() {
+          if (this.selectedTasks.length === this.filteredTasks.length) {
+            this.selectedTasks = [];
+          } else {
+            this.selectedTasks = this.filteredTasks.map(task => task.url);
           }
         },
       },

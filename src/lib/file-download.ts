@@ -2,13 +2,12 @@ import { resolve } from 'node:path';
 import { download, formatByteSize, formatTimeCost } from '@lzwme/fe-utils';
 import { blueBright, cyan, gray, greenBright, magentaBright, yellowBright } from 'console-log-colors';
 import type { M3u8DLOptions, M3u8DLProgressStats, M3u8DLResult } from '../types';
-import { formatHeaders, logger } from './utils.js';
 import { formatOptions } from './format-options.js';
+import { formatHeaders, logger } from './utils.js';
 
-export async function fileDownload(url: string, options: M3u8DLOptions): Promise<M3u8DLResult> {
-  logger.debug('fileDownload', url, options);
-  [url, options] = formatOptions(url, options);
-
+export async function fileDownload(u: string, opts: M3u8DLOptions): Promise<M3u8DLResult> {
+  logger.debug('fileDownload', u, opts);
+  const [url, options] = formatOptions(u, opts);
   const startTime = Date.now();
   const stats: M3u8DLProgressStats = {
     url,
@@ -49,15 +48,17 @@ export async function fileDownload(url: string, options: M3u8DLOptions): Promise
         stats.size = info.size;
         stats.downloadedSize = info.downloaded;
         stats.speed = info.speed;
-        stats.speedDesc = formatByteSize(stats.speed) + '/s';
+        stats.speedDesc = `${formatByteSize(stats.speed)}/s`;
         stats.remainingTime = Math.round((info.size - info.downloaded) / stats.speed);
 
         if (options.showProgress) {
           const processBar = info.percent === -1 ? '' : '='.repeat(Math.floor(stats.progress * 0.2)).padEnd(20, '-');
           logger.logInline(
-            `${stats.progress}% [${greenBright(processBar)}] ` +
-              `${blueBright(formatByteSize(stats.downloadedSize))} ${yellowBright(formatTimeCost(startTime))} ${magentaBright(stats.speedDesc)} ` +
-              (stats.progress === 100 ? '\n' : stats.remainingTime ? `${cyan(formatTimeCost(Date.now() - stats.remainingTime))}` : '')
+            [
+              `${stats.progress}% [${greenBright(processBar)}] `,
+              `${blueBright(formatByteSize(stats.downloadedSize))} ${yellowBright(formatTimeCost(startTime))} ${magentaBright(stats.speedDesc)} `,
+              stats.progress === 100 ? '\n' : stats.remainingTime ? `${cyan(formatTimeCost(Date.now() - stats.remainingTime))}` : '',
+            ].join('')
           );
         }
 
@@ -80,7 +81,7 @@ export async function fileDownload(url: string, options: M3u8DLOptions): Promise
 
     return {
       isExist: false,
-      errmsg: '下载失败: ' + (error as Error).message,
+      errmsg: `下载失败: ${(error as Error).message}`,
       stats,
     };
   }

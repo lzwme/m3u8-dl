@@ -1,10 +1,10 @@
 import { existsSync, promises } from 'node:fs';
+import type { IncomingHttpHeaders } from 'node:http';
 import { resolve } from 'node:path';
 import { md5 } from '@lzwme/fe-utils';
 import { Parser } from 'm3u8-parser';
 import type { M3u8Crypto, M3u8Info, TsItemInfo } from '../types/m3u8';
-import { logger, getRetry } from './utils';
-import { IncomingHttpHeaders } from 'node:http';
+import { getRetry, logger } from './utils';
 
 /**
  * 解析 m3u8 文件

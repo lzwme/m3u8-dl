@@ -1,6 +1,6 @@
 import { Request } from '@lzwme/fe-utils';
 import type { SearchApi, VideoDetailsResult, VideoSearchResult } from '../../types';
-import { type M3u8StorConfig } from '../storage.js';
+import type { M3u8StorConfig } from '../storage.js';
 
 const req = new Request(null, {
   'content-type': 'application/json; charset=UTF-8',
@@ -48,7 +48,7 @@ export class CommSearchApi implements SearchApi {
   }
   async search(wd: string, api = this.options.api) {
     let { data } = await req.get<VideoSearchResult>(api, { wd }, null, { rejectUnauthorized: false });
-    if (typeof data == 'string') data = JSON.parse(data) as VideoSearchResult;
+    if (typeof data === 'string') data = JSON.parse(data) as VideoSearchResult;
     return data;
   }
   async detail(id: string | number, api = this.options.api) {
@@ -66,7 +66,7 @@ export class CommSearchApi implements SearchApi {
       { rejectUnauthorized: false }
     );
 
-    if (typeof data == 'string') data = JSON.parse(data) as VideoDetailsResult;
+    if (typeof data === 'string') data = JSON.parse(data) as VideoDetailsResult;
 
     return data;
   }

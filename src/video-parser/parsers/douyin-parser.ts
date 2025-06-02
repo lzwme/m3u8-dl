@@ -1,6 +1,6 @@
-import { BaseParser } from './base-parser';
-import type { ApiResponse, VideoInfo } from '../../types';
 import { getLocation, request } from '../../lib/utils.js';
+import type { ApiResponse, VideoInfo } from '../../types';
+import { BaseParser } from './base-parser';
 
 export class DouyinParser extends BaseParser {
   protected static getHeaders() {
@@ -14,24 +14,28 @@ export class DouyinParser extends BaseParser {
       const loc = await getLocation(url);
       const idMatch = loc.match(/[0-9]+/);
 
-      if (!idMatch) return this.error(400, '无法解析视频 ID');
+      if (!idMatch) return DouyinParser.error(400, '无法解析视频 ID');
 
-      const { data: res } = await request.get<string>(`https://www.iesdouyin.com/share/video/${idMatch[0]}`, null, this.getHeaders());
+      const { data: res } = await request.get<string>(
+        `https://www.iesdouyin.com/share/video/${idMatch[0]}`,
+        null,
+        DouyinParser.getHeaders()
+      );
       const matches = res.match(/window\._ROUTER_DATA\s*=\s*(.*?)<\/script>/s);
 
-      if (!matches) return this.error(400, '无法解析视频数据');
+      if (!matches) return DouyinParser.error(400, '无法解析视频数据');
 
       const data = JSON.parse(matches[1].trim());
       const item = data.loaderData['video_(id)/page'].videoInfoRes.item_list[0];
 
-      if (!item) return this.error(400, '解析视频信息失败');
+      if (!item) return DouyinParser.error(400, '解析视频信息失败');
 
       const videoId = item.video.play_addr.uri;
-      if (!videoId) return this.error(201, '未找到视频URL');
+      if (!videoId) return DouyinParser.error(201, '未找到视频URL');
 
       const videoUrl = `https://www.iesdouyin.com/aweme/v1/play/?video_id=${videoId}&ratio=1080p&line=0`;
 
-      return this.success<VideoInfo>({
+      return DouyinParser.success<VideoInfo>({
         author: item.author.nickname,
         uid: item.author.unique_id,
         avatar: item.author.avatar_medium.url_list[0],
@@ -47,7 +51,7 @@ export class DouyinParser extends BaseParser {
         },
       });
     } catch (error) {
-      return this.error(500, `解析失败: ${error instanceof Error ? error.message : '未知错误'}`);
+      return DouyinParser.error(500, `解析失败: ${error instanceof Error ? error.message : '未知错误'}`);
     }
   }
 }

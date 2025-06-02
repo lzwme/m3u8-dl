@@ -10,6 +10,6 @@ export abstract class BaseParser {
   }
 
   public static parse(url: string, headers: Record<string, string> = {}): Promise<ApiResponse<VideoInfo>> {
-    return Promise.resolve(this.success<VideoInfo>({ url, title: '', referer: headers.referer }));
+    return Promise.resolve(BaseParser.success<VideoInfo>({ url, title: '', referer: headers.referer }));
   }
 }

@@ -2,23 +2,23 @@
  * @Author: renxia lzwy0820@qq.com
  * @Date: 2024-07-30 08:57:58
  * @LastEditors: renxia
- * @LastEditTime: 2025-05-19 17:03:50
+ * @LastEditTime: 2025-05-30 10:16:45
  * @FilePath: \m3u8-dl\src\m3u8-batch-download.ts
  * @Description: 这是默认设置,请设置`customMade`, 打开koroFileHeader查看配置 进行设置: https://github.com/OBKoro1/koro1FileHeader/wiki/%E9%85%8D%E7%BD%AE
  */
 import { existsSync, promises } from 'node:fs';
 import { basename } from 'node:path';
-import { m3u8Download, preDownLoad } from './lib/m3u8-download';
-import { M3u8DLOptions, M3u8DLResult, M3u8WorkerPool } from './types/m3u8';
-import { logger } from './lib/utils';
-import { VideoParser } from './video-parser';
 import { gray, red } from 'console-log-colors';
 import { fileDownload } from './lib/file-download';
 import { formatOptions } from './lib/format-options';
+import { m3u8Download, preDownLoad } from './lib/m3u8-download';
+import { logger } from './lib/utils';
+import type { M3u8DLOptions, M3u8DLResult, M3u8WorkerPool } from './types/m3u8';
+import { VideoParser } from './video-parser';
 
 async function formatUrls(urls: string[], options: M3u8DLOptions): Promise<Map<string, M3u8DLOptions>> {
   const taskset = new Map<string, M3u8DLOptions>();
-  for (let url of urls) {
+  for (const url of urls) {
     if (!url) continue;
     if (existsSync(url)) {
       const content = await promises.readFile(url, 'utf8');
@@ -26,10 +26,7 @@ async function formatUrls(urls: string[], options: M3u8DLOptions): Promise<Map<s
         const list = content
           .split('\n')
           .filter(d => d.includes('.m3u8'))
-          .map((href, idx) => {
-            if (href.startsWith('http')) href = `${idx}|${href}`;
-            return href;
-          });
+          .map((href, idx) => (href.startsWith('http') ? `${idx}|${href}` : href));
         const o = { ...options };
         if (!o.filename) o.filename = basename(url).split('.')[0];
         const t = await formatUrls(list, o);
@@ -39,8 +36,8 @@ async function formatUrls(urls: string[], options: M3u8DLOptions): Promise<Map<s
       }
     }
 
-    [url, options] = formatOptions(url, options);
-    taskset.set(url, options);
+    const [u, o] = formatOptions(url, options);
+    taskset.set(u, o);
   }
 
   return taskset;
@@ -92,7 +89,9 @@ export async function m3u8BatchDownload(urls: string[], options: M3u8DLOptions) 
               tasks.size
             );
             preDLing = true;
-            preDownLoad(urlNext, options, workPoll).then(() => (preDLing = false));
+            preDownLoad(urlNext, options, workPoll).then(() => {
+              preDLing = false;
+            });
           }
         };
 

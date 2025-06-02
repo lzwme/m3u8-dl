@@ -1,9 +1,9 @@
 import { cpus } from 'node:os';
 import { basename, extname } from 'node:path';
 import { md5 } from '@lzwme/fe-utils';
-import { M3u8DLOptions } from '../types';
-import { formatHeaders, logger } from './utils';
+import type { M3u8DLOptions } from '../types';
 import { VideoParser } from '../video-parser';
+import { formatHeaders, logger } from './utils';
 
 const fileSupportExtList = [
   '.mp4',
@@ -50,7 +50,7 @@ export function formatOptions(url: string, opts: M3u8DLOptions) {
   }
 
   let [u, n] = url.split(/[|$]+/);
-  if (n && n.startsWith('http')) [u, n] = [n, u];
+  if (n?.startsWith('http')) [u, n] = [n, u];
   url = u;
 
   if (n) {
@@ -67,7 +67,7 @@ export function formatOptions(url: string, opts: M3u8DLOptions) {
 
   if (!extname(options.filename) && options.type !== 'file') options.filename += ext || '.mp4';
 
-  if (!options.cacheDir) options.cacheDir = `cache`;
+  if (!options.cacheDir) options.cacheDir = 'cache';
   if (options.headers) options.headers = formatHeaders(options.headers);
   if (!options.threadNum || +options.threadNum <= 0) options.threadNum = Math.min(cpus().length * 2, 8);
 

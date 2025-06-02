@@ -1,8 +1,8 @@
-import { EventEmitter } from 'node:events';
 import { AsyncResource } from 'node:async_hooks';
-import { Worker } from 'node:worker_threads';
-import { cpus } from 'node:os';
+import { EventEmitter } from 'node:events';
 import { existsSync } from 'node:fs';
+import { cpus } from 'node:os';
+import { Worker } from 'node:worker_threads';
 
 type WorkerPoolCallback<R> = (err: Error | null, result: R, startTime: number) => void;
 

@@ -1,10 +1,10 @@
-import { execSync, findFreePort, mkdirp } from '@lzwme/fe-utils';
-import { color } from 'console-log-colors';
 import { createReadStream, existsSync, readdirSync, statSync, writeFileSync } from 'node:fs';
 import { createServer } from 'node:http';
 import { basename, dirname, extname, join, resolve } from 'node:path';
-import { logger } from './utils.js';
+import { execSync, findFreePort, mkdirp } from '@lzwme/fe-utils';
+import { color } from 'console-log-colors';
 import type { TsItemInfo } from '../types/m3u8.js';
+import { logger } from './utils.js';
 
 /**
  * 边下边看
@@ -33,25 +33,25 @@ export function toLocalM3u8(m3u8Info: TsItemInfo[], m3u8FilePath = '', host = ''
   if (existsSync(m3u8FilePath)) return m3u8FilePath;
 
   const m3u8ContentList = [
-    `#EXTM3U`,
-    `#EXT-X-VERSION:3`,
-    `#EXT-X-ALLOW-CACHE:YES`,
+    '#EXTM3U',
+    '#EXT-X-VERSION:3',
+    '#EXT-X-ALLOW-CACHE:YES',
     `#EXT-X-TARGETDURATION:${Math.max(...m3u8Info.map(d => d.duration))}`,
-    `#EXT-X-MEDIA-SEQUENCE:0`,
+    '#EXT-X-MEDIA-SEQUENCE:0',
     // `#EXT-X-KEY:METHOD=AES-128,URI="/api/aes/enc.key"`,
   ];
 
   if (host && !host.endsWith('/')) host += '/';
 
-  m3u8Info.forEach(d => {
+  for (const d of m3u8Info) {
     if (d.tsOut) m3u8ContentList.push(`#EXTINF:${Number(d.duration).toFixed(6)},`, `${host}${basename(d.tsOut)}`);
-  });
+  }
 
-  m3u8ContentList.push(`#EXT-X-ENDLIST`);
+  m3u8ContentList.push('#EXT-X-ENDLIST');
 
   const m3u8Content = m3u8ContentList.join('\n');
   const ext = extname(m3u8FilePath);
-  if (ext !== '.m3u8') m3u8FilePath = m3u8FilePath.replace(ext, '') + '.m3u8';
+  if (ext !== '.m3u8') m3u8FilePath = `${m3u8FilePath.replace(ext, '')}.m3u8`;
   m3u8FilePath = resolve(cacheDir, m3u8FilePath);
   mkdirp(cacheDir);
   writeFileSync(m3u8FilePath, m3u8Content, 'utf8');
@@ -86,7 +86,9 @@ async function createLocalServer(baseDir: string) {
 
         createReadStream(filename).pipe(res);
         return;
-      } else if (stats.isDirectory()) {
+      }
+
+      if (stats.isDirectory()) {
         const html = readdirSync(filename).map(fname => {
           const rpath = resolve(filename, fname).replace(baseDir, '');
           return `<li><a href="${rpath}">${rpath}</a></li>`;

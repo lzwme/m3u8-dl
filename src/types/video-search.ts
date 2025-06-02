@@ -1,4 +1,4 @@
-import { AnyObject } from '@lzwme/fe-utils';
+import type { AnyObject } from '@lzwme/fe-utils';
 
 export interface SearchApiResult<T> {
   /** api 来源 */
