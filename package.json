@@ -1,6 +1,6 @@
 {
   "name": "@lzwme/m3u8-dl",
-  "version": "1.2.0",
+  "version": "1.2.1",
   "description": "Batch download of m3u8 files and convert to mp4",
   "main": "cjs/index.js",
   "types": "cjs/index.d.ts",
