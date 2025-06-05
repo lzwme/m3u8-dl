@@ -112,7 +112,7 @@ export class DLServer {
       return;
     }
 
-    this.dlCache.forEach((item) => {
+    this.dlCache.forEach(item => {
       if (item.status === 'done' && item.localVideo && !existsSync(item.localVideo)) {
         item.status = 'error';
         item.errmsg = '已删除';
