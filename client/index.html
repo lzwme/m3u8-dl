@@ -10,20 +10,20 @@
   <link rel="icon" type="image/svg+xml" href="logo.svg">
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://s4.zstatic.net/ajax/libs/vue/2.7.16/vue.min.js"
-    integrity="sha512-Wx8niGbPNCD87mSuF0sBRytwW2+2ZFr7HwVDF8krCb3egstCc4oQfig+/cfg2OHd82KcUlOYxlSDAqdHqK5TCw==" crossorigin="anonymous"
-    referrerpolicy="no-referrer"></script>
+    integrity="sha512-Wx8niGbPNCD87mSuF0sBRytwW2+2ZFr7HwVDF8krCb3egstCc4oQfig+/cfg2OHd82KcUlOYxlSDAqdHqK5TCw=="
+    crossorigin="anonymous" referrerpolicy="no-referrer"></script>
   <script src="https://s4.zstatic.net/ajax/libs/sweetalert2/11.16.1/sweetalert2.min.js"
-    integrity="sha512-LGHBR+kJ5jZSIzhhdfytPoEHzgaYuTRifq9g5l6ja6/k9NAOsAi5dQh4zQF6JIRB8cAYxTRedERUF+97/KuivQ==" crossorigin="anonymous"
-    referrerpolicy="no-referrer"></script>
+    integrity="sha512-LGHBR+kJ5jZSIzhhdfytPoEHzgaYuTRifq9g5l6ja6/k9NAOsAi5dQh4zQF6JIRB8cAYxTRedERUF+97/KuivQ=="
+    crossorigin="anonymous" referrerpolicy="no-referrer"></script>
   <script src="https://s4.zstatic.net/ajax/libs/blueimp-md5/2.19.0/js/md5.min.js"
-    integrity="sha512-8pbzenDolL1l5OPSsoURCx9TEdMFTaeFipASVrMYKhuYtly+k3tcsQYliOEKTmuB1t7yuzAiVo+yd7SJz+ijFQ==" crossorigin="anonymous"
-    referrerpolicy="no-referrer"></script>
+    integrity="sha512-8pbzenDolL1l5OPSsoURCx9TEdMFTaeFipASVrMYKhuYtly+k3tcsQYliOEKTmuB1t7yuzAiVo+yd7SJz+ijFQ=="
+    crossorigin="anonymous" referrerpolicy="no-referrer"></script>
   <link rel="stylesheet" href="https://s4.zstatic.net/ajax/libs/sweetalert2/11.16.1/sweetalert2.min.css"
-    integrity="sha512-WnmDqbbAeHb7Put2nIAp7KNlnMup0FXVviOctducz1omuXB/hHK3s2vd3QLffK/CvvFUKrpioxdo+/Jo3k/xIw==" crossorigin="anonymous"
-    referrerpolicy="no-referrer" />
+    integrity="sha512-WnmDqbbAeHb7Put2nIAp7KNlnMup0FXVviOctducz1omuXB/hHK3s2vd3QLffK/CvvFUKrpioxdo+/Jo3k/xIw=="
+    crossorigin="anonymous" referrerpolicy="no-referrer" />
   <link rel="stylesheet" href="https://s4.zstatic.net/ajax/libs/font-awesome/6.7.2/css/all.min.css"
-    integrity="sha512-Evv84Mr4kqVGRNSgIGL/F/aIDqQb7xQ2vcrdIwxfjThSH8CSR7PBEakCr51Ck+w+/U6swU2Im1vVX0SVk9ABhg==" crossorigin="anonymous"
-    referrerpolicy="no-referrer" />
+    integrity="sha512-Evv84Mr4kqVGRNSgIGL/F/aIDqQb7xQ2vcrdIwxfjThSH8CSR7PBEakCr51Ck+w+/U6swU2Im1vVX0SVk9ABhg=="
+    crossorigin="anonymous" referrerpolicy="no-referrer" />
 
   <style>
     #app {
@@ -112,6 +112,49 @@
       margin-left: 16rem;
       width: calc(100% - 16rem);
     }
+
+    /* 自定义toast样式 */
+    .custom-toast {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      min-width: 250px;
+      max-width: 400px;
+      padding: 15px;
+      border-radius: 4px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+      background: #fff;
+      color: #333;
+      z-index: 99999;
+      display: flex;
+      align-items: center;
+      transform: translateX(150%);
+      transition: transform 0.3s ease;
+    }
+
+    .custom-toast.show {
+      transform: translateX(0);
+    }
+
+    .custom-toast.hide {
+      transform: translateX(150%);
+    }
+
+    .custom-toast-success {
+      border-left: 4px solid #28a745;
+    }
+
+    .custom-toast-error {
+      border-left: 4px solid #dc3545;
+    }
+
+    .custom-toast-warning {
+      border-left: 4px solid #ffc107;
+    }
+
+    .custom-toast-info {
+      border-left: 4px solid #17a2b8;
+    }
   </style>
 </head>
 
@@ -159,7 +202,8 @@
             <div class="flex justify-between items-center">
               <h2 class="text-xl font-semibold">下载任务</h2>
               <div class="flex space-x-2">
-                <button @click="showNewDownloadDialog" class="px-3 py-1 text-sm bg-blue-500 hover:bg-blue-600 text-white rounded">
+                <button @click="showNewDownloadDialog"
+                  class="px-3 py-1 text-sm bg-blue-500 hover:bg-blue-600 text-white rounded">
                   <i class="fas fa-plus mr-1"></i>新建
                 </button>
                 <button v-if="selectedTasks.length > 0" @click="pauseDownload(selectedTasks)"
@@ -192,13 +236,14 @@
               <div class="flex-1">
                 <div class="relative">
                   <input type="text" v-model="searchQuery"
-                    class="w-full pl-10 pr-4 py-2 border rounded-lg focus:ring-blue-500 focus:border-blue-500" placeholder="搜索任务名称或URL"
-                    aria-label="搜索任务">
+                    class="w-full pl-10 pr-4 py-2 border rounded-lg focus:ring-blue-500 focus:border-blue-500"
+                    placeholder="搜索任务名称或URL" aria-label="搜索任务">
                   <i class="fas fa-search absolute left-3 top-3 text-gray-400"></i>
                 </div>
               </div>
               <div class="flex items-center space-x-2">
-                <select v-model="statusFilter" class="px-3 py-2 border rounded-lg focus:ring-blue-500 focus:border-blue-500" title="按状态筛选"
+                <select v-model="statusFilter"
+                  class="px-3 py-2 border rounded-lg focus:ring-blue-500 focus:border-blue-500" title="按状态筛选"
                   aria-label="按状态筛选">
                   <option value="">全部状态</option>
                   <option value="resume">下载中</option>
@@ -207,7 +252,8 @@
                   <option value="error">异常</option>
                   <option value="done">已完成</option>
                 </select>
-                <button @click="clearFilters" class="px-3 py-2 text-gray-600 hover:text-gray-800" title="清除筛选条件" aria-label="清除筛选条件">
+                <button @click="clearFilters" class="px-3 py-2 text-gray-600 hover:text-gray-800" title="清除筛选条件"
+                  aria-label="清除筛选条件">
                   <i class="fas fa-times"></i>
                 </button>
               </div>
@@ -218,14 +264,11 @@
             <div class="flex items-center space-x-4 px-4 py-2">
               <!-- 全选/反选复选框 -->
               <div class="flex items-center">
-                <input
-                  type="checkbox"
+                <input type="checkbox"
                   :checked="selectedTasks.length === filteredTasks.length && filteredTasks.length > 0"
                   :indeterminate.prop="selectedTasks.length > 0 && selectedTasks.length < filteredTasks.length"
-                  @change="toggleSelectAll"
-                  class="form-checkbox h-5 w-5 text-blue-500 rounded focus:ring-blue-500 mr-2"
-                  title="全选/反选"
-                >
+                  @change="toggleSelectAll" class="form-checkbox h-5 w-5 text-blue-500 rounded focus:ring-blue-500 mr-2"
+                  title="全选/反选">
                 <span class="text-gray-700 text-sm">全选/反选</span>
                 <span class="ml-4 text-gray-400 text-xs">已选 {{selectedTasks.length}} / {{filteredTasks.length}}</span>
               </div>
@@ -254,15 +297,18 @@
               <div class="flex items-center justify-between mb-2">
                 <div class="flex-1">
                   <div class="flex items-center">
-                    <input type="checkbox" :checked="selectedTasks.includes(task.url)" @change="toggleTaskSelection(task.url)"
+                    <input type="checkbox" :checked="selectedTasks.includes(task.url)"
+                      @change="toggleTaskSelection(task.url)"
                       class="form-checkbox h-5 w-5 text-blue-500 rounded focus:ring-blue-500 mr-2"
                       :title="'选择任务：' + (task.localVideo || task.filename || task.url)">
                     <h3 class="font-bold text-green-600 truncate max-w-[calc(100vw-100px)]" :title="task.url">
-                      {{ task.localVideo || task.filename || task.url }}
+                      {{ task.filename || task.localVideo || task.url }}
                     </h3>
                     <div class="absolute right-1 top-1 text-xs rounded overflow-hidden">
-                      <span v-if="task.status === 'pending'" class="px-2 py-0.5 bg-yellow-100 text-yellow-800">等待中</span>
-                      <span v-else-if="task.status === 'resume'" class="px-2 py-0.5 bg-green-100 text-green-800">下载中</span>
+                      <span v-if="task.status === 'pending'"
+                        class="px-2 py-0.5 bg-yellow-100 text-yellow-800">等待中</span>
+                      <span v-else-if="task.status === 'resume'"
+                        class="px-2 py-0.5 bg-green-100 text-green-800">下载中</span>
                       <span v-else-if="task.status === 'pause'" class="px-2 py-0.5 bg-gray-100 text-gray-800">已暂停</span>
                       <span v-else-if="task.status === 'done'" class="px-2 py-0.5 bg-blue-100 text-blue-800">已完成</span>
                       <span v-else-if="task.status === 'error'" class="px-2 py-0.5 bg-red-100 text-red-600"
@@ -270,14 +316,16 @@
                     </div>
                   </div>
                   <div class="flex items-center text-sm text-gray-500 mt-1 flex-wrap gap-2">
-                    <span class="cursor-pointer" @click="showTaskDetail(task)">
+                    <span class="cursor-pointer text-blue-600 hover:text-blue-800" @click="showTaskDetail(task)">
                       <i class="fas fa-info-circle mr-1"></i>
                       <span>详情</span>
                     </span>
-                    <span v-if="config.showPreview" class="text-blue-500 hover:text-blue-600 cursor-pointer" @click="preview(task.url)">
+                    <span v-if="config.showPreview" class="text-blue-500 hover:text-blue-600 cursor-pointer"
+                      @click="preview(task.url)">
                       <i class="fas fa-eye mr-1"></i>预览
                     </span>
-                    <span v-if="config.showLocalPlay" class="text-green-500 hover:text-green-600 cursor-pointer" @click="localPlay(task)">
+                    <span v-if="config.showLocalPlay" class="text-green-500 hover:text-green-600 cursor-pointer"
+                      @click="localPlay(task)">
                       <i class="fas fa-play-circle mr-1"></i>{{ task.localVideo ? '播放' : '边下边播' }}
                     </span>
                     <span v-if="task.duration" class="flex items-center">
@@ -308,15 +356,17 @@
                   </div>
                 </div>
                 <div class="flex space-x-2">
-                  <button v-if="task.status === 'resume' || task.status === 'pending'" @click="pauseDownload([task.url])"
-                    class="p-2 text-yellow-500 hover:bg-yellow-50 rounded" title="暂停">
+                  <button v-if="task.status === 'resume' || task.status === 'pending'"
+                    @click="pauseDownload([task.url])" class="p-2 text-yellow-500 hover:bg-yellow-50 rounded"
+                    title="暂停">
                     <i class="fas fa-pause"></i>
                   </button>
                   <button v-if="task.status === 'pause' || task.status === 'error'" @click="resumeDownload([task.url])"
                     class="p-2 text-green-500 hover:bg-green-50 rounded" title="继续">
                     <i class="fas fa-play"></i>
                   </button>
-                  <button @click="deleteDownload([task.url])" class="p-2 text-red-500 hover:bg-red-50 rounded" title="删除">
+                  <button @click="deleteDownload([task.url])" class="p-2 text-red-500 hover:bg-red-50 rounded"
+                    title="删除">
                     <i class="fas fa-trash"></i>
                   </button>
                 </div>
@@ -345,7 +395,8 @@
             <div v-if="filteredTasks.length === 0" class="p-8 text-center text-gray-500">
               <i class="fas fa-download text-4xl mb-4"></i>
               <p>暂无下载任务</p>
-              <button @click="showNewDownloadDialog" class="mt-4 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600">
+              <button @click="showNewDownloadDialog"
+                class="mt-4 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600">
                 <i class="fas fa-plus mr-1"></i>添加下载任务
               </button>
             </div>
@@ -388,7 +439,8 @@
               <label class="block text-sm font-bold text-gray-700 mb-1">下载完成后删除ts分片缓存</label>
               <div class="flex items-center mt-2">
                 <label class="inline-flex items-center">
-                  <input type="checkbox" v-model="config.delCache" class="form-checkbox h-5 w-5 text-blue-500 rounded focus:ring-blue-500">
+                  <input type="checkbox" v-model="config.delCache"
+                    class="form-checkbox h-5 w-5 text-blue-500 rounded focus:ring-blue-500">
                   <span class="ml-2 text-gray-700">删除分片文件</span>
                 </label>
               </div>
@@ -400,7 +452,8 @@
               <label class="block text-sm font-bold text-gray-700 mb-1">下载完成后转换格式</label>
               <div class="flex items-center mt-2">
                 <label class="inline-flex items-center">
-                  <input type="checkbox" v-model="config.convert" class="form-checkbox h-5 w-5 text-blue-500 rounded focus:ring-blue-500">
+                  <input type="checkbox" v-model="config.convert"
+                    class="form-checkbox h-5 w-5 text-blue-500 rounded focus:ring-blue-500">
                   <span class="ml-2 text-gray-700">合并转换为 MP4/TS 文件</span>
                 </label>
               </div>
@@ -451,8 +504,8 @@
             <div>
               <label class="block text-sm font-bold text-gray-700 mb-1">访问密码</label>
               <div class="flex">
-                <input v-model="token" type="password" maxlength="256" class="w-full p-2 border rounded-lg focus:ring-blue-500"
-                  placeholder="请输入访问密码" />
+                <input v-model="token" type="password" maxlength="256"
+                  class="w-full p-2 border rounded-lg focus:ring-blue-500" placeholder="请输入访问密码" />
               </div>
               <p class="mt-1 text-sm text-gray-500">若服务端设置了访问密码(token)，请在此输入</p>
             </div>
@@ -484,11 +537,13 @@
                   class="text-blue-500 hover:text-blue-600">https://github.com/lzwme/m3u8-dl.git</a>
               </p>
               <p class="text-gray-600"><strong>问题反馈：</strong>
-                <a href="https://github.com/lzwme/m3u8-dl/issues" target="_blank" rel="noopener" class="text-blue-500 hover:text-blue-600">
+                <a href="https://github.com/lzwme/m3u8-dl/issues" target="_blank" rel="noopener"
+                  class="text-blue-500 hover:text-blue-600">
                   https://github.com/lzwme/m3u8-dl/issues</a>
               </p>
               <p class="text-gray-600"><strong>当前版本：</strong>
-                <a href="https://github.com/lzwme/m3u8-dl/release" target="_blank" rel="noopener" class="text-blue-500 hover:text-blue-600">
+                <a href="https://github.com/lzwme/m3u8-dl/release" target="_blank" rel="noopener"
+                  class="text-blue-500 hover:text-blue-600">
                   {{serverInfo.version}}</a>
               </p>
             </div>
@@ -519,7 +574,8 @@
             <h3 class="text-lg font-medium text-green-700 mb-2">安装使用</h3>
             <div class="bg-gray-50 p-4 rounded-lg">
               <p class="text-gray-600 mb-2">全局安装：</p>
-              <pre class="bg-gray-800 text-gray-100 p-3 rounded-lg overflow-x-auto">npm i -g @lzwme/m3u8-dl<br>m3u8dl -h</pre>
+              <pre
+                class="bg-gray-800 text-gray-100 p-3 rounded-lg overflow-x-auto">npm i -g @lzwme/m3u8-dl<br>m3u8dl -h</pre>
               <p class="text-gray-600 mt-4 mb-2">使用 npx：</p>
               <pre class="bg-gray-800 text-gray-100 p-3 rounded-lg overflow-x-auto">npx @lzwme/m3u8-dl -h</pre>
             </div>
@@ -551,6 +607,7 @@ services:
       </div>
     </div>
   </div>
+  <div id="toast" class="grid fixed top-4 right-4 z-50 overflow-x-hidden overflow-y-auto"></div>
   <script>
     const T = {
       token: '',
@@ -572,11 +629,11 @@ services:
           headers: { ...this.reqHeaders, ...headers }
         }).then(d => d.json())
           .then(d => {
-            if (d.code) T.alert(d.message || `[${url}] 请求失败`, { icon: 'error' });
+            if (d.code) T.toast(d.message || `[${url}] 请求失败`, { icon: 'error', duration: 10000 });
             return d;
           })
           .catch(e => {
-            T.alert(`请求失败: ${e.message}`, { icon: 'error' });
+            T.toast(`请求失败: ${e.message}`, { icon: 'error', duration: 10000 });
             return { code: -1, message: e.message };
           });
       },
@@ -592,8 +649,35 @@ services:
         Swal.fire(Object.assign({ icon: 'info', showConfirmButton: false, showCloseButton: true }, p));
       },
       toast(msg, p) {
-        p = typeof msg === 'object' ? msg : Object.assign({ text: msg }, p);
-        return this.alert(Object.assign({ toast: true, position: 'top-end', icon: 'success', timer: 2000, timerProgressBar: true }, p));
+        p = (typeof msg === 'object' ? msg : Object.assign({ text: msg }, p));
+        const config = Object.assign({ type: p.icon || 'success', duration: p.timer || 3000 }, p);
+        const toast = document.createElement('div');
+        const iconMap = {
+          success: 'fa-check-circle text-green-600',
+          error: 'fa-times-circle text-red-600',
+          warning: 'fa-exclamation-triangle text-yellow-600',
+          info: 'fa-info-circle text-blue-500'
+        };
+
+        toast.className = `custom-toast custom-toast-${config.type}`;
+        toast.innerHTML = [
+          `<i class="custom-toast-icon mr-2 fa ${iconMap[config.type] || iconMap.info}"></i>`,
+          `<span class="break-all">${config.text || ''}</span>`,
+          `<i class="custom-toast-close fa fa-close fixed right-2 cursor-pointer text-lg" onclick="this.parentElement.remove()"></i>`
+        ].join('');
+
+        document.body.appendChild(toast);
+        setTimeout(() => toast.classList.add('show'), 10);
+
+        const close = () => {
+          toast.classList.remove('show');
+          toast.classList.add('hide');
+          setTimeout(() => toast.remove(), 300);
+        };
+
+        if (config.duration > 0) setTimeout(() => close(), config.duration);
+
+        return { element: toast, close };
       },
       // 格式化大小
       formatSize: function (size) {
@@ -838,7 +922,7 @@ services:
                 <div class="mt-4">
                   <label class="block text-sm font-bold text-gray-700 mb-1">视频名称（可选）</label>
                   <input id="filename" class="w-full p-2 border rounded-lg focus:border-blue-500" placeholder="请输入视频名称">
-                  <p class="mt-1 text-sm text-gray-500">如果输入多个链接，将依次以"视频名称+第N集"命名</p>
+                  <p class="mt-1 text-sm text-gray-500">若输入多个链接，将依次以"视频名称+第N集"命名</p>
                 </div>
 
                 <div class="mt-4">
@@ -986,7 +1070,7 @@ services:
             状态: T.taskStatus[task.status] || task.status,
             大小: `${T.formatSize(task.downloadedSize)} / ${T.formatSize(task.size)}`,
             分片: `${task.tsSuccess} / ${task.tsCount}`,
-            // 进度: `${task.progress}%`,
+            进度: `${task.progress}%`,
             平均速度: `${task.avgSpeedDesc}/s`,
             并发线程: task.threadNum,
             下载地址: task.url,
@@ -1002,7 +1086,7 @@ services:
               '<div class="flex-col full-width text-left">',
               Object.entries(taskInfo).filter(d => d[1]).map(
                 ([key, value]) => `<div class="flex"><label class="font-bold text-right inline-block" style="min-width:80px">${key}:</label>
-                  <span class="ml-2 text-green-600 word-break">${value}</span></div>`
+                  <span class="ml-2 text-blue-400 word-break">${value}</span></div>`
               ).join(''),
               '</div>'
             ].join(''),
@@ -1012,7 +1096,6 @@ services:
         localPlay: function (task) {
           const url = location.origin + '/localplay/' + (task.localVideo || task.localM3u8);
           console.log(task);
-          // return window.open(`./play.html?url=${encodeURIComponent(url)}`);
           Swal.fire({
             title: task?.options.filename || task.url,
             width: '1000px',
@@ -1020,11 +1103,9 @@ services:
             allowOutsideClick: false,
             showCloseButton: true,
             showConfirmButton: false,
-            html: `<iframe src="./play.html?url=${encodeURIComponent(url)}" style="width: 100%; height: 550px; max-width: 1000px; max-height: 90vh" frameborder="0" allowfullscreen></iframe>`,
-            // html: `<video autoplay width="100%" style="max-width: 1000px; min-height: 300px; max-height: 90vh" src="${url}" controls></video> `,
+            html: `<iframe src="./play.html?url=${encodeURIComponent(url)}" style="width: 100%; height: 550px; max-height: 90vh" frameborder="0" allowfullscreen></iframe>`,
           });
         },
-        // 预览
         preview: function (url) {
           window.open(`https://lzw.me/x/m3u8-player/?url=${encodeURIComponent(url)}`);
         },
@@ -1090,16 +1171,12 @@ services:
         },
         /** 全选/反选 */
         toggleSelectAll() {
-          if (this.selectedTasks.length === this.filteredTasks.length) {
-            this.selectedTasks = [];
-          } else {
-            this.selectedTasks = this.filteredTasks.map(task => task.url);
-          }
+          const isSelectedAll = this.selectedTasks.length === this.filteredTasks.length;
+          this.selectedTasks = isSelectedAll ? [] : this.filteredTasks.map(task => task.url);
         },
       },
       mounted() {
         T.reqHeaders.authorization = this.token ? `${this.token}` : '';
-
         this.fetchConfig().then(d => d && this.wsConnect());
         window.addEventListener('resize', this.handleResize);
       },
