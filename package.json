@@ -47,12 +47,12 @@
     "@biomejs/biome": "^1.9.4",
     "@eslint/js": "^9.28.0",
     "@lzwme/fed-lint-helper": "^2.6.6",
-    "@types/express": "^5.0.2",
+    "@types/express": "^5.0.3",
     "@types/m3u8-parser": "^7.2.2",
     "@types/node": "^22.15.30",
     "@types/ws": "^8.18.1",
-    "@typescript-eslint/eslint-plugin": "^8.33.1",
-    "@typescript-eslint/parser": "^8.33.1",
+    "@typescript-eslint/eslint-plugin": "^8.34.0",
+    "@typescript-eslint/parser": "^8.34.0",
     "eslint": "^9.28.0",
     "eslint-config-prettier": "^10.1.5",
     "eslint-plugin-prettier": "^5.4.1",
@@ -61,7 +61,7 @@
     "prettier": "^3.5.3",
     "standard-version": "^9.5.0",
     "typescript": "^5.8.3",
-    "typescript-eslint": "^8.33.1",
+    "typescript-eslint": "^8.34.0",
     "ws": "^8.18.2"
   },
   "dependencies": {
@@ -76,7 +76,6 @@
     "client",
     "!cjs/type.js",
     "!cjs/cli.d.ts",
-    "global.d.ts",
     "bin"
   ]
 }

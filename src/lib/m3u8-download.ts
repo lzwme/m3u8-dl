@@ -1,4 +1,4 @@
-import { existsSync } from 'node:fs';
+import { existsSync, statSync } from 'node:fs';
 import type { IncomingHttpHeaders } from 'node:http';
 import { dirname, resolve, sep } from 'node:path';
 import { Barrier, formatTimeCost, rmrfAsync } from '@lzwme/fe-utils';
@@ -110,9 +110,10 @@ async function m3u8InfoParse(url: string, options: M3u8DLOptions = {}) {
 
   if (!options.force && existsSync(filepath)) return result;
 
-  const m3u8Info = await parseM3U8(url, resolve(options.cacheDir, urlMd5), options.headers as IncomingHttpHeaders).catch(e =>
-    logger.error('[parseM3U8][failed]', e)
-  );
+  const m3u8Info = await parseM3U8(url, resolve(options.cacheDir, urlMd5), options.headers as IncomingHttpHeaders).catch(e => {
+    logger.error('[parseM3U8][failed]', e.message);
+    console.log(e);
+  });
   if (m3u8Info && m3u8Info?.tsCount > 0) result.m3u8Info = m3u8Info;
 
   return result;
@@ -149,7 +150,7 @@ export async function preDownLoad(url: string, options: M3u8DLOptions, wp = work
     if (!cache.downloading.has(info.uri)) {
       cache.downloading.add(info.uri);
 
-      wp.runTask({ url, info, options: JSON.parse(JSON.stringify(result.options)), crypto: result.m3u8Info.crypto }, () => {
+      wp.runTask({ url, info, options: JSON.parse(JSON.stringify(result.options)), crypto: result.m3u8Info.crypto[info.keyUri] }, () => {
         cache.downloading.delete(info.uri);
       });
     }
@@ -215,7 +216,7 @@ export async function m3u8Download(url: string, options: M3u8DLOptions = {}) {
     const runTask = (data: TsItemInfo[]) => {
       for (const info of data) {
         const o = JSON.parse(JSON.stringify(options));
-        workPoll.runTask({ url, info, options: o, crypto: m3u8Info.crypto }, (err, res, taskStartTime) => {
+        workPoll.runTask({ url, info, options: o, crypto: m3u8Info.crypto[info.keyUri] }, (err, res, taskStartTime) => {
           stats.errmsg = err ? (err.cause as string) || err.message || err.toString() : '';
 
           if (!res || err) {
@@ -262,7 +263,7 @@ export async function m3u8Download(url: string, options: M3u8DLOptions = {}) {
             stats.remainingTime = (timeCost / downloadedDuration) * (m3u8Info.duration - stats.durationDownloaded);
             if (stats.speed > stats.avgSpeed) stats.remainingTime = stats.remainingTime * (stats.avgSpeed / stats.speed);
             stats.remainingTime = Math.ceil(stats.remainingTime);
-            stats.size = stats.downloadedSize * (stats.duration / stats.durationDownloaded);
+            stats.size = Math.round(stats.downloadedSize * (stats.duration / stats.durationDownloaded));
           }
 
           if (options.showProgress) {
@@ -303,13 +304,18 @@ export async function m3u8Download(url: string, options: M3u8DLOptions = {}) {
 
     await barrier.wait();
 
-    if (stats.tsFailed === 0) {
-      if (options.convert !== false) {
-        result.filepath = await m3u8Convert(options, m3u8Info.data);
-        if (options.delCache && result.filepath && existsSync(result.filepath)) rmrfAsync(dirname(m3u8Info.data[0].tsOut));
+    if (stats.tsFailed > 0) {
+      logger.warn('Download Failed! Please retry!', stats.tsFailed);
+    } else if (options.convert !== false) {
+      result.filepath = await m3u8Convert(options, m3u8Info.data);
+
+      if (result.filepath && existsSync(result.filepath)) {
+        stats.size = statSync(result.filepath).size;
+        if (options.delCache) rmrfAsync(dirname(m3u8Info.data[0].tsOut));
       }
-    } else logger.warn('Download Failed! Please retry!', stats.tsFailed);
+    }
   }
+
   logger.debug('Done!', url, result.m3u8Info);
   return result;
 }

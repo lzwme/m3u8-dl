@@ -15,7 +15,7 @@ export async function tsDownload(info: TsItemInfo, cryptoInfo: M3u8Crypto, heade
 
     if (r.response.statusCode === 200) {
       logger.debug('\n', info);
-      const data = cryptoInfo.key ? aesDecrypt(r.buffer, cryptoInfo) : r.buffer;
+      const data = cryptoInfo?.key ? aesDecrypt(r.buffer, cryptoInfo) : r.buffer;
 
       mkdirp(dirname(info.tsOut));
       await promises.writeFile(info.tsOut, data);
@@ -34,7 +34,8 @@ export async function tsDownload(info: TsItemInfo, cryptoInfo: M3u8Crypto, heade
 
 function aesDecrypt(data: Buffer, cryptoInfo: M3u8Crypto) {
   try {
-    const decipher = createDecipheriv(`${cryptoInfo.method}-cbc`.toLocaleLowerCase(), cryptoInfo.key, cryptoInfo.iv);
+    const iv = cryptoInfo.iv || new Uint8Array(16);
+    const decipher = createDecipheriv(`${cryptoInfo.method}-cbc`.toLocaleLowerCase(), cryptoInfo.key, iv);
     return Buffer.concat([decipher.update(Buffer.isBuffer(data) ? data : Buffer.from(data)), decipher.final()]);
   } catch (err) {
     console.log('aesDecrypt err:', err);

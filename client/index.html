@@ -312,7 +312,7 @@
                       <span v-else-if="task.status === 'pause'" class="px-2 py-0.5 bg-gray-100 text-gray-800">已暂停</span>
                       <span v-else-if="task.status === 'done'" class="px-2 py-0.5 bg-blue-100 text-blue-800">已完成</span>
                       <span v-else-if="task.status === 'error'" class="px-2 py-0.5 bg-red-100 text-red-600"
-                        :title="task.errmsg">异常<i class="fas fa-info-circle ml-1"></i></span>
+                        :title="task.errmsg">{{task.errmsg || '异常'}} <i class="fas fa-info-circle"></i></span>
                     </div>
                   </div>
                   <div class="flex items-center text-sm text-gray-500 mt-1 flex-wrap gap-2">
@@ -333,7 +333,7 @@
                       <span>时长: {{ T.formatTimeCost(task.duration * 1000) }}</span>
                     </span><span class="flex items-center">
                       <i class="fas fa-file-video mr-1"></i>
-                      <span>大小: {{ T.formatSize(task.size || task.downloadedSize) }}</span>
+                      <span>大小: {{ T.formatSize(task.downloadedSize) }}</span>
                     </span>
                     <span v-if="task.tsCount" class="flex items-center">
                       <i class="fas fa-file-alt mr-1"></i>
@@ -1068,8 +1068,8 @@ services:
           const taskInfo = {
             名称: task.filename || task.localVideo,
             状态: T.taskStatus[task.status] || task.status,
-            大小: `${T.formatSize(task.downloadedSize)} / ${T.formatSize(task.size)}`,
-            分片: `${task.tsSuccess} / ${task.tsCount}`,
+            大小: `${T.formatSize(task.downloadedSize)} / ${task.size ? T.formatSize(task.size) : ''}`,
+            分片: `<span class=text-green-600>${task.tsSuccess}</span> / <span class=text-red-500>${task.tsFailed}</span> / ${task.tsCount}`,
             进度: `${task.progress}%`,
             平均速度: `${task.avgSpeedDesc}/s`,
             并发线程: task.threadNum,
@@ -1077,7 +1077,8 @@ services:
             保存位置: task.localVideo || task.options?.saveDir,
             开始时间: new Date(task.startTime).toLocaleString(),
             结束时间: task.endTime && new Date(task.endTime).toLocaleString(),
-            剩余时间: !task.endTime && task.remainingTime && T.formatTimeCost(task.remainingTime),
+            预估还需: !task.endTime && task.remainingTime && T.formatTimeCost(task.remainingTime),
+            相关信息: task.errmsg && `<span class=text-red-600>${task.errmsg}</span>`
           };
           Swal.fire({
             title: '任务详情',
@@ -1086,7 +1087,7 @@ services:
               '<div class="flex-col full-width text-left">',
               Object.entries(taskInfo).filter(d => d[1]).map(
                 ([key, value]) => `<div class="flex"><label class="font-bold text-right inline-block" style="min-width:80px">${key}:</label>
-                  <span class="ml-2 text-blue-400 word-break">${value}</span></div>`
+                  <span class="ml-2 text-gray-400 word-break">${value}</span></div>`
               ).join(''),
               '</div>'
             ].join(''),

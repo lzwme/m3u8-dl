@@ -11,6 +11,8 @@ export interface TsItemInfo {
   timeline: number;
   /** ts 文件下载 url 地址 */
   uri: string;
+  /** 如果 ts 使用了加密算法，加密 key 的获取 uri */
+  keyUri?: string;
   /** ts 文件下载保存路径 */
   tsOut: string;
   /** 下载成功的 ts 文件大小(byte) */
@@ -29,7 +31,7 @@ export interface M3u8Info {
   /** 总时长 */
   duration: number;
   /** 加密相关信息 */
-  crypto: M3u8Crypto;
+  crypto: { [uri: string]: M3u8Crypto };
   /** ts 文件列表 */
   data: TsItemInfo[];
   /** m3u8 文件信息 */

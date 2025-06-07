@@ -3,7 +3,7 @@ import type { IncomingHttpHeaders } from 'node:http';
 import { resolve } from 'node:path';
 import { md5 } from '@lzwme/fe-utils';
 import { Parser } from 'm3u8-parser';
-import type { M3u8Crypto, M3u8Info, TsItemInfo } from '../types/m3u8';
+import type { M3u8Info, TsItemInfo } from '../types/m3u8';
 import { getRetry, logger } from './utils';
 
 /**
@@ -59,12 +59,7 @@ export async function parseM3U8(content: string, cacheDir = './cache', headers?:
     duration: 0,
     data: [] as TsItemInfo[],
     /** 加密相关信息 */
-    crypto: {
-      method: 'AES-128',
-      iv: new Uint8Array(16),
-      key: '',
-      uri: '',
-    } as M3u8Crypto,
+    crypto: {},
   };
 
   if (!result.tsCount) {
@@ -72,34 +67,39 @@ export async function parseM3U8(content: string, cacheDir = './cache', headers?:
     return result;
   }
 
-  const tsKeyInfo = tsList[0].key;
+  for (const [i, item] of tsList.entries()) {
+    if (!item.uri.includes('://')) item.uri = new URL(item.uri, url).toString();
 
-  if (tsKeyInfo?.uri) {
-    if (tsKeyInfo.method) result.crypto.method = tsKeyInfo.method.toUpperCase();
-    if (tsKeyInfo.iv) {
-      result.crypto.iv = typeof tsKeyInfo.iv === 'string' ? new Uint8Array(Buffer.from(tsKeyInfo.iv)) : tsKeyInfo.iv;
+    if (item.key) {
+      const tsKeyInfo = item.key;
+      if (!tsKeyInfo.uri.includes('://')) tsKeyInfo.uri = new URL(tsKeyInfo.uri, url).toString();
+
+      if (tsKeyInfo?.uri && !result.crypto[tsKeyInfo.uri]) {
+        const r = await getRetry(tsKeyInfo.uri);
+
+        if (r.response.statusCode !== 200) {
+          logger.error('获取加密 key 失败:', tsKeyInfo.uri, r.response.statusCode, r.data);
+        } else {
+          result.crypto[tsKeyInfo.uri] = {
+            uri: tsKeyInfo.uri,
+            method: tsKeyInfo.method.toUpperCase() || 'AES-128',
+            iv: typeof tsKeyInfo.iv === 'string' ? new Uint8Array(Buffer.from(tsKeyInfo.iv)) : tsKeyInfo.iv,
+            key: r.buffer,
+          };
+        }
+      }
     }
 
-    result.crypto.uri = tsKeyInfo.uri.includes('://') ? tsKeyInfo.uri : new URL(tsKeyInfo.uri, url).toString();
-  }
-
-  if (result.crypto.uri !== '') {
-    const r = await getRetry(result.crypto.uri);
-    result.crypto.key = r.buffer;
-  }
-
-  for (let i = 0; i < result.tsCount; i++) {
-    if (!tsList[i].uri.startsWith('http')) tsList[i].uri = new URL(tsList[i].uri, url).toString();
-
     result.data.push({
-      m3u8: url,
       index: i,
-      duration: tsList[i].duration,
-      timeline: tsList[i].timeline,
-      uri: tsList[i].uri,
-      tsOut: resolve(cacheDir, `${md5(tsList[i].uri)}.ts`),
+      duration: item.duration,
+      timeline: item.timeline,
+      uri: item.uri,
+      tsOut: resolve(cacheDir, `${md5(item.uri)}.ts`),
+      keyUri: item.key?.uri || '',
+      m3u8: url,
     });
-    result.duration += tsList[i].duration;
+    result.duration += item.duration;
   }
   result.duration = +Number(result.duration).toFixed(2);
   return result;
