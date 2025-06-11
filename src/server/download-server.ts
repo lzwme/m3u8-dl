@@ -31,6 +31,8 @@ interface CacheItem extends Partial<M3u8DLProgressStats> {
   workPoll?: M3u8WorkerPool;
 }
 
+const rootDir = resolve(__dirname, '../..');
+
 export class DLServer {
   app: Express = null;
   wss: Server = null;
@@ -43,7 +45,7 @@ export class DLServer {
   };
   private serverInfo = {
     version: '',
-    ariang: existsSync(resolve(__dirname, '../../client/ariang/index.html')),
+    ariang: existsSync(resolve(rootDir, 'client/ariang/index.html')),
   };
   private cfg = {
     /** 支持 web 设置修改的参数 */
@@ -73,7 +75,7 @@ export class DLServer {
     opts.cacheDir = resolve(opts.cacheDir);
     if (!opts.configPath) opts.configPath = resolve(opts.cacheDir, 'config.json');
 
-    const pkgFile = resolve(__dirname, '../../package.json');
+    const pkgFile = resolve(rootDir, 'package.json');
     if (existsSync(pkgFile)) {
       const pkg = JSON.parse(readFileSync(pkgFile, 'utf8'));
       this.serverInfo.version = pkg.version;
@@ -174,8 +176,24 @@ export class DLServer {
     this.app = app;
     this.wss = wss;
 
+    app.use((req, res, next) => {
+      if (['/', '/index.html'].includes(req.path)) {
+        let indexHtml = readFileSync(resolve(rootDir, 'client/index.html'), 'utf-8');
+
+        if (existsSync(resolve(rootDir, 'client/local/cdn'))) {
+          indexHtml = indexHtml
+            .replaceAll('https://s4.zstatic.net/ajax/libs', 'local/cdn')
+            .replace('https://cdn.tailwindcss.com/3.4.16', 'local/cdn/tailwindcss/3.4.16/tailwindcss.min.js');
+        }
+
+        res.setHeader('content-type', 'text/html').send(indexHtml);
+        return;
+      }
+      next();
+    });
+
     app.use(express.json());
-    app.use(express.static(resolve(__dirname, '../../client')));
+    app.use(express.static(resolve(rootDir, 'client')));
 
     app.use((req, res, next) => {
       res.setHeader('Access-Control-Allow-Origin', '*');

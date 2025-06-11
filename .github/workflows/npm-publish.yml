@@ -28,8 +28,8 @@ jobs:
           node-version: 22
           registry-url: https://registry.npmjs.com
 
-      - uses: pnpm/action-setup@v4
-        name: Install pnpm
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
         id: pnpm-install
         with:
           run_install: false
@@ -41,19 +41,19 @@ jobs:
         run: |
           echo "STORE_PATH=$(pnpm store path)" >> $GITHUB_OUTPUT
 
-      - uses: actions/cache@v3
+      - uses: actions/cache@v4
         name: Setup pnpm cache
         with:
           path: ${{ steps.pnpm-cache.outputs.STORE_PATH }}
           key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
           restore-keys: |
-            ${{ runner.os }}-pnpm-store-
+            ${{ runner.os }}-pnpm-store
 
       - name: Install dependencies
         run: pnpm install --no-frozen-lockfile --ignore-scripts
 
-      - name: Build and npm-publish
-        run: npm run dist
+      - name: Build
+        run: npm run build
 
       - run: npm publish
         env:
@@ -65,12 +65,12 @@ jobs:
       #     github_token: ${{ secrets.GITHUB_TOKEN }}
       #     publish_dir: ./docs
 
-      - name: Github Release
-        uses: softprops/action-gh-release@v2
-        if: github.ref_type == 'tag'
-        with:
-          draft: false
-          prerelease: false
+      # - name: Github Release
+      #   uses: softprops/action-gh-release@v2
+      #   if: github.ref_type == 'tag'
+      #   with:
+      #     draft: false
+      #     prerelease: false
           # tag_name: ${{ github.ref }}
           # name: Release ${{ github.ref }}
           # body: TODO New Release.

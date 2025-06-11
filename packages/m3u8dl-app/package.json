@@ -1,0 +1,28 @@
+{
+  "name": "m3u8dl-app",
+  "version": "1.0.0",
+  "description": "",
+  "main": "main.js",
+  "type": "commonjs",
+  "private": true,
+  "scripts": {
+    "dev": "electron .",
+    "build": "node build/build-app.cjs",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": {
+    "name": "renxia",
+    "email": "lzwy0820@qq.com",
+    "url": "https://lzw.me"
+  },
+  "license": "MIT",
+  "dependencies": {
+    "@lzwme/fe-utils": "^1.9.0",
+    "express": "^5.1.0",
+    "ws": "^8.18.2"
+  },
+  "devDependencies": {
+    "electron": "36.4.0",
+    "electron-builder": "^26.0.12"
+  }
+}

@@ -8,7 +8,14 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <title>M3U8 下载管理</title>
   <link rel="icon" type="image/svg+xml" href="logo.svg">
-  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://s4.zstatic.net/ajax/libs/font-awesome/6.7.2/css/all.min.css"
+    integrity="sha512-Evv84Mr4kqVGRNSgIGL/F/aIDqQb7xQ2vcrdIwxfjThSH8CSR7PBEakCr51Ck+w+/U6swU2Im1vVX0SVk9ABhg=="
+    crossorigin="anonymous" referrerpolicy="no-referrer" />
+  <link rel="stylesheet" href="https://s4.zstatic.net/ajax/libs/sweetalert2/11.16.1/sweetalert2.min.css"
+    integrity="sha512-WnmDqbbAeHb7Put2nIAp7KNlnMup0FXVviOctducz1omuXB/hHK3s2vd3QLffK/CvvFUKrpioxdo+/Jo3k/xIw=="
+    crossorigin="anonymous" referrerpolicy="no-referrer" />
+
+  <script src="https://cdn.tailwindcss.com/3.4.16"></script>
   <script src="https://s4.zstatic.net/ajax/libs/vue/2.7.16/vue.min.js"
     integrity="sha512-Wx8niGbPNCD87mSuF0sBRytwW2+2ZFr7HwVDF8krCb3egstCc4oQfig+/cfg2OHd82KcUlOYxlSDAqdHqK5TCw=="
     crossorigin="anonymous" referrerpolicy="no-referrer"></script>
@@ -16,14 +23,7 @@
     integrity="sha512-LGHBR+kJ5jZSIzhhdfytPoEHzgaYuTRifq9g5l6ja6/k9NAOsAi5dQh4zQF6JIRB8cAYxTRedERUF+97/KuivQ=="
     crossorigin="anonymous" referrerpolicy="no-referrer"></script>
   <script src="https://s4.zstatic.net/ajax/libs/blueimp-md5/2.19.0/js/md5.min.js"
-    integrity="sha512-8pbzenDolL1l5OPSsoURCx9TEdMFTaeFipASVrMYKhuYtly+k3tcsQYliOEKTmuB1t7yuzAiVo+yd7SJz+ijFQ=="
     crossorigin="anonymous" referrerpolicy="no-referrer"></script>
-  <link rel="stylesheet" href="https://s4.zstatic.net/ajax/libs/sweetalert2/11.16.1/sweetalert2.min.css"
-    integrity="sha512-WnmDqbbAeHb7Put2nIAp7KNlnMup0FXVviOctducz1omuXB/hHK3s2vd3QLffK/CvvFUKrpioxdo+/Jo3k/xIw=="
-    crossorigin="anonymous" referrerpolicy="no-referrer" />
-  <link rel="stylesheet" href="https://s4.zstatic.net/ajax/libs/font-awesome/6.7.2/css/all.min.css"
-    integrity="sha512-Evv84Mr4kqVGRNSgIGL/F/aIDqQb7xQ2vcrdIwxfjThSH8CSR7PBEakCr51Ck+w+/U6swU2Im1vVX0SVk9ABhg=="
-    crossorigin="anonymous" referrerpolicy="no-referrer" />
 
   <style>
     #app {
@@ -120,7 +120,7 @@
       right: 20px;
       min-width: 250px;
       max-width: 400px;
-      padding: 15px;
+      padding: 15px 25px 15px 15px;
       border-radius: 4px;
       box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
       background: #fff;
@@ -622,6 +622,13 @@ services:
         'content-type': 'application/json',
         authorization: localStorage.getItem('token') || '',
       },
+      initTJ() {
+        if (!window._hmt) window._hmt = [];
+        const hm = document.createElement("script");
+        hm.src = "https://hm.baidu.com/hm.js?0b21eda331ac9677a4c546dea88616d0";
+        const s = document.getElementsByTagName("script")[0];
+        s.parentNode.insertBefore(hm, s);
+      },
       request(method, url, data, headers = {}) {
         return fetch(url, {
           method,
@@ -727,6 +734,7 @@ services:
     };
 
     Vue.prototype.T = T;
+    T.initTJ();
     window.APP = new Vue({
       el: '#app',
       data: {
