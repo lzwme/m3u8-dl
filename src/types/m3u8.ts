@@ -7,7 +7,9 @@ export interface TsItemInfo {
   m3u8: string;
   /** ts 文件次序 */
   index: number;
+  /** 视频片段时长 */
   duration: number;
+  /** 时间线(起点) */
   timeline: number;
   /** ts 文件下载 url 地址 */
   uri: string;
@@ -23,6 +25,8 @@ export interface TsItemInfo {
   startTime?: number;
   /** 是否下载成功。成功为1，失败一次则减 1 */
   success?: number;
+  // /** 是否忽略下载 */
+  // ignore?: boolean;
 }
 
 export interface M3u8Info {
@@ -119,6 +123,8 @@ export interface M3u8DLOptions {
   saveDir?: string;
   /** 临时文件保存目录。默认为 cache/<md5(url)> */
   cacheDir?: string;
+  /** 忽略的时间片段，单位为秒，多段以逗号分割。示例: 0-10,100-110 */
+  ignoreSegments?: string;
   /** 下载成功后是否删除临时文件。默认为 true。保存临时文件可以在重复下载时识别缓存 */
   delCache?: boolean;
   /** 文件已存在时是否仍强制下载和生成。默认为 false，文件已存在则跳过 */

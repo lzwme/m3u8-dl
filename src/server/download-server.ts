@@ -178,7 +178,8 @@ export class DLServer {
 
     app.use((req, res, next) => {
       if (['/', '/index.html'].includes(req.path)) {
-        let indexHtml = readFileSync(resolve(rootDir, 'client/index.html'), 'utf-8');
+        const version = this.serverInfo.version;
+        let indexHtml = readFileSync(resolve(rootDir, 'client/index.html'), 'utf-8').replaceAll('{{version}}', version);
 
         if (existsSync(resolve(rootDir, 'client/local/cdn'))) {
           indexHtml = indexHtml
@@ -187,9 +188,9 @@ export class DLServer {
         }
 
         res.setHeader('content-type', 'text/html').send(indexHtml);
-        return;
+      } else {
+        next();
       }
-      next();
     });
 
     app.use(express.json());
@@ -243,21 +244,22 @@ export class DLServer {
     return { app, wss };
   }
   private startDownload(url: string, options?: M3u8DLOptions) {
-    const cacheItem = this.dlCache.get(url);
     const dlOptions: M3u8DLOptions = formatOptions(url, { ...this.cfg.dlOptions, ...options, cacheDir: this.options.cacheDir })[1];
+    const cacheItem = this.dlCache.get(url) || { options, dlOptions, status: 'pending', url };
     logger.debug('startDownload', url, dlOptions, cacheItem?.status);
 
-    if (cacheItem?.status === 'resume') return cacheItem.options;
+    if (cacheItem.status === 'resume') return cacheItem.options;
 
     if (this.downloading >= this.cfg.webOptions.maxDownloads) {
-      if (cacheItem) cacheItem.status = 'pending';
-      else this.dlCache.set(url, { options, dlOptions, status: 'pending', url });
-
-      return cacheItem?.options || dlOptions;
+      cacheItem.status = 'pending';
+      this.dlCache.set(url, cacheItem);
+      return cacheItem.options;
     }
 
-    let workPoll: M3u8WorkerPool = cacheItem?.workPoll;
-    const defaultItem: CacheItem = { options, dlOptions, status: 'resume', url };
+    cacheItem.status = 'resume';
+    this.dlCache.set(url, cacheItem);
+
+    let workPoll: M3u8WorkerPool = cacheItem.workPoll;
     const opts: M3u8DLOptions = {
       ...dlOptions,
       showProgress: dlOptions.debug || this.options.debug,
@@ -265,8 +267,8 @@ export class DLServer {
         workPoll = wp;
       },
       onProgress: (_finished, _total, current, stats) => {
-        const item = this.dlCache.get(url) || defaultItem;
-        const status = item?.status || 'resume';
+        const item = this.dlCache.get(url) || cacheItem;
+        const status = item.status || 'resume';
 
         Object.assign(item, { ...stats, current, options: dlOptions, status, workPoll, url });
         this.dlCache.set(url, item);
@@ -277,7 +279,7 @@ export class DLServer {
       },
     };
     const afterDownload = (r: M3u8DLResult, url: string) => {
-      const item = this.dlCache.get(url) || defaultItem;
+      const item = this.dlCache.get(url) || cacheItem;
 
       if (r.filepath && existsSync(r.filepath)) {
         item.localVideo = r.filepath;
@@ -302,9 +304,6 @@ export class DLServer {
         }
       }
     };
-
-    if (cacheItem) cacheItem.status = 'resume';
-    else this.dlCache.set(url, defaultItem);
 
     try {
       if (dlOptions.type === 'parser') {
@@ -427,11 +426,12 @@ export class DLServer {
       const list: CacheItem[] = [];
 
       for (const url of urlsToPause) {
-        const { workPoll, ...item } = this.dlCache.get(url);
+        const item = this.dlCache.get(url);
         if (['resume', 'pending'].includes(item?.status)) {
-          m3u8DLStop(url, workPoll);
+          m3u8DLStop(url, item.workPoll);
           item.status = item.tsSuccess === item.tsCount ? 'done' : 'pause';
-          list.push(item);
+          const { workPoll, ...tItem } = item;
+          list.push(tItem);
         }
       }
 

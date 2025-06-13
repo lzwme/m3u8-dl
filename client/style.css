@@ -1,0 +1,129 @@
+#app {
+  max-width: 1400px;
+  margin: auto;
+  min-height: 100vh;
+  background-color: #f5f5f5;
+  position: relative;
+}
+
+.sidebar {
+  background-color: #fff;
+  box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1);
+  transition: all 0.3s ease;
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 16rem;
+  z-index: 1;
+}
+
+.download-item {
+  transition: all 0.3s ease;
+}
+
+.download-item:hover {
+  background-color: #f8f9fa;
+}
+
+.progress-bar {
+  height: 4px;
+  transition: width 0.3s ease;
+}
+
+.nav-item {
+  transition: all 0.3s ease;
+}
+
+.nav-item:hover {
+  background-color: #f0f0f0;
+  transform: translateX(4px);
+}
+
+.nav-item.active {
+  background-color: #e6f3ff;
+  color: #1890ff;
+}
+
+/* 移动端适配 */
+@media (max-width: 768px) {
+  .sidebar {
+    transform: translateX(-100%);
+  }
+
+  .sidebar.show {
+    transform: translateX(0);
+  }
+
+  .menu-toggle {
+    display: block !important;
+  }
+
+  .main-content {
+    margin-left: 0 !important;
+  }
+}
+
+.menu-toggle {
+  display: none;
+  position: fixed;
+  top: 1rem;
+  left: 1rem;
+  z-index: 51;
+  padding: 0.5rem;
+  background: white;
+  border-radius: 0.5rem;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 2px 4px #9bdff5;
+  width: 42px;
+  height: 42px;
+}
+
+.main-content {
+  transition: margin-left 0.3s ease;
+  margin-left: 16rem;
+  width: calc(100% - 16rem);
+}
+
+/* 自定义toast样式 */
+.custom-toast {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  min-width: 250px;
+  max-width: 400px;
+  padding: 15px 25px 15px 15px;
+  border-radius: 4px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  background: #fff;
+  color: #333;
+  z-index: 99999;
+  display: flex;
+  align-items: center;
+  transform: translateX(150%);
+  transition: transform 0.3s ease;
+}
+
+.custom-toast.show {
+  transform: translateX(0);
+}
+
+.custom-toast.hide {
+  transform: translateX(150%);
+}
+
+.custom-toast-success {
+  border-left: 4px solid #28a745;
+}
+
+.custom-toast-error {
+  border-left: 4px solid #dc3545;
+}
+
+.custom-toast-warning {
+  border-left: 4px solid #ffc107;
+}
+
+.custom-toast-info {
+  border-left: 4px solid #17a2b8;
+}

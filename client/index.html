@@ -14,6 +14,7 @@
   <link rel="stylesheet" href="https://s4.zstatic.net/ajax/libs/sweetalert2/11.16.1/sweetalert2.min.css"
     integrity="sha512-WnmDqbbAeHb7Put2nIAp7KNlnMup0FXVviOctducz1omuXB/hHK3s2vd3QLffK/CvvFUKrpioxdo+/Jo3k/xIw=="
     crossorigin="anonymous" referrerpolicy="no-referrer" />
+  <link rel="stylesheet" href="style.css?v={{version}}">
 
   <script src="https://cdn.tailwindcss.com/3.4.16"></script>
   <script src="https://s4.zstatic.net/ajax/libs/vue/2.7.16/vue.min.js"
@@ -22,140 +23,9 @@
   <script src="https://s4.zstatic.net/ajax/libs/sweetalert2/11.16.1/sweetalert2.min.js"
     integrity="sha512-LGHBR+kJ5jZSIzhhdfytPoEHzgaYuTRifq9g5l6ja6/k9NAOsAi5dQh4zQF6JIRB8cAYxTRedERUF+97/KuivQ=="
     crossorigin="anonymous" referrerpolicy="no-referrer"></script>
-  <script src="https://s4.zstatic.net/ajax/libs/blueimp-md5/2.19.0/js/md5.min.js"
-    crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+  <script src="https://s4.zstatic.net/ajax/libs/blueimp-md5/2.19.0/js/md5.min.js" crossorigin="anonymous"
+    referrerpolicy="no-referrer"></script>
 
-  <style>
-    #app {
-      max-width: 1400px;
-      margin: auto;
-      min-height: 100vh;
-      background-color: #f5f5f5;
-      position: relative;
-    }
-
-    .sidebar {
-      background-color: #fff;
-      box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1);
-      transition: all 0.3s ease;
-      position: absolute;
-      left: 0;
-      top: 0;
-      bottom: 0;
-      width: 16rem;
-      z-index: 1;
-    }
-
-    .download-item {
-      transition: all 0.3s ease;
-    }
-
-    .download-item:hover {
-      background-color: #f8f9fa;
-    }
-
-    .progress-bar {
-      height: 4px;
-      transition: width 0.3s ease;
-    }
-
-    .nav-item {
-      transition: all 0.3s ease;
-    }
-
-    .nav-item:hover {
-      background-color: #f0f0f0;
-      transform: translateX(4px);
-    }
-
-    .nav-item.active {
-      background-color: #e6f3ff;
-      color: #1890ff;
-    }
-
-    /* 移动端适配 */
-    @media (max-width: 768px) {
-      .sidebar {
-        transform: translateX(-100%);
-      }
-
-      .sidebar.show {
-        transform: translateX(0);
-      }
-
-      .menu-toggle {
-        display: block !important;
-      }
-
-      .main-content {
-        margin-left: 0 !important;
-      }
-    }
-
-    .menu-toggle {
-      display: none;
-      position: fixed;
-      top: 1rem;
-      left: 1rem;
-      z-index: 51;
-      padding: 0.5rem;
-      background: white;
-      border-radius: 0.5rem;
-      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-      box-shadow: 0 2px 4px #9bdff5;
-      width: 42px;
-      height: 42px;
-    }
-
-    .main-content {
-      transition: margin-left 0.3s ease;
-      margin-left: 16rem;
-      width: calc(100% - 16rem);
-    }
-
-    /* 自定义toast样式 */
-    .custom-toast {
-      position: fixed;
-      top: 20px;
-      right: 20px;
-      min-width: 250px;
-      max-width: 400px;
-      padding: 15px 25px 15px 15px;
-      border-radius: 4px;
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-      background: #fff;
-      color: #333;
-      z-index: 99999;
-      display: flex;
-      align-items: center;
-      transform: translateX(150%);
-      transition: transform 0.3s ease;
-    }
-
-    .custom-toast.show {
-      transform: translateX(0);
-    }
-
-    .custom-toast.hide {
-      transform: translateX(150%);
-    }
-
-    .custom-toast-success {
-      border-left: 4px solid #28a745;
-    }
-
-    .custom-toast-error {
-      border-left: 4px solid #dc3545;
-    }
-
-    .custom-toast-warning {
-      border-left: 4px solid #ffc107;
-    }
-
-    .custom-toast-info {
-      border-left: 4px solid #17a2b8;
-    }
-  </style>
 </head>
 
 <body>
@@ -343,16 +213,6 @@
                       <i class="fas fa-hourglass-half mr-1"></i>
                       <span>剩余: {{ T.formatTimeCost(task.remainingTime || 0) }}</span>
                     </span>
-                    <!-- <span class="flex items-center">
-                      <i class="fas fa-sort-amount-up mr-1"></i>
-                      <select v-model="task.priority" @change="updatePriority(url, task.priority)"
-                        class="text-sm border rounded px-1 py-0.5 focus:ring-blue-500 focus:border-blue-500"
-                        aria-label="设置下载优先级">
-                        <option value="0">普通优先级</option>
-                        <option value="1">高优先级</option>
-                        <option value="2">最高优先级</option>
-                      </select>
-                    </span> -->
                   </div>
                 </div>
                 <div class="flex space-x-2">
@@ -740,7 +600,7 @@ services:
       data: {
         ws: null,
         serverInfo: {
-          version: '',
+          version: '{{version}}',
           ariang: false,
         },
         config: {
@@ -826,6 +686,7 @@ services:
           const now = Date.now();
           if (now - this.forceUpdateTime > 500) {
             this.forceUpdateTime = now;
+            this.tasks = { ...this.tasks };
             this.$forceUpdate();
           } else {
             if (this.forceUpdateTimeout) clearTimeout(this.forceUpdateTimeout);
@@ -939,6 +800,11 @@ services:
                 </div>
 
                 <div class="mt-4">
+                  <label class="block text-sm font-bold text-gray-700 mb-1">删除时间片段（适用于移除广告片段的情况）</label>
+                  <input id="ignoreSegments" class="w-full p-2 border rounded-lg focus:ring-blue-500" placeholder="以-分割起止时间，多个以逗号分隔。示例：0-10,20-100">
+                </div>
+
+                <div class="mt-4">
                   <label class="block text-sm font-bold text-gray-700 mb-1">自定义请求头</label>
                   <textarea id="headers" class="w-full p-2 border rounded-lg focus:ring-blue-500" rows="4" placeholder="每行一个请求头（微博视频必须设置 Cookie），格式：Key: Value&#10;例如：&#10;Referer: https://example.com&#10;Cookie: token=123"></textarea>
                 </div>
@@ -955,6 +821,7 @@ services:
               const filename = document.getElementById('filename').value.trim();
               const saveDir = document.getElementById('saveDir').value.trim();
               const headersText = document.getElementById('headers').value.trim();
+              const ignoreSegments = document.getElementById('ignoreSegments').value.trim();
 
               if (!urlsText) {
                 Swal.showValidationMessage('请输入至少一个 M3U8 链接');
@@ -979,6 +846,7 @@ services:
                 filename: item.name || (filename ? `${filename}第${idx + 1}集` : ''),
                 saveDir,
                 headers,
+                ignoreSegments,
               }));
             }
           }).then((result) => {
@@ -989,6 +857,7 @@ services:
         startBatchDownload: async function (list) {
           try {
             list.forEach(async (item, idx) => {
+              Object.entries(item).forEach(([key, value]) => !value && delete item[key]);
               this.tasks[item.url] = { status: 'resume', progress: 0, speed: 0, remainingTime: 0, size: 0 };
             });
             const r = await T.post('/download', { list });
@@ -1056,6 +925,7 @@ services:
                 deleteCache: result.value.deleteCache,
                 deleteVideo: result.value.deleteVideo
               });
+
               if (!r.code) {
                 T.toast(r.message || '已删除选中的下载');
                 urls.forEach(url => (delete this.tasks[url]));

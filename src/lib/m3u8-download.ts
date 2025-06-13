@@ -114,7 +114,39 @@ async function m3u8InfoParse(url: string, options: M3u8DLOptions = {}) {
     logger.error('[parseM3U8][failed]', e.message);
     console.log(e);
   });
-  if (m3u8Info && m3u8Info?.tsCount > 0) result.m3u8Info = m3u8Info;
+
+  if (m3u8Info && m3u8Info?.tsCount > 0) {
+    result.m3u8Info = m3u8Info;
+
+    if (options.ignoreSegments) {
+      const timeSegments = options.ignoreSegments
+        .split(',')
+        .map(d => d.split(/[- ]+/).map(d => +d.trim()))
+        .filter(d => d[0] && d[1] && d[0] !== d[1]);
+
+      if (timeSegments.length) {
+        const total = m3u8Info.data.length;
+        m3u8Info.data = m3u8Info.data.filter(item => {
+          for (let [start, end] of timeSegments) {
+            if (start > end) [start, end] = [end, start];
+            if (item.timeline + item.duration / 2 >= start && item.timeline + item.duration / 2 <= end) {
+              m3u8Info.duration -= item.duration;
+              return false;
+            }
+          }
+
+          return true;
+        });
+
+        const ignoredCount = total - m3u8Info.data.length;
+        if (ignoredCount) {
+          m3u8Info.tsCount = m3u8Info.data.length;
+          logger.info(`[parseM3U8][ignoreSegments] ignored ${cyanBright(ignoredCount)} segments`);
+          m3u8Info.duration = +Number(m3u8Info.duration).toFixed(2);
+        }
+      }
+    }
+  }
 
   return result;
 }

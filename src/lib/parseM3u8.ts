@@ -93,7 +93,7 @@ export async function parseM3U8(content: string, cacheDir = './cache', headers?:
     result.data.push({
       index: i,
       duration: item.duration,
-      timeline: item.timeline,
+      timeline: item.timeline || result.duration,
       uri: item.uri,
       tsOut: resolve(cacheDir, `${md5(item.uri)}.ts`),
       keyUri: item.key?.uri || '',
