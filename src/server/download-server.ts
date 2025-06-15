@@ -1,5 +1,6 @@
 import { existsSync, readFileSync, rmSync, statSync, unlinkSync, writeFileSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
+import { homedir } from 'node:os';
 import { assign, getUrlParams, md5, mkdirp } from '@lzwme/fe-utils';
 import { cyan, gray, green, red } from 'console-log-colors';
 import type { Express } from 'express';
@@ -39,7 +40,7 @@ export class DLServer {
   /** DS 参数 */
   options: DLServerOptions = {
     port: Number(process.env.DS_PORT) || 6600,
-    cacheDir: resolve(process.cwd(), './cache'),
+    cacheDir: process.env.DS_CACHE_DIR || resolve(homedir(), '.m3u8-dl/cache'),
     token: process.env.DS_SECRET || process.env.DS_TOKEN || '',
     debug: process.env.DS_DEBUG === '1',
   };
@@ -184,6 +185,7 @@ export class DLServer {
         if (existsSync(resolve(rootDir, 'client/local/cdn'))) {
           indexHtml = indexHtml
             .replaceAll('https://s4.zstatic.net/ajax/libs', 'local/cdn')
+            .replaceAll(/integrity=.+\n/g, '')
             .replace('https://cdn.tailwindcss.com/3.4.16', 'local/cdn/tailwindcss/3.4.16/tailwindcss.min.js');
         }
 

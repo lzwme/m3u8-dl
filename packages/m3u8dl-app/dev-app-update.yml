@@ -1,0 +1,5 @@
+owner: lzwme
+repo: m3u8-dl
+provider: github
+updaterCacheDirName: m3u8dl-app-updater
+host: github.com

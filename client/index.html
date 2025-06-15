@@ -6,7 +6,7 @@
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="apple-mobile-web-app-capable" content="yes">
-  <title>M3U8 下载管理</title>
+  <title>M3U8 下载器</title>
   <link rel="icon" type="image/svg+xml" href="logo.svg">
   <link rel="stylesheet" href="https://s4.zstatic.net/ajax/libs/font-awesome/6.7.2/css/all.min.css"
     integrity="sha512-Evv84Mr4kqVGRNSgIGL/F/aIDqQb7xQ2vcrdIwxfjThSH8CSR7PBEakCr51Ck+w+/U6swU2Im1vVX0SVk9ABhg=="
@@ -406,6 +406,14 @@
                   class="text-blue-500 hover:text-blue-600">
                   {{serverInfo.version}}</a>
               </p>
+              <p class="text-gray-600"><strong>检测版本：</strong>
+                <button @click="checkNewVersion" v-if="!serverInfo.appUpdateMessage"
+                  class="px-2 py-1 text-sm bg-green-600 hover:bg-green-700 text-white rounded">
+                  <i class="fas fa-check mr-1"></i>检测新版本
+                </button>
+                <span v-if="serverInfo.newVersion" class="text-blue-600">发现新版本！[{{serverInfo.newVersion}}]</span>
+                <span v-if="serverInfo.appUpdateMessage" class="text-green-600">{{serverInfo.appUpdateMessage}}</span>
+              </p>
             </div>
           </div>
 
@@ -513,7 +521,10 @@ services:
       alert(msg, p) {
         p = typeof msg === 'object' ? msg : Object.assign({ text: msg }, p);
         if (!p.toast) p.allowOutsideClick = false;
-        Swal.fire(Object.assign({ icon: 'info', showConfirmButton: false, showCloseButton: true }, p));
+        return Swal.fire(Object.assign({ icon: 'info', showConfirmButton: false, showCloseButton: true }, p));
+      },
+      confirm(msg, p) {
+        return this.alert(msg, { showConfirmButton: true, showCancelButton: true, showCloseButton: true, confirmButtonText: '确认', cancelButtonText: '取消' });
       },
       toast(msg, p) {
         p = (typeof msg === 'object' ? msg : Object.assign({ text: msg }, p));
@@ -602,6 +613,8 @@ services:
         serverInfo: {
           version: '{{version}}',
           ariang: false,
+          newVersion: '',
+          appUpdateMessage: '',
         },
         config: {
           /** 并发下载线程数。取决于服务器限制，过多可能会容易下载失败。一般建议不超过 8 个。默认为 cpu数 * 2，但不超过 8 */
@@ -682,6 +695,38 @@ services:
         }
       },
       methods: {
+        initEventsForApp() {
+          if (!window.electron) return;
+          const ipc = window.electron.ipc;
+          ipc.on('message', (ev) => {
+            if (typeof ev.data === 'string') T.toast(ev.data, { icon: 'info' });
+            else console.log(ev.data);
+          });
+
+          ipc.on('downloadProgress', (data) => {
+            console.log('downloadProgress', data);
+            this.serverInfo.appUpdateMessage = `下载中：${Number(data.percent).toFixed(2)}% [${T.formatSpeed(data.bytesPerSecond)}] [${T.formatSize(data.transferred)}/${T.formatSize(data.total)}]`;
+          });
+        },
+        async checkNewVersion() {
+          try {
+            const r = await fetch(`https://registry.npmmirror.com/@lzwme/m3u8-dl/latest`).then(r => r.json());
+            if (r.version) {
+              if (r.version === this.serverInfo.version) T.toast(`已是最新版本，无需更新[${r.version}]`);
+              else {
+                this.serverInfo.newVersion = r.version;
+                if (window.electron) {
+                  window.electron.ipc.send('checkForUpdate');
+                } else {
+                  T.alert(`发现新版本[${r.version}]，请前往 https://github.com/lzwme/m3u8-dl/releases 下载最新版本`, { icon: 'success' });
+                }
+              }
+            }
+          } catch (error) {
+            console.error('检查新版本失败:', error);
+            T.alert(`版本检查失败：${error.message}`, { icon: 'error' });
+          }
+        },
         forceUpdate: function () {
           const now = Date.now();
           if (now - this.forceUpdateTime > 500) {
@@ -705,7 +750,7 @@ services:
 
             switch (type) {
               case 'serverInfo':
-                this.serverInfo = data;
+                Object.assign(this.serverInfo, data);
                 break;
               case 'tasks':
                 this.tasks = data;
@@ -1058,6 +1103,7 @@ services:
         T.reqHeaders.authorization = this.token ? `${this.token}` : '';
         this.fetchConfig().then(d => d && this.wsConnect());
         window.addEventListener('resize', this.handleResize);
+        this.initEventsForApp();
       },
       beforeDestroy() {
         window.removeEventListener('resize', this.handleResize);

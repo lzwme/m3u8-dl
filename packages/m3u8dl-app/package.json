@@ -2,7 +2,7 @@
   "name": "m3u8dl-app",
   "version": "1.0.0",
   "description": "m3u8 download app",
-  "main": "main.js",
+  "main": "src/main.js",
   "type": "commonjs",
   "private": true,
   "scripts": {
@@ -18,7 +18,7 @@
   },
   "license": "MIT",
   "dependencies": {
-    "@lzwme/fe-utils": "^1.9.0",
+    "electron-updater": "^6.6.2",
     "express": "^5.1.0",
     "ws": "^8.18.2"
   },
