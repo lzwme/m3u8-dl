@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [1.3.0](https://github.com/lzwme/m3u8-dl/compare/v1.2.2...v1.3.0) (2025-06-15)
+
+
+### Features
+
+* 新增 ignoreSegments 参数，支持忽略下载指定的视频时间片段 (close [#7](https://github.com/lzwme/m3u8-dl/issues/7)) ([324698f](https://github.com/lzwme/m3u8-dl/commit/324698ff2d687620a501102bd0968c0c2d586790))
+* 支持 Electron 打包为 PC 安装客户端 ([456b285](https://github.com/lzwme/m3u8-dl/commit/456b2859ad59ea50bcb4906ccf3757b55e1a3694))
+
 ### [1.2.2](https://github.com/lzwme/m3u8-dl/compare/v1.2.1...v1.2.2) (2025-06-10)
 
 ### [1.2.1](https://github.com/lzwme/m3u8-dl/compare/v1.2.0...v1.2.1) (2025-06-02)
