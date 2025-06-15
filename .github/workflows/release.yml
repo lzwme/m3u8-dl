@@ -16,6 +16,7 @@ permissions:
 
 env:
   GITHUB_CI: 1
+  USE_HARD_LINKS: false
 
 jobs:
   release:
@@ -44,22 +45,22 @@ jobs:
           run_install: false
           version: 10
 
-      - name: Get pnpm store directory
-        id: pnpm-cache
-        shell: bash
-        run: |
-          echo "STORE_PATH=$(pnpm store path)" >> $GITHUB_OUTPUT
+      # - name: Get pnpm store directory
+      #   id: pnpm-cache
+      #   shell: bash
+      #   run: |
+      #     echo "STORE_PATH=$(pnpm store path)" >> $GITHUB_OUTPUT
 
-      - uses: actions/cache@v4
-        name: Setup pnpm cache
-        with:
-          path: ${{ steps.pnpm-cache.outputs.STORE_PATH }}
-          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
-          restore-keys: |
-            ${{ runner.os }}-pnpm-store
+      # - uses: actions/cache@v4
+      #   name: Setup pnpm cache
+      #   with:
+      #     path: ${{ steps.pnpm-cache.outputs.STORE_PATH }}
+      #     key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
+      #     restore-keys: |
+      #       ${{ runner.os }}-pnpm-store
 
       - name: Install dependencies
-        run: pnpm install --no-frozen-lockfile
+        run: npm install --no-package-lock
 
       - name: Get release tag
         id: get-tag
@@ -77,9 +78,9 @@ jobs:
       - name: Build Linux
         if: matrix.os == 'ubuntu-latest'
         run: |
-          cd packages/app
-          pnpm install --no-frozen-lockfile
-          pnpm build --linux
+          cd packages/m3u8dl-app
+          npm install --no-package-lock
+          npm run build -- --linux
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           RENDERER_VITE_AIHUBMIX_SECRET: ${{ vars.RENDERER_VITE_AIHUBMIX_SECRET }}
@@ -88,9 +89,9 @@ jobs:
       - name: Build Mac
         if: matrix.os == 'macos-latest'
         run: |
-          cd packages/app
-          pnpm install --no-frozen-lockfile
-          pnpm build --mac
+          cd packages/m3u8dl-app
+          npm install --no-package-lock
+          npm run build -- --mac
         env:
           CSC_LINK: ${{ secrets.CSC_LINK }}
           CSC_KEY_PASSWORD: ${{ secrets.CSC_KEY_PASSWORD }}
@@ -103,9 +104,9 @@ jobs:
       - name: Build Windows
         if: matrix.os == 'windows-latest'
         run: |
-          cd packages/app
-          pnpm install --no-frozen-lockfile
-          pnpm build --win
+          cd packages/m3u8dl-app
+          npm install --no-package-lock
+          npm run build -- --win
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           NODE_OPTIONS: --max-old-space-size=8192

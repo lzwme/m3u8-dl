@@ -49,7 +49,7 @@
     "@lzwme/fed-lint-helper": "^2.6.6",
     "@types/express": "^5.0.3",
     "@types/m3u8-parser": "^7.2.2",
-    "@types/node": "^24.0.0",
+    "@types/node": "^24.0.1",
     "@types/ws": "^8.18.1",
     "@typescript-eslint/eslint-plugin": "^8.34.0",
     "@typescript-eslint/parser": "^8.34.0",

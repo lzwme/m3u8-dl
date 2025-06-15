@@ -17,7 +17,6 @@ yarn-error.log
 pnpm-lock.yaml
 .pnpm-debug.log
 node_modules
-build
 eslintWhitelist.json
 tsCheckWhiteList.json
 .nyc_output
