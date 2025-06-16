@@ -21,7 +21,7 @@ async function createMainWindow() {
     menuBarVisible: false,
     autoHideMenuBar: true,
     width: 1200,
-    height: 768,
+    height: 800,
     webPreferences: { nodeIntegration: true, devTools: true },
   });
   const { DLServer } = require(path.resolve(baseDir, './cjs/server/download-server.js'));

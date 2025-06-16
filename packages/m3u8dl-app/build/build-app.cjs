@@ -8,31 +8,31 @@ const argv = require('minimist')(process.argv.slice(2));
 
 const isCI = argv.ci || process.env.GITHUB_CI;
 const baseDir = path.resolve(__dirname, '../');
-const m3u8dlTmpDir = path.resolve(baseDir, './dist/m3u8-dl-tmp');
+const rootDir = path.resolve(baseDir, '../..');
+const appBuildDir = path.resolve(baseDir, 'dist/app-build-tmp');
+const rootPkg = readJsonFileSync(path.resolve(rootDir, 'package.json'));
 
 const T = {
   prepare() {
-    rmrf(m3u8dlTmpDir);
-    mkdirp(m3u8dlTmpDir);
+    const appPkg = readJsonFileSync(path.resolve(baseDir, './package.json'));
+    appPkg.version = rootPkg.version;
+    appPkg.dependencies = {
+      ...rootPkg.dependencies,
+      ...appPkg.dependencies
+    };
+    delete appPkg.devDependencies;
+    delete appPkg.dependencies.commander;
+    delete appPkg.dependencies.enquirer;
 
-    const pkg = readJsonFileSync(path.resolve(baseDir, '../../package.json'));
-    pkg.dependencies.express = pkg.devDependencies.express || '*';
-    pkg.dependencies.ws = pkg.devDependencies.ws || '*';
-
-    delete pkg.devDependencies;
-    delete pkg.dependencies.commander;
-    delete pkg.dependencies.enquirer;
-    fs.writeFileSync(path.resolve(m3u8dlTmpDir, 'package.json'), JSON.stringify(pkg, null, 2));
+    rmrf(appBuildDir);
+    mkdirp(appBuildDir);
+    fs.writeFileSync(path.resolve(appBuildDir, 'package.json'), JSON.stringify(appPkg, null, 2));
+    fs.cpSync(path.resolve(baseDir, 'main.js'), path.resolve(appBuildDir, 'main.js'), { force: true });
 
     execSync(`npm install --omit dev`, {
       stdio: 'inherit',
-      cwd: m3u8dlTmpDir,
+      cwd: appBuildDir,
     });
-
-    const appPkg = readJsonFileSync(path.resolve(baseDir, './package.json'));
-    appPkg.version = pkg.version;
-    delete appPkg.devDependencies;
-    fs.writeFileSync(path.resolve(baseDir, 'dist/package.json'), JSON.stringify(appPkg, null, 2));
 
     // node_modules 清理
     let total = 0;
@@ -48,7 +48,7 @@ const T = {
           '**/*/.{eslintrc,prettierrc,editorconfig,nycrc,jshintrc,npmignore,travis.yml}',
         ],
         {
-          cwd: path.resolve(m3u8dlTmpDir, 'node_modules'),
+          cwd: path.resolve(appBuildDir, 'node_modules'),
           absolute: true,
           dot: true,
         }
@@ -63,34 +63,39 @@ const T = {
     const r = await build({
       targets: platform.createTarget(),
       config: {
+        buildVersion: rootPkg.version,
         appId: 'cn.lzwme.m3u8dl',
         artifactName: '${productName}-${os}_${arch}-${version}.${ext}',
         electronVersion: '36.4.0',
         copyright: `Copyright © ${new Date().getFullYear()} \${author}`,
         compression: 'normal',
         electronDownload: {
-          mirror: isCI ? undefined : 'https://npmmirror.com/mirrors/electron/',
+          mirror:
+            process.env.ELECTRON_MIRROR ||
+            process.env.npm_config_ELECTRON_MIRROR ||
+            process.env.npm_config_electron_mirror ||
+            (isCI ? undefined : 'https://npmmirror.com/mirrors/electron/'),
         },
         directories: {
-          app: baseDir,
+          app: appBuildDir,
           output: 'dist/app',
         },
         files: [
           'main.js',
           {
-            from: 'dist/package.json',
+            from: path.resolve(appBuildDir, 'package.json'),
             to: 'package.json',
           },
           {
-            from: '../../client',
+            from: path.resolve(rootDir, 'client'),
             to: 'client',
           },
           {
-            from: '../../cjs',
+            from: path.resolve(rootDir, 'cjs'),
             to: 'cjs',
           },
           {
-            from: path.resolve(m3u8dlTmpDir, 'node_modules'),
+            from: path.resolve(appBuildDir, 'node_modules'),
             to: './node_modules',
           },
         ],
@@ -102,7 +107,7 @@ const T = {
               target: 'nsis',
             },
             {
-              target: 'zip',
+              target: '7z',
               arch: ['x64', 'ia32'],
             },
           ],
@@ -110,6 +115,7 @@ const T = {
           icon: 'build/icon/logo.png',
         },
         dmg: {
+          sign: false,
           window: {
             width: 540,
             height: 380,
@@ -129,14 +135,21 @@ const T = {
           ],
         },
         mac: {
+          sign: false,
+          forceCodeSigning: false,
+          gatekeeperAssess: false,
           hardenedRuntime: true,
           appId: 'cn.lzwme.m3u8dl-mac',
           category: 'public.app-category.productivity',
           target: [
             {
-              target: 'dmg',
+              target: '7z',
               arch: ['x64', 'arm64'],
             },
+            // {
+            //   target: 'dmg',
+            //   arch: ['x64', 'arm64'],
+            // },
           ],
           icon: 'build/icon/logo.icns',
         },
