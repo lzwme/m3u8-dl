@@ -19,6 +19,8 @@ interface DLServerOptions {
   debug?: boolean;
   /** 登录 token，默认取环境变量 DS_SECRET */
   token?: string;
+  /** 是否限制文件访问(localplay视频资源等仅可读取下载和缓存目录) */
+  limitFileAccess?: boolean;
 }
 
 interface CacheItem extends Partial<M3u8DLProgressStats> {
@@ -43,6 +45,7 @@ export class DLServer {
     cacheDir: process.env.DS_CACHE_DIR || resolve(homedir(), '.m3u8-dl/cache'),
     token: process.env.DS_SECRET || process.env.DS_TOKEN || '',
     debug: process.env.DS_DEBUG === '1',
+    limitFileAccess: !['0', 'false'].includes(process.env.DS_LIMTE_FILE_ACCESS),
   };
   private serverInfo = {
     version: '',
@@ -91,10 +94,11 @@ export class DLServer {
     this.loadCache();
     await this.createApp();
     this.initRouters();
-    logger.debug('Server initialized', this.options, this.cfg.dlOptions);
+    logger.debug('Server initialized', 'cacheSize:', this.dlCache.size, this.options, this.cfg.dlOptions);
   }
   private loadCache() {
     const cacheFile = resolve(this.options.cacheDir, 'cache.json');
+
     if (existsSync(cacheFile)) {
       (JSON.parse(readFileSync(cacheFile, 'utf8')) as [string, CacheItem][]).forEach(([url, item]) => {
         if (item.status === 'resume') item.status = 'pause';
@@ -248,18 +252,16 @@ export class DLServer {
   private startDownload(url: string, options?: M3u8DLOptions) {
     const dlOptions: M3u8DLOptions = formatOptions(url, { ...this.cfg.dlOptions, ...options, cacheDir: this.options.cacheDir })[1];
     const cacheItem = this.dlCache.get(url) || { options, dlOptions, status: 'pending', url };
-    logger.debug('startDownload', url, dlOptions, cacheItem?.status);
+    logger.debug('startDownload', url, dlOptions, cacheItem.status);
 
     if (cacheItem.status === 'resume') return cacheItem.options;
 
-    if (this.downloading >= this.cfg.webOptions.maxDownloads) {
-      cacheItem.status = 'pending';
-      this.dlCache.set(url, cacheItem);
-      return cacheItem.options;
-    }
-
-    cacheItem.status = 'resume';
+    if (cacheItem.localVideo && !existsSync(cacheItem.localVideo)) delete cacheItem.localVideo;
+    cacheItem.status = this.downloading >= this.cfg.webOptions.maxDownloads ? 'pending' : 'resume';
     this.dlCache.set(url, cacheItem);
+    this.wsSend('progress', url);
+
+    if (cacheItem.status === 'pending') return cacheItem.options;
 
     let workPoll: M3u8WorkerPool = cacheItem.workPoll;
     const opts: M3u8DLOptions = {
@@ -298,12 +300,10 @@ export class DLServer {
       this.saveCache();
 
       // 找到一个 pending 的任务，开始下载
-      for (const [url, item] of this.dlCache.entries()) {
-        if (item.status === 'pending') {
-          this.startDownload(url, item.options);
-          this.wsSend('progress', url);
-          break;
-        }
+      const nextItem = this.dlCache.entries().find(([_url, d]) => d.status === 'pending');
+      if (nextItem) {
+        this.startDownload(nextItem[0], nextItem[1].options);
+        this.wsSend('progress', nextItem[0]);
       }
     };
 
@@ -328,10 +328,10 @@ export class DLServer {
       data = Object.fromEntries(this.dlCacheClone());
     } else if (type === 'progress' && typeof data === 'string') {
       const item = this.dlCache.get(data);
-      if (item) {
-        const { workPoll, ...stats } = item;
-        data = [{ ...stats, url: data }];
-      } else return;
+      if (!item) return;
+
+      const { workPoll, ...stats } = item;
+      data = [{ ...stats, url: data }];
     }
 
     // 广播进度信息给所有客户端
@@ -501,8 +501,10 @@ export class DLServer {
           if (!existsSync(filepath)) filepath += '.m3u8';
         }
 
+        const allowedDirs = [this.options.cacheDir, this.cfg.dlOptions.saveDir];
+
         if (!existsSync(filepath)) {
-          for (const dir of [this.options.cacheDir, this.cfg.dlOptions.saveDir]) {
+          for (const dir of allowedDirs) {
             const tpath = resolve(dir, filepath);
             if (existsSync(tpath)) {
               filepath = tpath;
@@ -511,8 +513,10 @@ export class DLServer {
           }
         } else {
           filepath = resolve(filepath);
+          const isAllow = !this.options.limitFileAccess || allowedDirs.some(d => filepath.startsWith(resolve(d)));
 
-          if ([this.options.cacheDir, this.cfg.dlOptions.saveDir].some(d => filepath.startsWith(resolve(d)))) {
+          if (!isAllow) {
+            logger.error('[Localplay] Access denied:', filepath);
             res.send({ message: 'Access denied', code: 403 });
             return;
           }

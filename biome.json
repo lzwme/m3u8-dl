@@ -1,10 +1,19 @@
 {
-  "$schema": "https://biomejs.dev/schemas/1.9.4/schema.json",
+  "$schema": "https://biomejs.dev/schemas/2.0.0/schema.json",
   "vcs": { "enabled": false, "clientKind": "git", "useIgnoreFile": false },
   "files": {
     "ignoreUnknown": false,
-    "ignore": ["**/node_modules/**", "dist/**", "cjs/**", "esm/**", "docs/**", "mock/**", "**/*.js", "**/*.d.ts"],
-    "include": ["src/**/*.ts"]
+    "includes": [
+      "src/**/*.ts",
+      "!**/node_modules/**",
+      "!**/dist/**",
+      "!**/cjs/**",
+      "!**/esm/**",
+      "!**/docs/**",
+      "!**/mock/**",
+      "!**/*.js",
+      "!**/*.d.ts"
+    ]
   },
   "formatter": {
     "enabled": true,
@@ -17,7 +26,7 @@
     "attributePosition": "auto",
     "bracketSpacing": true
   },
-  "organizeImports": { "enabled": true },
+  "assist": { "actions": { "source": { "organizeImports": "on" } } },
   "linter": {
     "enabled": true,
     "rules": {
@@ -26,12 +35,29 @@
         "noForEach": "off",
         "noStaticOnlyClass": "off"
       },
+      "correctness": {
+        "noUnusedVariables": {
+          "level": "error",
+          "options": {
+            "ignoreRestSiblings": true
+          }
+        }
+      },
       "nursery": {},
       "performance": {
         "noDelete": "off"
       },
       "style": {
-        "noParameterAssign": "off"
+        "noParameterAssign": "off",
+        "useAsConstAssertion": "error",
+        "useDefaultParameterLast": "error",
+        "useEnumInitializers": "error",
+        "useSelfClosingElements": "error",
+        "useSingleVarDeclarator": "error",
+        "noUnusedTemplateLiteral": "error",
+        "useNumberNamespace": "error",
+        "noInferrableTypes": "error",
+        "noUselessElse": "error"
       },
       "suspicious": {
         "noConfusingVoidType": "off"

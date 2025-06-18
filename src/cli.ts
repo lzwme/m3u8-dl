@@ -54,10 +54,11 @@ program
   .description('启动下载中心web服务')
   .option('-P, --port <port>', '指定web服务端口。默认为6600')
   .option('-t, --token <token>', '指定web服务密码（请求头authorization）。默认为空')
-  .action((options: { port?: number; token?: string; debug?: boolean }) => {
+  .action((options: { port?: number; token?: string; debug?: boolean; cacheDir?: string }) => {
     const opts = getOptions();
     if (opts.debug) options.debug = true;
-    console.log(opts, options);
+    if (opts.cacheDir) options.cacheDir = opts.cacheDir;
+    logger.debug('[cli][server]', opts, options);
 
     import('./server/download-server.js').then(m => {
       new m.DLServer(options);

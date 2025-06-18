@@ -674,7 +674,7 @@ services:
 
           // 排序：resume > pending > pause > error > done
           const statusOrder = { resume: 0, pending: 1, pause: 2, error: 3, done: 4 };
-          tasks.sort((a, b) => (statusOrder[a.status] - statusOrder[b.status]) || a.status === 'done' ? (b.filename - a.filename) : (b.endTime - a.endTime));
+          tasks.sort((a, b) => (statusOrder[a.status] - statusOrder[b.status]) || (a.status === 'done' ? (b.filename - a.filename) : (b.endTime - a.endTime)));
 
           // 更新 queueStatus
           const queueStatus = {
