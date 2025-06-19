@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [1.3.1](https://github.com/lzwme/m3u8-dl/compare/v1.3.0...v1.3.1) (2025-06-19)
+
+
+### Bug Fixes
+
+* 修复视频播放失败的问题；DLServer 增加 limitFileAccess 参数，支持配置 localplay 是否允许访问外部目录文件 ([b195b3f](https://github.com/lzwme/m3u8-dl/commit/b195b3f81960d498635d0b390ac0d03a2d424881))
+
 ## [1.3.0](https://github.com/lzwme/m3u8-dl/compare/v1.2.2...v1.3.0) (2025-06-15)
 
 
