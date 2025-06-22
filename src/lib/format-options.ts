@@ -75,5 +75,5 @@ export function formatOptions(url: string, opts: M3u8DLOptions) {
     logger.updateOptions({ levelType: 'debug' });
     logger.debug('[m3u8-DL]options', options, url);
   }
-  return [url, options, urlMd5] as const;
+  return { url, options, urlMd5 };
 }

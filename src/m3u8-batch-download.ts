@@ -36,8 +36,8 @@ async function formatUrls(urls: string[], options: M3u8DLOptions): Promise<Map<s
       }
     }
 
-    const [u, o] = formatOptions(url, options);
-    taskset.set(u, o);
+    const r = formatOptions(url, options);
+    taskset.set(r.url, r.options);
   }
 
   return taskset;

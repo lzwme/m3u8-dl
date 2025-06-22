@@ -92,6 +92,11 @@ export class WorkerPool<T = unknown, R = unknown> extends EventEmitter {
     if (this.numThreads < this.workers.length) this.numThreads = this.workers.length;
   }
   runTask(task: T, callback: WorkerPoolCallback<R>) {
+    if (this.totalNum === 0) {
+      console.error('未初始化 worker 或已销毁');
+      return;
+    }
+
     if (this.freeWorkers.length === 0) {
       this.tasks.push({ task, callback });
       return;

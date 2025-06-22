@@ -250,7 +250,7 @@ export class DLServer {
     return { app, wss };
   }
   private startDownload(url: string, options?: M3u8DLOptions) {
-    const dlOptions: M3u8DLOptions = formatOptions(url, { ...this.cfg.dlOptions, ...options, cacheDir: this.options.cacheDir })[1];
+    const { options: dlOptions } = formatOptions(url, { ...this.cfg.dlOptions, ...options, cacheDir: this.options.cacheDir });
     const cacheItem = this.dlCache.get(url) || { options, dlOptions, status: 'pending', url };
     logger.debug('startDownload', url, dlOptions, cacheItem.status);
 

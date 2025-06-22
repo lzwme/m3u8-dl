@@ -92,10 +92,8 @@ const cache = {
 const tsDlFile = resolve(__dirname, './ts-download.js');
 export const workPollPublic: M3u8WorkerPool = new WorkerPool(tsDlFile);
 
-async function m3u8InfoParse(url: string, options: M3u8DLOptions = {}) {
-  let urlMd5 = '';
-  [url, options, urlMd5] = formatOptions(url, options);
-
+async function m3u8InfoParse(u: string, o: M3u8DLOptions = {}) {
+  const { url, options, urlMd5 } = formatOptions(u, o);
   const ext = isSupportFfmpeg() ? '.mp4' : '.ts';
   /** 最终合并转换后的文件路径 */
   let filepath = resolve(options.saveDir, options.filename);
@@ -217,15 +215,12 @@ export async function m3u8Download(url: string, options: M3u8DLOptions = {}) {
   }
 
   if (result.m3u8Info?.tsCount > 0) {
-    const workPoll: M3u8WorkerPool = new WorkerPool(tsDlFile);
-    let n = options.threadNum - workPoll.numThreads;
-    if (n > 0) while (n--) workPoll.addNewWorker();
-
+    const workPoll: M3u8WorkerPool = new WorkerPool(tsDlFile, options.threadNum);
     const { m3u8Info } = result;
     const startTime = Date.now();
     const barrier = new Barrier();
     /** 本地开始播放最少需要下载的 ts 文件数量 */
-    const playStart = Math.min(options.threadNum + 2, result.m3u8Info.tsCount);
+    const playStart = Math.min(options.threadNum + 2, m3u8Info.tsCount);
     const stats: M3u8DLProgressStats = {
       url,
       startTime,
@@ -335,6 +330,7 @@ export async function m3u8Download(url: string, options: M3u8DLOptions = {}) {
     runTask(m3u8Info.data);
 
     await barrier.wait();
+    workPoll.close();
 
     if (stats.tsFailed > 0) {
       logger.warn('Download Failed! Please retry!', stats.tsFailed);
@@ -354,5 +350,8 @@ export async function m3u8Download(url: string, options: M3u8DLOptions = {}) {
 
 export function m3u8DLStop(url: string, wp = workPollPublic) {
   if (!wp?.removeTask) return 0;
-  return wp.removeTask(task => task.url === url);
+  const count = wp.removeTask(task => task.url === url);
+  // 进行中的任务，最多允许继续下载 10s
+  if (count === 0 && wp !== workPollPublic) setTimeout(() => wp.close(), 10_000);
+  return count;
 }
