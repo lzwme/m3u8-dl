@@ -1,3 +1,11 @@
+::placeholder {
+  font-size: 14px;
+}
+
+.swal2-html-container textarea, input {
+  font-size: 16px !important;
+}
+
 #app {
   max-width: 1400px;
   margin: auto;

@@ -103,7 +103,8 @@ const T = {
             },
           ],
           // extraResources: ['../../cjs', '../../client'],
-          icon: 'build/icon/logo.png',
+          // icon: path.resolve(rootDir, 'client/logo.png'),
+          icon: 'build/icon/logo.ico',
           verifyUpdateCodeSignature: false,
         },
         dmg: {

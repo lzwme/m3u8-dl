@@ -7,7 +7,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <title>M3U8 下载器</title>
-  <link rel="icon" type="image/svg+xml" href="logo.svg">
+  <link rel="icon" type="image/png" href="logo.png">
   <link rel="stylesheet" href="https://s4.zstatic.net/ajax/libs/font-awesome/6.7.2/css/all.min.css"
     integrity="sha512-Evv84Mr4kqVGRNSgIGL/F/aIDqQb7xQ2vcrdIwxfjThSH8CSR7PBEakCr51Ck+w+/U6swU2Im1vVX0SVk9ABhg=="
     crossorigin="anonymous" referrerpolicy="no-referrer" />
@@ -36,7 +36,7 @@
     <div class="sidebar p-4" :class="{ 'show': !sidebarCollapsed }">
       <div class="mb-8">
         <div class="flex items-center mb-4">
-          <img src="logo.svg" alt="M3U8 下载器" class="w-8 h-8 mr-2">
+          <img src="logo.png" alt="M3U8 下载器" class="w-8 h-8 mr-2">
           <h1 class="text-xl font-bold text-gray-800">M3U8 下载器</h1>
         </div>
         <button @click="showNewDownloadDialog"
@@ -521,7 +521,7 @@ services:
       alert(msg, p) {
         p = typeof msg === 'object' ? msg : Object.assign({ text: msg }, p);
         if (!p.toast) p.allowOutsideClick = false;
-        return Swal.fire(Object.assign({ icon: 'info', showConfirmButton: false, showCloseButton: true }, p));
+        return Swal.fire(Object.assign({ icon: 'info', showConfirmButton: false, showCloseButton: true, confirmButtonText: '确定', cancelButtonText: '关闭' }, p));
       },
       confirm(msg, p) {
         return this.alert(msg, { showConfirmButton: true, showCancelButton: true, showCloseButton: true, confirmButtonText: '确认', cancelButtonText: '取消' });
@@ -790,7 +790,7 @@ services:
         },
         /** 获取配置 */
         fetchConfig: async function () {
-          const config = await T.get('/config');
+          const config = await T.get('/api/config');
           if (config.code) {
             console.error('获取配置失败:', config);
             T.alert('获取配置失败: ' + config.message, { icon: 'error' });
@@ -803,7 +803,7 @@ services:
         },
         /** 更新配置 */
         updateConfig: async function () {
-          const result = await T.post('/config', this.config);
+          const result = await T.post('/api/config', this.config);
           T.toast(result.message || '配置已更新', { icon: result.code ? 'error' : 'success' });
         },
         updateLocalConfig: async function () {
@@ -830,18 +830,31 @@ services:
             width: '800px',
             html: `
               <div class="text-left">
-                <label class="block text-sm font-bold text-gray-700 mb-1">视频链接（每行一个，支持m3u8地址及抖音、微博、皮皮虾视频分享链接）</label>
-                <textarea id="downloadUrls" class="w-full p-2 border rounded-lg focus:ring-blue-500" rows="3" placeholder="格式： URL | 名称(可选)、名称 | URL"></textarea>
-
-                <div class="mt-4">
-                  <label class="block text-sm font-bold text-gray-700 mb-1">视频名称（可选）</label>
-                  <input id="filename" class="w-full p-2 border rounded-lg focus:border-blue-500" placeholder="请输入视频名称">
-                  <p class="mt-1 text-sm text-gray-500">若输入多个链接，将依次以"视频名称+第N集"命名</p>
+                <div class="flex flex-row gap-4">
+                  <input type="text" id="playUrl" placeholder="输入视频播放页地址，尝试提取m3u8下载链接" autocomplete="off" id="urlInput" class="flex-1 border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400" value="">
+                  <div class="flex flex-row gap-1">
+                    <button type="button" id="getM3u8UrlsBtn" class="player-btn px-2 py-1 bg-blue-600 text-white rounded hover:bg-blue-700 focus:outline-none">
+                      提取
+                    </button>
+                  </div>
                 </div>
 
                 <div class="mt-4">
+                  <label class="block text-sm font-bold text-gray-700 mb-1">视频链接（每行一个，支持m3u8地址及抖音、微博、皮皮虾视频分享链接）</label>
+                  <textarea id="downloadUrls" class="w-full p-2 border rounded-lg focus:ring-blue-500" rows="3" placeholder="格式： URL | 名称(可选)、名称 | URL"></textarea>
+                </div>
+
+                <div class="mt-4">
+                  <div class="flex flex-row gap-2 items-center">
+                    <label class="block text-sm font-bold text-gray-700 mb-1">视频名称</label>
+                    <input id="filename" class="flex-1 p-2 border rounded-lg focus:border-blue-500" placeholder="请输入视频名称(可选)">
+                  </div>
+                  <p class="ml-2 mt-1 text-sm text-gray-500">若输入多个链接，将依次以"视频名称+第N集"命名</p>
+                </div>
+
+                <div class="mt-4 flex flex-row gap-2 items-center">
                   <label class="block text-sm font-bold text-gray-700 mb-1">保存位置</label>
-                  <input id="saveDir" class="w-full p-2 border rounded-lg focus:ring-blue-500" placeholder="请输入保存路径" value="${this.config.saveDir || ''}">
+                  <input id="saveDir" class="flex-1 p-2 border rounded-lg focus:ring-blue-500" placeholder="请输入保存路径" value="${this.config.saveDir || ''}">
                 </div>
 
                 <div class="mt-4">
@@ -851,7 +864,7 @@ services:
 
                 <div class="mt-4">
                   <label class="block text-sm font-bold text-gray-700 mb-1">自定义请求头</label>
-                  <textarea id="headers" class="w-full p-2 border rounded-lg focus:ring-blue-500" rows="4" placeholder="每行一个请求头（微博视频必须设置 Cookie），格式：Key: Value&#10;例如：&#10;Referer: https://example.com&#10;Cookie: token=123"></textarea>
+                  <textarea id="headers" class="w-full p-2 border rounded-lg focus:ring-blue-500" rows="3" placeholder="每行一个（微博视频须设置 Cookie），格式：Key: Value。例如：&#10;Referer: https://example.com&#10;Cookie: token=123"></textarea>
                 </div>
               </div>
             `,
@@ -897,6 +910,31 @@ services:
           }).then((result) => {
             if (result.isConfirmed) this.startBatchDownload(result.value);
           });
+
+          setTimeout(() => {
+            const btn = document.getElementById('getM3u8UrlsBtn');
+            if (!btn) return;
+
+            btn.addEventListener('click', async () => {
+              const url = document.getElementById('playUrl').value.trim();
+              if (!/^https?:/.test(url)) {
+                return Swal.showValidationMessage('请输入正确的 URL 地址');
+              }
+
+              btn.setAttribute('disabled', 'disabled');
+              btn.innerText = '解析中...';
+
+              T.post('/api/getM3u8Urls', { url }).then(r => {
+                if (Array.isArray(r.data)) {
+                  document.getElementById('downloadUrls').value = r.data.map(d => d.join(' | ')).join('\n');
+                  T.toast(r.message || `解析完成！获取到 ${r.data.length} 个地址`);
+                }
+
+                btn.removeAttribute('disabled');
+                btn.innerText = '提取';
+              });
+            });
+          }, 500);
         },
         /** 批量下载 */
         startBatchDownload: async function (list) {
@@ -905,7 +943,7 @@ services:
               Object.entries(item).forEach(([key, value]) => !value && delete item[key]);
               this.tasks[item.url] = { status: 'resume', progress: 0, speed: 0, remainingTime: 0, size: 0 };
             });
-            const r = await T.post('/download', { list });
+            const r = await T.post('/api/download', { list });
             if (!r.code) T.toast(r.message || '批量下载已开始');
             this.forceUpdate();
           } catch (error) {
@@ -917,7 +955,7 @@ services:
         pauseDownload: async function (urls) {
           if (!urls) urls = this.selectedTasks;
           if (typeof urls === 'string') urls = [urls];
-          const r = await T.post(`/pause`, { urls, all: urls[0] === 'all' });
+          const r = await T.post('/api/pause', { urls, all: urls[0] === 'all' });
           if (!r.code) T.toast(r.message || '已暂停下载');
           if (urls === this.selectedTasks) this.selectedTasks = [];
         },
@@ -925,7 +963,7 @@ services:
         resumeDownload: async function (urls) {
           if (!urls) urls = this.selectedTasks;
           if (typeof urls === 'string') urls = [urls];
-          const r = await T.post(`/resume`, { urls, all: urls[0] === 'all' });
+          const r = await T.post('/api/resume', { urls, all: urls[0] === 'all' });
           if (!r.code) T.toast(r.message || '已恢复下载');
           if (urls === this.selectedTasks) this.selectedTasks = [];
         },
@@ -965,7 +1003,7 @@ services:
             });
 
             if (result.isConfirmed) {
-              const r = await T.post(`/delete`, {
+              const r = await T.post('/api/delete', {
                 urls,
                 deleteCache: result.value.deleteCache,
                 deleteVideo: result.value.deleteVideo
@@ -984,7 +1022,7 @@ services:
           }
         },
         getTasks: async function () {
-          this.tasks = await T.get('/tasks');
+          this.tasks = await T.get('/api/tasks');
         },
         showTaskDetail(task) {
           console.log(task);
@@ -1003,9 +1041,10 @@ services:
             预估还需: !task.endTime && task.remainingTime && T.formatTimeCost(task.remainingTime),
             相关信息: task.errmsg && `<span class=text-red-600>${task.errmsg}</span>`
           };
-          Swal.fire({
+          T.alert({
             title: '任务详情',
             width: 1000,
+            icon: '',
             html: [
               '<div class="flex-col full-width text-left">',
               Object.entries(taskInfo).filter(d => d[1]).map(
@@ -1054,12 +1093,12 @@ services:
         },
         // 更新任务优先级
         updatePriority: async function (url, priority) {
-          const r = await T.post('/priority', { url, priority: parseInt(priority) });
+          const r = await T.post('/api/priority', { url, priority: parseInt(priority) });
           T.toast(r.message || '已更新优先级');
         },
         // 获取队列状态
         getQueueStatus: async function () {
-          const status = await T.get('/queue/status');
+          const status = await T.get('/api/queue/status');
           if (status?.maxConcurrent) this.queueStatus = status;
         },
         // 清空下载队列
@@ -1075,7 +1114,7 @@ services:
           });
 
           if (result.isConfirmed) {
-            const r = await T.post('/queue/clear');
+            const r = await T.post('/api/queue/clear');
             T.toast(r.message || '已清空下载队列');
             this.getQueueStatus();
           }

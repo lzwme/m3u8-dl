@@ -8,6 +8,7 @@ import type { Server } from 'ws';
 import { fileDownload } from '../lib/file-download.js';
 import { formatOptions } from '../lib/format-options.js';
 import { m3u8DLStop, m3u8Download } from '../lib/m3u8-download.js';
+import { getM3u8Urls } from '../lib/getM3u8Urls.js';
 import { logger } from '../lib/utils.js';
 import type { M3u8DLOptions, M3u8DLProgressStats, M3u8DLResult, M3u8WorkerPool, TsItemInfo } from '../types/m3u8.js';
 import { VideoParser } from '../video-parser/index.js';
@@ -120,7 +121,7 @@ export class DLServer {
     }
 
     this.dlCache.forEach(item => {
-      if (item.status === 'done' && item.localVideo && !existsSync(item.localVideo)) {
+      if (item.status === 'done' && (!item.localVideo || !existsSync(item.localVideo))) {
         item.status = 'error';
         item.errmsg = '已删除';
       }
@@ -342,28 +343,27 @@ export class DLServer {
   private initRouters() {
     const { app } = this;
 
-    // health check
     app.get('/healthcheck', (_req, res) => {
       res.json({ message: 'ok', code: 0 });
     });
 
-    app.post('/config', (req, res) => {
+    app.post('/api/config', (req, res) => {
       const config = req.body as M3u8DLOptions;
       this.saveConfig(config);
       res.json({ message: 'Config updated successfully', code: 0 });
     });
 
-    app.get('/config', (_req, res) => {
+    app.get('/api/config', (_req, res) => {
       res.json({ ...this.cfg.dlOptions, ...this.cfg.webOptions });
     });
 
     // API to get all download progress
-    app.get('/tasks', (_req, res) => {
+    app.get('/api/tasks', (_req, res) => {
       res.json(Object.fromEntries(this.dlCacheClone()));
     });
 
     // API to get queue status
-    app.get('/queue/status', (_req, res) => {
+    app.get('/api/queue/status', (_req, res) => {
       const pendingTasks = Array.from(this.dlCache.entries()).filter(([_, item]) => item.status === 'pending');
       const activeTasks = Array.from(this.dlCache.entries()).filter(([_, item]) => item.status === 'resume');
 
@@ -375,7 +375,7 @@ export class DLServer {
     });
 
     // API to clear queue
-    app.post('/queue/clear', (_req, res) => {
+    app.post('/api/queue/clear', (_req, res) => {
       let count = 0;
       for (const [url, item] of this.dlCache.entries()) {
         if (item.status === 'pending') {
@@ -389,7 +389,7 @@ export class DLServer {
     });
 
     // API to update task priority
-    app.post('/priority', (req, res) => {
+    app.post('/api/priority', (req, res) => {
       const { url, priority } = req.body;
       const item = this.dlCache.get(url);
       if (!item) {
@@ -403,7 +403,7 @@ export class DLServer {
     });
 
     // API to start m3u8 download
-    app.post('/download', (req, res) => {
+    app.post('/api/download', (req, res) => {
       const { url, options = {}, list = [] } = req.body;
 
       try {
@@ -422,7 +422,7 @@ export class DLServer {
     });
 
     // API to pause download
-    app.post('/pause', (req, res) => {
+    app.post('/api/pause', (req, res) => {
       const { urls, all = false } = req.body;
       const urlsToPause: string[] = all ? [...this.dlCache.keys()] : urls;
       const list: CacheItem[] = [];
@@ -431,7 +431,7 @@ export class DLServer {
         const item = this.dlCache.get(url);
         if (['resume', 'pending'].includes(item?.status)) {
           m3u8DLStop(url, item.workPoll);
-          item.status = item.tsSuccess === item.tsCount ? 'done' : 'pause';
+          item.status = item.tsSuccess > 0 && item.tsSuccess === item.tsCount ? 'done' : 'pause';
           const { workPoll, ...tItem } = item;
           list.push(tItem);
         }
@@ -442,7 +442,7 @@ export class DLServer {
     });
 
     // API to resume download
-    app.post('/resume', (req, res) => {
+    app.post('/api/resume', (req, res) => {
       const { urls, all = false } = req.body;
       const urlsToResume: string[] = all ? [...this.dlCache.keys()] : urls;
       const list: CacheItem[] = [];
@@ -461,7 +461,7 @@ export class DLServer {
     });
 
     // API to delete download
-    app.post('/delete', (req, res) => {
+    app.post('/api/delete', (req, res) => {
       const { urls, deleteCache = false, deleteVideo = false } = req.body;
       const urlsToDelete = urls;
       const list: string[] = [];
@@ -475,19 +475,28 @@ export class DLServer {
 
           if (deleteCache && item.current?.tsOut) {
             const cacheDir = dirname(item.current.tsOut);
-            if (existsSync(cacheDir)) rmSync(cacheDir, { recursive: true });
+            if (existsSync(cacheDir)) {
+              rmSync(cacheDir, { recursive: true });
+              logger.debug('删除缓存目录：', cacheDir);
+            }
           }
 
           if (deleteVideo) {
             ['.ts', '.mp4'].forEach(ext => {
               const filepath = resolve(item.options.saveDir, item.options.filename + ext);
-              if (existsSync(filepath)) unlinkSync(filepath);
+              if (existsSync(filepath)) {
+                unlinkSync(filepath);
+                logger.debug('删除文件：', filepath);
+              }
             });
           }
         }
       }
 
-      if (list.length) this.wsSend('delete', list);
+      if (list.length) {
+        this.wsSend('delete', list);
+        this.saveCache();
+      }
       res.json({ message: `已删除 ${list.length} 个下载任务`, code: 0, count: list.length });
     });
 
@@ -540,6 +549,18 @@ export class DLServer {
 
       logger.error('Localplay file not found:', filepath);
       res.status(404).send({ message: 'Not Found', code: 404 });
+    });
+
+    app.post('/api/getM3u8Urls', (req, res) => {
+      const url = req.body.url;
+
+      if (!url) {
+        res.json({ code: 1001, message: '无效的 url 参数' });
+      } else {
+        getM3u8Urls(url)
+          .then(d => res.json({ code: 0, data: Array.from(d) }))
+          .catch(err => res.json({ code: 401, message: (err as Error).message }));
+      }
     });
   }
 }

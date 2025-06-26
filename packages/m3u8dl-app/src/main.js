@@ -8,11 +8,11 @@ const isDev = !app.isPackaged;
 const baseDir = path.resolve(__dirname, isDev ? '../../..' : '..');
 const config = {
   title: 'M3U8下载器',
-  logo: path.resolve(baseDir, 'client/local/icon/logo.png'),
+  logo: path.resolve(baseDir, 'client/logo.png'),
 };
 
 const utils = {
-  async findFreePort(start = 3000, end = 99_999, port = 0) {
+  async findFreePort(start = 3800, end = 99_999, port = 0) {
     return new Promise(resolve => {
       if (!port || port < start) port = start;
       if (port > end) throw new Error(`Could not find free port in range: ${start}-${end}`);
@@ -29,7 +29,7 @@ const utils = {
   },
 };
 
-const initAutoUpdater = mainWindow => {
+const initAutoUpdater = mWindow => {
   const { autoUpdater } = require('electron-updater');
   const messages = {
     error: '检查更新出错',
@@ -37,7 +37,7 @@ const initAutoUpdater = mainWindow => {
     updateAva: '检测到新版本，正在下载……',
     updateNotAva: '已是最新版本，无需更新',
   };
-  const sendUpdateMessage = text => mainWindow.webContents.send('message', text);
+  const sendUpdateMessage = text => mWindow.webContents.send('message', text);
 
   if (isDev) {
     autoUpdater.forceDevUpdateConfig = true;
@@ -71,7 +71,7 @@ const initAutoUpdater = mainWindow => {
 
   autoUpdater.on('download-progress', progress => {
     if (isDev) console.log('downloadProgress:', progress);
-    mainWindow.webContents.send('downloadProgress', progress);
+    mWindow.webContents.send('downloadProgress', progress);
   });
 
   autoUpdater.on('update-downloaded', () => {
@@ -81,7 +81,7 @@ const initAutoUpdater = mainWindow => {
   });
 
   ipcMain.on('checkForUpdate', () => autoUpdater.checkForUpdates());
-  ipcMain.on('checkAppVersion', () => mainWindow.webContents.send('version', app.getVersion()));
+  ipcMain.on('checkAppVersion', () => mWindow.webContents.send('version', app.getVersion()));
 };
 
 const T = {
@@ -117,7 +117,7 @@ const T = {
     if (isDev) window.webContents.openDevTools();
     window.loadURL(`http://localhost:${port}`);
 
-    window.on('closed', () => (mainWindow = null));
+    window.on('closed', () => (this.mainWindow = null));
     window.on('minimize', () => window.hide());
 
     window.webContents.on('devtools-opened', () => setImmediate(() => window.focus()));
@@ -131,17 +131,17 @@ const T = {
       {
         label: '显示窗口',
         type: 'normal',
-        click: () => mainWindow.show(),
+        click: () => this.mainWindow.show(),
       },
       {
         label: '隐藏窗口',
         type: 'normal',
-        click: () => mainWindow.hide(),
+        click: () => this.mainWindow.hide(),
       },
       {
         label: '打开调试',
         type: 'normal',
-        click: () => mainWindow.webContents[mainWindow.webContents.isDevToolsOpened() ? 'closeDevTools' : 'openDevTools'](),
+        click: () => this.mainWindow.webContents[this.mainWindow.webContents.isDevToolsOpened() ? 'closeDevTools' : 'openDevTools'](),
       },
       {
         type: 'separator',
@@ -157,13 +157,13 @@ const T = {
       {
         label: '重启',
         type: 'normal',
-        click: () => mainWindow.close() & app.relaunch(),
+        click: () => this.mainWindow.close() & app.relaunch(),
       },
       {
         label: '退出',
         type: 'normal',
         click: () => {
-          mainWindow.close();
+          this.mainWindow.close();
           setTimeout(() => app.quit(), 2000);
         },
       },
@@ -172,7 +172,7 @@ const T = {
     const tray = new Tray(iconImg.resize({ width: 20, height: 20 }));
     tray.setTitle(config.title);
     tray.setToolTip(config.title);
-    tray.on('double-click', () => mainWindow[mainWindow.isVisible() ? 'hide' : 'show']());
+    tray.on('double-click', () => this.mainWindow[this.mainWindow.isVisible() ? 'hide' : 'show']());
     tray.setContextMenu(contextMenu);
     return tray;
   },
@@ -191,7 +191,7 @@ const T = {
     app.on('activate', () => (this.mainWindow ? this.mainWindow.show() : this.createMainWindow()));
 
     let firstHide = false;
-    ipcMain.on('hide-windows', function () {
+    ipcMain.on('hide-windows', () => {
       if (this.mainWindow != null) {
         this.mainWindow.hide();
 
@@ -208,6 +208,19 @@ const T = {
       this.mainWindow = await this.createMainWindow();
       this.tray = this.createTray();
     });
+
+    // 多开检测、聚焦当前窗口
+    const isFirstInstance = app.requestSingleInstanceLock()
+    if (!isFirstInstance) {
+      app.quit();
+    } else {
+      app.on('second-instance', () => {
+        if (this.mainWindow) {
+          if (this.mainWindow.isMinimized()) this.mainWindow.restore();
+          this.mainWindow.focus();
+        }
+      });
+    }
   },
 };
 
