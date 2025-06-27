@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [1.4.0](https://github.com/lzwme/m3u8-dl/compare/v1.3.1...v1.4.0) (2025-06-27)
+
+
+### Features
+
+* 新增getM3u8Urls方法，支持从网站播放页提取地址 ([211ee36](https://github.com/lzwme/m3u8-dl/commit/211ee36cd908393fe670e079ede2084dff80885a))
+
 ### [1.3.1](https://github.com/lzwme/m3u8-dl/compare/v1.3.0...v1.3.1) (2025-06-19)
 
 
