@@ -170,9 +170,9 @@
                     <input type="checkbox" :checked="selectedTasks.includes(task.url)"
                       @change="toggleTaskSelection(task.url)"
                       class="form-checkbox h-5 w-5 text-blue-500 rounded focus:ring-blue-500 mr-2"
-                      :title="'选择任务：' + (task.localVideo || task.filename || task.url)">
+                      :title="'选择任务：' + task.showName">
                     <h3 class="font-bold text-green-600 truncate max-w-[calc(100vw-100px)]" :title="task.url">
-                      {{ task.filename || task.localVideo || task.url }}
+                      {{ task.showName }}
                     </h3>
                     <div class="absolute right-1 top-1 text-xs rounded overflow-hidden">
                       <span v-if="task.status === 'pending'"
@@ -662,7 +662,7 @@ services:
           if (this.searchQuery) {
             const query = this.searchQuery.toLowerCase();
             tasks = tasks.filter(task => {
-              const filename = (task.localVideo || task.filename || task.url).toLowerCase();
+              const filename = (task.localVideo || task.filename || task.dlOptions?.filename || task.url).toLowerCase();
               return filename.includes(query) || task.url.toLowerCase().includes(query);
             });
           }
@@ -674,7 +674,7 @@ services:
 
           // 排序：resume > pending > pause > error > done
           const statusOrder = { resume: 0, pending: 1, pause: 2, error: 3, done: 4 };
-          tasks.sort((a, b) => (statusOrder[a.status] - statusOrder[b.status]) || (a.status === 'done' ? (b.filename - a.filename) : (b.endTime - a.endTime)));
+          tasks.sort((a, b) => (statusOrder[a.status] - statusOrder[b.status]) || (a.status === 'done' ? (b.filename - a.filename) : ((a.startTime || 0) - (b.startTime || 0))));
 
           // 更新 queueStatus
           const queueStatus = {
@@ -683,6 +683,7 @@ services:
             maxConcurrent: this.config.maxDownloads,
           };
           tasks.forEach(task => {
+            task.showName = task.filename || task.dlOptions?.filename || task.localVideo || task.url;
             if (task.status === 'pending') {
               queueStatus.queueLength++;
             } else if (task.status === 'resume') {
@@ -824,7 +825,7 @@ services:
           }
         },
         /** 显示新建下载弹窗 */
-        showNewDownloadDialog () {
+        showNewDownloadDialog() {
           Swal.fire({
             title: '新建下载',
             width: '900px',
@@ -1031,19 +1032,20 @@ services:
         },
         showTaskDetail(task) {
           console.log(task);
+          const isResume = task.status === 'resume';
           const taskInfo = {
             名称: task.filename || task.localVideo,
             状态: T.taskStatus[task.status] || task.status,
-            大小: `${T.formatSize(task.downloadedSize)} / ${task.size ? T.formatSize(task.size) : ''}`,
-            分片: `<span class=text-green-600>${task.tsSuccess}</span> / <span class=text-red-500>${task.tsFailed}</span> / ${task.tsCount}`,
-            进度: `${task.progress}%`,
-            平均速度: `${task.avgSpeedDesc}/s`,
+            大小: `${T.formatSize(task.downloadedSize || 0)} / ${task.size ? T.formatSize(task.size) : ''}`,
+            分片: task.tsCount ? `<span class=text-green-600>${task.tsSuccess}</span> / <span class=text-red-500>${task.tsFailed}</span> / ${task.tsCount}` : '-',
+            进度: `${task.progress || '-'}%`,
+            平均速度: `${task.avgSpeedDesc || '-'}/s`,
             并发线程: task.threadNum,
             下载地址: task.url,
             保存位置: task.localVideo || task.options?.saveDir,
-            开始时间: new Date(task.startTime).toLocaleString(),
-            结束时间: task.endTime && new Date(task.endTime).toLocaleString(),
-            预估还需: !task.endTime && task.remainingTime && T.formatTimeCost(task.remainingTime),
+            开始时间: task.startTime && new Date(task.startTime).toLocaleString(),
+            结束时间: !isResume && task.endTime && new Date(task.endTime).toLocaleString(),
+            预估还需: isResume && task.remainingTime && T.formatTimeCost(task.remainingTime),
             相关信息: task.errmsg && `<span class=text-red-600>${task.errmsg}</span>`
           };
           T.alert({

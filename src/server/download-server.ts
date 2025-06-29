@@ -190,7 +190,7 @@ export class DLServer {
         if (existsSync(resolve(rootDir, 'client/local/cdn'))) {
           indexHtml = indexHtml
             .replaceAll('https://s4.zstatic.net/ajax/libs', 'local/cdn')
-            .replaceAll(/integrity=.+\n/g, '')
+            .replaceAll(/integrity=".+"\n?/g, '')
             .replace('https://cdn.tailwindcss.com/3.4.16', 'local/cdn/tailwindcss/3.4.16/tailwindcss.min.js');
         }
 
@@ -258,7 +258,11 @@ export class DLServer {
     if (cacheItem.status === 'resume') return cacheItem.options;
 
     if (cacheItem.localVideo && !existsSync(cacheItem.localVideo)) delete cacheItem.localVideo;
+    if (cacheItem.endTime) delete cacheItem.endTime;
+
     cacheItem.status = this.downloading >= this.cfg.webOptions.maxDownloads ? 'pending' : 'resume';
+    // pending 优先级靠后
+    if (cacheItem.status === 'pending' && this.dlCache.has(url)) this.dlCache.delete(url);
     this.dlCache.set(url, cacheItem);
     this.wsSend('progress', url);
 
@@ -300,13 +304,7 @@ export class DLServer {
       this.dlCache.set(url, item);
       this.wsSend('progress', url);
       this.saveCache();
-
-      // 找到一个 pending 的任务，开始下载
-      const nextItem = this.dlCache.entries().find(([_url, d]) => d.status === 'pending');
-      if (nextItem) {
-        this.startDownload(nextItem[0], nextItem[1].options);
-        this.wsSend('progress', nextItem[0]);
-      }
+      this.startNextPending();
     };
 
     try {
@@ -324,6 +322,14 @@ export class DLServer {
     }
 
     return dlOptions;
+  }
+  startNextPending() {
+    // 找到一个 pending 的任务，开始下载
+    const nextItem = this.dlCache.entries().find(([_url, d]) => d.status === 'pending');
+    if (nextItem) {
+      this.startDownload(nextItem[0], nextItem[1].options);
+      this.wsSend('progress', nextItem[0]);
+    }
   }
   private wsSend(type = 'progress', data?: unknown) {
     if (type === 'tasks' && !data) {
@@ -438,7 +444,10 @@ export class DLServer {
         }
       }
 
-      if (list.length) this.wsSend('progress', list);
+      if (list.length) {
+        this.wsSend('progress', list);
+        this.startNextPending();
+      }
       res.json({ message: `已暂停 ${list.length} 个下载任务`, code: 0, count: list.length });
     });
 
@@ -497,6 +506,7 @@ export class DLServer {
       if (list.length) {
         this.wsSend('delete', list);
         this.saveCache();
+        this.startNextPending();
       }
       res.json({ message: `已删除 ${list.length} 个下载任务`, code: 0, count: list.length });
     });
