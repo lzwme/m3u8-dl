@@ -272,7 +272,8 @@ export class DLServer {
         workPoll = wp;
       },
       onProgress: (_finished, _total, current, stats) => {
-        const item = this.dlCache.get(url) || cacheItem;
+        const item = this.dlCache.get(url);
+        if (!item) return false; // 已删除
         const status = item.status || 'resume';
 
         Object.assign(item, { ...stats, current, options: dlOptions, status, workPoll, url });
@@ -542,7 +543,9 @@ export class DLServer {
             'Content-Type':
               ext === 'ts' ? 'video/mp2t' : ext === 'm3u8' ? 'application/vnd.apple.mpegurl' : ext === 'mp4' ? 'video/mp4' : 'text/plain',
           });
-          res.setHeaders(headers).sendFile(filepath);
+          res.setHeaders(headers);
+          if (['ts', 'm3u8'].includes(ext) && stats.size < 1024 * 1024 * 3) res.send(readFileSync(filepath));
+          else res.sendFile(filepath);
           return;
         }
       }

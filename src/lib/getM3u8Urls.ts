@@ -12,11 +12,19 @@ export async function getM3u8Urls(url: string, deep = 2, visited = new Set<strin
 
   // 1. 直接正则匹配 m3u8 地址
   let match = m3u8Regex.exec(html);
+  const title = (/<title>([^<]+)</.exec(html)?.[1].split('-')[0] || '').replace(/在线播放|详情|介绍|《|》/g, '').trim();
   while (match) {
-    const title = (/<title>([^<]+)</.exec(html)?.[1].split('-')[0] || '').replace(/在线播放|《|》/g, '');
     const href = match[0].replaceAll('\\/', '/');
-    if (!m3u8Urls.has(href)) m3u8Urls.set(href, title);
     match = m3u8Regex.exec(html);
+    if (!m3u8Urls.has(href)) m3u8Urls.set(href, title);
+  }
+
+  // 找到了多个链接，修改 title 添加序号
+  if (m3u8Urls.size > 3 && !/第.+(集|期)/.test(title)) {
+    let idx = 1;
+    for (const [key] of m3u8Urls) {
+      m3u8Urls.set(key, `${title}第${String(idx++).padStart(2, '0')}集`);
+    }
   }
 
   // 2. 若未找到且深度大于 0，则获取所有 a 标签的 href 并递归查找
@@ -27,19 +35,35 @@ export async function getM3u8Urls(url: string, deep = 2, visited = new Set<strin
     const aTagRegex = /<a\s+[^>]*href=["']([^"']+)["'][^>]*>(.*?)<\/a>/gi;
     let aMatch = aTagRegex.exec(html);
     const origin = new URL(url).origin;
+    const subPageUrls = new Map<string, string>();
+    let failedSubPages = 0;
 
     while (aMatch) {
       const href = aMatch[1] ? new URL(aMatch[1], origin).toString() : '';
-      const text = aMatch[2];
+      const text = aMatch[2].replace(/<[^>]+>/g, '');
 
       aMatch = aTagRegex.exec(html);
-      if (!href || visited.has(href) || !href.startsWith(origin) || !/集|HD|高清|播放/.test(text)) continue;
+      if (!href || visited.has(href) || !href.startsWith(origin)) continue;
+      if (!/集|期|HD|高清|抢先|BD/.test(text)) continue;
 
-      visited.add(href);
+      subPageUrls.set(href, text);
+    }
+
+    for (const [href, text] of subPageUrls) {
       try {
+        visited.add(href);
         const subUrls = await getM3u8Urls(href, deep - 1, visited);
         logger.debug(' > 从子页面提取: ', color.gray(href), text, subUrls.size);
-        for (const [u, t] of subUrls) m3u8Urls.set(u, t || text);
+
+        if (subUrls.size === 0 && m3u8Urls.size === 0) {
+          failedSubPages++;
+          if (failedSubPages > 3) {
+            logger.warn(`连续查找 ${failedSubPages} 个子页面均未获取到，不再继续`, url, href);
+            return m3u8Urls;
+          }
+        }
+
+        for (const [u, t] of subUrls) m3u8Urls.set(u, subUrls.size === 1 || /第.+(集|期)/.test(t) ? t : text);
       } catch (err) {
         logger.warn(' > 尝试访问子页面异常: ', color.red(href), (err as Error).message);
       }
