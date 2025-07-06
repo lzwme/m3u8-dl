@@ -879,7 +879,7 @@ services:
               const urlsText = document.getElementById('downloadUrls').value.trim();
               const filename = document.getElementById('filename').value.trim();
               let saveDir = document.getElementById('saveDir').value.trim();
-              const headersText = document.getElementById('headers').value.trim();
+              const headers = document.getElementById('headers').value.trim();
               const ignoreSegments = document.getElementById('ignoreSegments').value.trim();
 
               if (!urlsText) {
@@ -930,7 +930,7 @@ services:
               btn.setAttribute('disabled', 'disabled');
               btn.innerText = '解析中...';
 
-              T.post('/api/getM3u8Urls', { url }).then(r => {
+              T.post('/api/getM3u8Urls', { url, headers: document.getElementById('headers').value.trim() }).then(r => {
                 if (Array.isArray(r.data)) {
                   document.getElementById('downloadUrls').value = r.data.map(d => d.join(' | ')).join('\n');
                   T.toast(r.message || `解析完成！获取到 ${r.data.length} 个地址`);
@@ -947,7 +947,7 @@ services:
           try {
             list.forEach(async (item, idx) => {
               Object.entries(item).forEach(([key, value]) => !value && delete item[key]);
-              this.tasks[item.url] = { status: 'resume', progress: 0, speed: 0, remainingTime: 0, size: 0 };
+              if (!/\.html?$/.test(item.url)) this.tasks[item.url] = { status: 'resume', progress: 0, speed: 0, remainingTime: 0, size: 0 };
             });
             const r = await T.post('/api/download', { list });
             if (!r.code) T.toast(r.message || '批量下载已开始');

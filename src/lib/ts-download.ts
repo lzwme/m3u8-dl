@@ -1,13 +1,13 @@
 import { createDecipheriv } from 'node:crypto';
 import { existsSync, promises } from 'node:fs';
-import type { IncomingHttpHeaders } from 'node:http';
+import type { OutgoingHttpHeaders } from 'node:http';
 import { dirname } from 'node:path';
 import { isMainThread, parentPort } from 'node:worker_threads';
 import { mkdirp } from '@lzwme/fe-utils';
 import type { M3u8Crypto, TsItemInfo, WorkerTaskInfo } from '../types/m3u8';
-import { formatHeaders, getRetry, logger } from './utils.js';
+import { getRetry, logger } from './utils.js';
 
-export async function tsDownload(info: TsItemInfo, cryptoInfo: M3u8Crypto, headers?: IncomingHttpHeaders) {
+export async function tsDownload(info: TsItemInfo, cryptoInfo: M3u8Crypto, headers?: OutgoingHttpHeaders | string) {
   try {
     if (existsSync(info.tsOut)) return true;
 
@@ -47,9 +47,7 @@ if (!isMainThread && parentPort) {
   parentPort.on('message', (data: WorkerTaskInfo) => {
     const startTime = Date.now();
     if (data.options.debug) logger.updateOptions({ levelType: 'debug' });
-    let headers = data.options?.headers;
-    if (headers) headers = formatHeaders(headers);
-    tsDownload(data.info, data.crypto, headers as IncomingHttpHeaders).then(success => {
+    tsDownload(data.info, data.crypto, data.options?.headers).then(success => {
       parentPort.postMessage({ success, info: data.info, timeCost: Date.now() - startTime });
     });
   });

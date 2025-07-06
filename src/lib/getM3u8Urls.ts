@@ -1,13 +1,19 @@
-import { ReqFetch, color } from '@lzwme/fe-utils';
-import { logger } from './utils.js';
+import { Request, color } from '@lzwme/fe-utils';
+import { formatHeaders, logger } from './utils.js';
+import type { OutgoingHttpHeaders } from 'node:http';
 
 /** 从指定的 url 页面中提取 m3u8 播放地址。deep 指定搜索页面深度 */
-export async function getM3u8Urls(url: string, deep = 2, visited = new Set<string>()) {
-  const req = new ReqFetch({ headers: { 'content-type': 'text/html; charset=UTF-8' }, reqOptions: {} });
-  const { data: html } = await req.get<string>(url);
+export async function getM3u8Urls(url: string, headers: OutgoingHttpHeaders | string = {}, deep = 2, visited = new Set<string>()) {
+  const req = new Request({ headers: { 'content-type': 'text/html; charset=UTF-8', referer: new URL(url).origin, ...formatHeaders(headers) } });
+  const { data: html, response } = await req.get<string>(url);
+  const m3u8Urls: Map<string, string> = new Map();
+
+  if (!response.statusCode || response.statusCode >= 400) {
+    logger.error('获取页面失败:', color.red(url), response.statusCode, response.statusMessage, html);
+    return m3u8Urls;
+  }
 
   // 从 html 中正则匹配提取 m3u8
-  const m3u8Urls: Map<string, string> = new Map();
   const m3u8Regex = /https?:[^\s'"]+\.m3u8(\?[^\s'"]*)?/gi;
 
   // 1. 直接正则匹配 m3u8 地址
@@ -47,12 +53,13 @@ export async function getM3u8Urls(url: string, deep = 2, visited = new Set<strin
       if (!/集|期|HD|高清|抢先|BD/.test(text)) continue;
 
       subPageUrls.set(href, text);
+      logger.debug(' > 提取到m3u8链接: ', color.gray(href), text);
     }
 
     for (const [href, text] of subPageUrls) {
       try {
         visited.add(href);
-        const subUrls = await getM3u8Urls(href, deep - 1, visited);
+        const subUrls = await getM3u8Urls(href, headers, deep - 1, visited);
         logger.debug(' > 从子页面提取: ', color.gray(href), text, subUrls.size);
 
         if (subUrls.size === 0 && m3u8Urls.size === 0) {

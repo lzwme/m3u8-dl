@@ -85,7 +85,7 @@ export class VideoParser {
       return { url, platform: 'unknown' };
     } catch (error) {
       console.error('解析 URL 失败', url, error);
-      return null;
+      return { url, platform: 'unknown' };
     }
   }
   /**

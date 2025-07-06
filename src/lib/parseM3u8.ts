@@ -1,5 +1,5 @@
 import { existsSync, promises } from 'node:fs';
-import type { IncomingHttpHeaders } from 'node:http';
+import type { OutgoingHttpHeaders } from 'node:http';
 import { resolve } from 'node:path';
 import { md5 } from '@lzwme/fe-utils';
 import { Parser } from 'm3u8-parser';
@@ -11,12 +11,12 @@ import { getRetry, logger } from './utils';
  * @param content m3u8 文件的内容，可为 http 远程地址、本地文件路径
  * @param cacheDir 缓存文件保存目录
  */
-export async function parseM3U8(content: string, cacheDir = './cache', headers?: IncomingHttpHeaders) {
+export async function parseM3U8(content: string, cacheDir = './cache', headers?: OutgoingHttpHeaders | string) {
   let url = process.cwd();
 
   if (content.startsWith('http')) {
     url = content;
-    content = (await getRetry<string>(url)).data;
+    content = (await getRetry<string>(url, headers)).data;
   } else if (!content.includes('\n') && existsSync(content)) {
     url = resolve(process.cwd(), content);
     content = await promises.readFile(url, 'utf8');

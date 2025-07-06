@@ -1,5 +1,5 @@
 import { type Stats, existsSync, readdirSync, statSync } from 'node:fs';
-import type { IncomingHttpHeaders } from 'node:http';
+import type { OutgoingHttpHeaders } from 'node:http';
 import { resolve } from 'node:path';
 import { NLogger, Request, color, execSync, retry, toLowcaseKeyObject } from '@lzwme/fe-utils';
 
@@ -9,9 +9,9 @@ export const request = new Request({
 });
 
 // process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
-export const getRetry = <T = string>(url: string, headers?: IncomingHttpHeaders, retries = 3) =>
+export const getRetry = <T = string>(url: string, headers?: OutgoingHttpHeaders | string, retries = 3) =>
   retry(
-    () => request.get<T>(url, null, headers, { rejectUnauthorized: false }),
+    () => request.get<T>(url, null, formatHeaders(headers), { rejectUnauthorized: false }),
     1000,
     retries,
     r => {
@@ -65,10 +65,8 @@ export async function getLocation(url: string, method = 'HEAD'): Promise<string>
  * 将传入的 headers 转换为统一的小写键对象格式
  * 如果 headers 是字符串，会先将其解析为对象；如果 headers 为空，则返回空对象。
  */
-export function formatHeaders(headers: string | IncomingHttpHeaders) {
-  if (typeof headers === 'string') {
-    headers = Object.fromEntries(headers.split('\n').map(line => line.split(':').map(d => d.trim())));
-  } else if (!headers) return {};
-
+export function formatHeaders(headers: string | OutgoingHttpHeaders) {
+  if (!headers) return {};
+  if (typeof headers === 'string') headers = Object.fromEntries(headers.split('\n').map(line => line.split(':').map(d => d.trim())));
   return toLowcaseKeyObject(headers as Record<string, string>);
 }

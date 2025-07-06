@@ -250,12 +250,21 @@ export class DLServer {
 
     return { app, wss };
   }
-  private startDownload(url: string, options?: M3u8DLOptions) {
+  private async startDownload(url: string, options?: M3u8DLOptions) {
+    if (!url) return logger.error('[satartDownload]Invalid URL:', url);
+
+    if (url.endsWith('.html')) {
+      const item = Array.from(await getM3u8Urls(url, options.headers))[0];
+      if (!item) return logger.error('[startDownload]不是有效(包含)M3U8的地址:', url);
+      url = item[0];
+      if (!options.filename) options.filename = item[1];
+    }
+
     const { options: dlOptions } = formatOptions(url, { ...this.cfg.dlOptions, ...options, cacheDir: this.options.cacheDir });
     const cacheItem = this.dlCache.get(url) || { options, dlOptions, status: 'pending', url };
     logger.debug('startDownload', url, dlOptions, cacheItem.status);
 
-    if (cacheItem.status === 'resume') return cacheItem.options;
+    if (cacheItem.status === 'resume') return;
 
     if (cacheItem.localVideo && !existsSync(cacheItem.localVideo)) delete cacheItem.localVideo;
     if (cacheItem.endTime) delete cacheItem.endTime;
@@ -266,7 +275,7 @@ export class DLServer {
     this.dlCache.set(url, cacheItem);
     this.wsSend('progress', url);
 
-    if (cacheItem.status === 'pending') return cacheItem.options;
+    if (cacheItem.status === 'pending') return;
 
     let workPoll: M3u8WorkerPool = cacheItem.workPoll;
     const opts: M3u8DLOptions = {
@@ -320,8 +329,6 @@ export class DLServer {
       afterDownload({ filepath: '', errmsg: (error as Error).message }, url);
       logger.error('下载失败:', error);
     }
-
-    return dlOptions;
   }
   startNextPending() {
     // 找到一个 pending 的任务，开始下载
@@ -565,12 +572,12 @@ export class DLServer {
     });
 
     app.post('/api/getM3u8Urls', (req, res) => {
-      const url = req.body.url;
+      const { url, headers } = req.body;
 
       if (!url) {
         res.json({ code: 1001, message: '无效的 url 参数' });
       } else {
-        getM3u8Urls(url)
+        getM3u8Urls(url, headers)
           .then(d => res.json({ code: 0, data: Array.from(d) }))
           .catch(err => res.json({ code: 401, message: (err as Error).message }));
       }
