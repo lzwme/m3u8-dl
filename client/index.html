@@ -1064,7 +1064,8 @@ services:
         },
         /** 边下边播 */
         localPlay: function (task) {
-          const url = location.origin + '/localplay/' + (task.localVideo || task.localM3u8);
+          const filepath = task.localVideo || task.localM3u8;
+          const url = location.origin + `/localplay/${encodeURIComponent(filepath)}`;
           console.log(task);
           Swal.fire({
             title: task?.options.filename || task.url,
