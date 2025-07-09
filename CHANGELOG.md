@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [1.4.1](https://github.com/lzwme/m3u8-dl/compare/v1.4.0...v1.4.1) (2025-07-09)
+
+
+### Bug Fixes
+
+* localplay api 参数增加encode处理 ([912dfa9](https://github.com/lzwme/m3u8-dl/commit/912dfa90699b0767285a7ebed42f3e0e7883ac88))
+* **server:** 修复页面下载填入的headers不生效问题；从页面提取m3u8地址支持读取headers设置 ([2cf0427](https://github.com/lzwme/m3u8-dl/commit/2cf04278df85160e8a372b5d1953ffa997dc2986))
+
 ## [1.4.0](https://github.com/lzwme/m3u8-dl/compare/v1.3.1...v1.4.0) (2025-06-27)
 
 
