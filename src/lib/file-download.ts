@@ -38,7 +38,7 @@ export async function fileDownload(u: string, opts: M3u8DLOptions): Promise<M3u8
       force: options.force,
       requestOptions: {
         headers: {
-          referer: url,
+          referer: new URL(url).origin,
           ...formatHeaders(options.headers),
         },
         rejectUnauthorized: false,

@@ -190,7 +190,7 @@ export class DLServer {
         if (existsSync(resolve(rootDir, 'client/local/cdn'))) {
           indexHtml = indexHtml
             .replaceAll('https://s4.zstatic.net/ajax/libs', 'local/cdn')
-            .replaceAll(/integrity=".+"\n?/g, '')
+            .replaceAll(/integrity="[^"]+"\n?/g, '')
             .replace('https://cdn.tailwindcss.com/3.4.16', 'local/cdn/tailwindcss/3.4.16/tailwindcss.min.js');
         }
 
