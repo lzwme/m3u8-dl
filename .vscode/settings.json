@@ -23,8 +23,9 @@
     "public/**": true,
     "**/cjs/**": true,
     "**/esm/**": true,
-    "**/mock/**": true,
-    "**/cache/**": true
+    "**/local/**": true,
+    "**/cache/**": true,
+    "**/dist/**": true
   },
   "git.rebaseWhenSync": true,
   "[json]": {

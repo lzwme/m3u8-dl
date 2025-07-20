@@ -832,12 +832,19 @@ services:
             html: `
               <div class="text-left">
                 <div class="flex flex-row gap-4">
-                  <input type="text" id="playUrl" placeholder="[实验性]输入视频播放页地址，尝试提取m3u8下载链接" autocomplete="off" id="urlInput" class="flex-1 border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400" value="">
+                  <input type="text" id="playUrl" placeholder="[实验性]输入列表页或播放页地址，提取m3u8链接" autocomplete="off" id="urlInput" class="flex-1 border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400" value="">
                   <div class="flex flex-row gap-1">
                     <button type="button" id="getM3u8UrlsBtn" class="player-btn px-2 py-1 bg-blue-600 text-white rounded hover:bg-blue-700 focus:outline-none">
                       提取
                     </button>
                   </div>
+                </div>
+
+                <div class="mt-4">
+                  <div class="flex flex-row gap-2 items-center">
+                    <input id="subUrlRegex" class="flex-1 p-2 border rounded-lg focus:border-blue-500" placeholder="[实验性](可选)播放页链接特征规则">
+                  </div>
+                  <p class="ml-2 mt-1 text-sm text-gray-500">用于从视频列表页准确识别播放地址。如：<code>play/845-1-</code></p>
                 </div>
 
                 <div class="mt-4">
@@ -930,7 +937,9 @@ services:
               btn.setAttribute('disabled', 'disabled');
               btn.innerText = '解析中...';
 
-              T.post('/api/getM3u8Urls', { url, headers: document.getElementById('headers').value.trim() }).then(r => {
+              const headers = document.getElementById('headers').value.trim();
+              const subUrlRegex = document.getElementById('subUrlRegex').value.trim();
+              T.post('/api/getM3u8Urls', { url, headers, subUrlRegex }).then(r => {
                 if (Array.isArray(r.data)) {
                   document.getElementById('downloadUrls').value = r.data.map(d => d.join(' | ')).join('\n');
                   T.toast(r.message || `解析完成！获取到 ${r.data.length} 个地址`);

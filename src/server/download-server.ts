@@ -46,7 +46,7 @@ export class DLServer {
     cacheDir: process.env.DS_CACHE_DIR || resolve(homedir(), '.m3u8-dl/cache'),
     token: process.env.DS_SECRET || process.env.DS_TOKEN || '',
     debug: process.env.DS_DEBUG === '1',
-    limitFileAccess: !['0', 'false'].includes(process.env.DS_LIMTE_FILE_ACCESS),
+    limitFileAccess: ['1', 'true'].includes(process.env.DS_LIMTE_FILE_ACCESS),
   };
   private serverInfo = {
     version: '',
@@ -254,7 +254,7 @@ export class DLServer {
     if (!url) return logger.error('[satartDownload]Invalid URL:', url);
 
     if (url.endsWith('.html')) {
-      const item = Array.from(await getM3u8Urls(url, options.headers))[0];
+      const item = Array.from(await getM3u8Urls({ url, headers: options.headers }))[0];
       if (!item) return logger.error('[startDownload]不是有效(包含)M3U8的地址:', url);
       url = item[0];
       if (!options.filename) options.filename = item[1];
@@ -587,12 +587,12 @@ export class DLServer {
     });
 
     app.post('/api/getM3u8Urls', (req, res) => {
-      const { url, headers } = req.body;
+      const { url, headers, subUrlRegex } = req.body;
 
       if (!url) {
         res.json({ code: 1001, message: '无效的 url 参数' });
       } else {
-        getM3u8Urls(url, headers)
+        getM3u8Urls({ url, headers, subUrlRegex })
           .then(d => res.json({ code: 0, data: Array.from(d) }))
           .catch(err => res.json({ code: 401, message: (err as Error).message }));
       }
