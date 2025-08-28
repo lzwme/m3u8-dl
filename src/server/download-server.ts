@@ -1,5 +1,5 @@
 import { existsSync, readFileSync, rmSync, statSync, unlinkSync, writeFileSync } from 'node:fs';
-import { basename, dirname, resolve } from 'node:path';
+import { dirname, resolve } from 'node:path';
 import { homedir } from 'node:os';
 import { assign, getUrlParams, md5, mkdirp } from '@lzwme/fe-utils';
 import { cyan, gray, green, red } from 'console-log-colors';
@@ -556,6 +556,7 @@ export class DLServer {
             'Access-Control-Allow-Headers': '*',
             'Access-Control-Allow-Methods': 'POST, GET, OPTIONS',
             'Access-Control-Allow-Origin': '*',
+            'Access-Control-Allow-Credentials': 'true',
             'Content-Length': String(stats.size),
             'Content-Type':
               ext === 'ts' ? 'video/mp2t' : ext === 'm3u8' ? 'application/vnd.apple.mpegurl' : ext === 'mp4' ? 'video/mp4' : 'text/plain',
@@ -563,17 +564,7 @@ export class DLServer {
           res.setHeaders(headers);
 
           if (ext === 'm3u8' || ('ts' === ext && stats.size < 1024 * 1024 * 3)) {
-            let content: string | Buffer = readFileSync(filepath);
-
-            if (ext === 'm3u8') {
-              const baseDirName = basename(filepath, '.m3u8');
-              content = content
-                .toString('utf8')
-                .split('\n')
-                .map(line => (line.endsWith('.ts') && !line.includes('/') ? `${baseDirName}/${line}` : line))
-                .join('\n');
-            }
-            res.send(content);
+            res.send(readFileSync(filepath));
             logger.debug('[Localplay]file sent:', gray(filepath), 'Size:', stats.size, 'bytes');
           } else {
             res.sendFile(filepath);

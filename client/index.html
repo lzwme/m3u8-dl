@@ -1064,11 +1064,10 @@ services:
         },
         /** 边下边播 */
         localPlay: function (task) {
-          const filepath = task.localVideo || task.localM3u8;
-          const url = location.origin + `/localplay/${encodeURIComponent(filepath)}`;
+          const url = location.origin + `/localplay/${encodeURIComponent(task.localVideo || '') || task.localM3u8}`;
           console.log(task);
           Swal.fire({
-            title: task?.options.filename || task.url,
+            title: task.options?.filename || task.url,
             width: '1000px',
             padding: 0,
             allowOutsideClick: false,
