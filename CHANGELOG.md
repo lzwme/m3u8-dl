@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [1.4.3](https://github.com/lzwme/m3u8-dl/compare/v1.4.2...v1.4.3) (2025-08-29)
+
+
+### Bug Fixes
+
+* 修复 Safari 上边看边播异常的问题 ([598e288](https://github.com/lzwme/m3u8-dl/commit/598e288a01e25443cd26f522514cd9350e89a767))
+* **ui:** 页面中创建 WebSocket 时，https 协议访问时应使用 wss ([9f2f464](https://github.com/lzwme/m3u8-dl/commit/9f2f464a54879c3042a49922e600cef6ed32944b))
+
 ### [1.4.2](https://github.com/lzwme/m3u8-dl/compare/v1.4.1...v1.4.2) (2025-07-20)
 
 ### [1.4.1](https://github.com/lzwme/m3u8-dl/compare/v1.4.0...v1.4.1) (2025-07-09)
