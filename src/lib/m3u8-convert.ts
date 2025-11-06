@@ -2,11 +2,15 @@ import { createWriteStream, existsSync, readFileSync, statSync, unlinkSync, writ
 import { dirname, resolve } from 'node:path';
 import { execSync, formatByteSize, mkdirp } from '@lzwme/fe-utils';
 import { cyan, greenBright, magentaBright } from 'console-log-colors';
+import ffmpegStatic from 'ffmpeg-static';
 import type { M3u8DLOptions, TsItemInfo } from '../types/m3u8';
 import { isSupportFfmpeg, logger } from './utils';
 
 export async function m3u8Convert(options: M3u8DLOptions, data: TsItemInfo[]) {
-  let ffmpegSupport = isSupportFfmpeg();
+  const useStatic = options.useFfmpegStatic || false;
+  const ffmpegBin = useStatic ? ffmpegStatic : 'ffmpeg';
+
+  let ffmpegSupport = isSupportFfmpeg(ffmpegBin);
   let filepath = resolve(options.saveDir, options.filename);
 
   if (!ffmpegSupport) filepath = filepath.replace(/\.mp4$/, '.ts');
@@ -30,12 +34,16 @@ export async function m3u8Convert(options: M3u8DLOptions, data: TsItemInfo[]) {
     }
 
     // ffmpeg -i nz.ts -c copy -map 0:v -map 0:a -bsf:a aac_adtstoasc nz.mp4
-    // const cmd = `ffmpeg -async 1 -y -f concat -safe 0 -i "${ffconcatFile}" -acodec copy -vcodec copy -bsf:a aac_adtstoasc ${headersString} "${filepath}"`;
-    const cmd = `ffmpeg -async 1 -y -f concat -safe 0 -i "${ffconcatFile}" -c:v copy -c:a copy -movflags +faststart -fflags +genpts -bsf:a aac_adtstoasc ${headersString} "${filepath}"`;
+    // const cmd = `"${ffmpegBin}" -async 1 -y -f concat -safe 0 -i "${ffconcatFile}" -acodec copy -vcodec copy -bsf:a aac_adtstoasc ${headersString} "${filepath}"`;
+    const cmd = `"${ffmpegBin}" -async 1 -y -f concat -safe 0 -i "${ffconcatFile}" -c:v copy -c:a copy -movflags +faststart -fflags +genpts -bsf:a aac_adtstoasc ${headersString} "${filepath}"`;
     logger.debug('[convert to mp4]cmd:', cyan(cmd));
     const r = execSync(cmd);
     ffmpegSupport = !r.error;
-    if (r.error) logger.error('Conversion to mp4 failed. Please confirm that `ffmpeg` is installed!', r.stderr);
+    if (r.error)
+      logger.error(
+        `Conversion to mp4 failed. Please confirm that \`${useStatic ? 'ffmpeg-static' : 'ffmpeg'}\` is ${useStatic ? 'available' : 'installed'}!`,
+        r.stderr
+      );
     else unlinkSync(ffconcatFile);
   }
 

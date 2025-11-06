@@ -69,6 +69,7 @@
     "commander": "^14.0.0",
     "console-log-colors": "^0.5.0",
     "enquirer": "^2.4.1",
+    "ffmpeg-static": "^5.2.0",
     "m3u8-parser": "^7.2.0"
   },
   "files": [
