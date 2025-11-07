@@ -94,7 +94,7 @@ const tsDlFile = resolve(__dirname, './ts-download.js');
 export const workPollPublic: M3u8WorkerPool = new WorkerPool(tsDlFile);
 
 async function m3u8InfoParse(u: string, o: M3u8DLOptions = {}) {
-  const ffmpegBin = o.useFfmpegStatic ? ffmpegStatic : 'ffmpeg';
+  const ffmpegBin = o.useGlobalFfmpeg ? 'ffmpeg' : ffmpegStatic;
   const ext = isSupportFfmpeg(ffmpegBin) ? '.mp4' : '.ts';
 
   const { url, options, urlMd5 } = formatOptions(u, o);

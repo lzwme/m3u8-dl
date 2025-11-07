@@ -7,8 +7,8 @@ import type { M3u8DLOptions, TsItemInfo } from '../types/m3u8';
 import { isSupportFfmpeg, logger } from './utils';
 
 export async function m3u8Convert(options: M3u8DLOptions, data: TsItemInfo[]) {
-  const useStatic = options.useFfmpegStatic || false;
-  const ffmpegBin = useStatic ? ffmpegStatic : 'ffmpeg';
+  const useGlobal = options.useGlobalFfmpeg || false;
+  const ffmpegBin = useGlobal ? 'ffmpeg' : ffmpegStatic;
 
   let ffmpegSupport = isSupportFfmpeg(ffmpegBin);
   let filepath = resolve(options.saveDir, options.filename);
@@ -41,7 +41,7 @@ export async function m3u8Convert(options: M3u8DLOptions, data: TsItemInfo[]) {
     ffmpegSupport = !r.error;
     if (r.error)
       logger.error(
-        `Conversion to mp4 failed. Please confirm that \`${useStatic ? 'ffmpeg-static' : 'ffmpeg'}\` is ${useStatic ? 'available' : 'installed'}!`,
+        `Conversion to mp4 failed. Please confirm that \`${useGlobal ? 'ffmpeg' : 'ffmpeg-static'}\` is ${useGlobal ? 'installed' : 'available'}!`,
         r.stderr
       );
     else unlinkSync(ffconcatFile);
