@@ -28,8 +28,8 @@ export const getRetry = <T = string>(url: string, headers?: OutgoingHttpHeaders 
 export const logger = NLogger.getLogger('[M3U8-DL]', { color });
 
 let _isSupportFfmpeg: boolean = null;
-export function isSupportFfmpeg() {
-  if (null == _isSupportFfmpeg) _isSupportFfmpeg = execSync('ffmpeg -version').stderr === '';
+export function isSupportFfmpeg(ffmpegBin: string) {
+  if (null == _isSupportFfmpeg) _isSupportFfmpeg = execSync(`${ffmpegBin} -version`).stderr === '';
   return _isSupportFfmpeg;
 }
 

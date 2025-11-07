@@ -142,6 +142,8 @@ export interface M3u8DLOptions {
    * - 'parser'：下载 VideoParser 支持解析的平台视频文件
    */
   type?: 'm3u8' | 'file' | 'parser';
+  /** 是否使用系统安装的 ffmpeg 而不是内置的 ffmpeg-static。默认为 false */
+  useGlobalFfmpeg?: boolean;
 }
 
 export interface M3u8DLResult extends Partial<DownloadResult> {

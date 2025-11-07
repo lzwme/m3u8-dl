@@ -35,6 +35,7 @@ program
   .option('-S, --save-dir <dirpath>', '下载文件保存的路径。默认为当前目录')
   .option('--no-del-cache', '下载成功后是否删除临时文件。默认为 true。保存临时文件可以在重复下载时识别缓存')
   .option('--no-convert', '下载成功后，是否不合并转换为 mp4 文件。默认为 true。')
+  .option('--use-global-ffmpeg', '是否使用系统安装的 ffmpeg 而不是内置的 ffmpeg-static')
   .option('-H, --headers <headers>', '自定义请求头。格式为 key1=value1\nkey2=value2')
   .option('-T, --type <type>', '指定下载类型。默认根据URL自动识别，如果是批量下载多个不同 URL 类型，请不要设置。可选值：m3u8, file, parser')
   .option('-I, --ignore-segments <time-segments>', '忽略的视频片段，用-分割起始时间点，多个用逗号分隔。如：0-10,20-30')
