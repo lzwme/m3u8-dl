@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [1.5.0](https://github.com/lzwme/m3u8-dl/compare/v1.4.3...v1.5.0) (2025-11-07)
+
+
+### Features
+
+* **ffmpeg:** add option to use built-in ffmpeg-static ([e387da1](https://github.com/lzwme/m3u8-dl/commit/e387da121d38a6c22c1f9c7c7405ff8cfc1e731a))
+* **ffmpeg:** change option to use global ffmpeg instead of built-in ([f2151af](https://github.com/lzwme/m3u8-dl/commit/f2151afbfb7a91453b6d165c3bf232dd9b1f14e1))
+
 ### [1.4.3](https://github.com/lzwme/m3u8-dl/compare/v1.4.2...v1.4.3) (2025-08-29)
 
 
