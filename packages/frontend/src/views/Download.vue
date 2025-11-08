@@ -1,7 +1,6 @@
 <template>
   <Layout @new-download="showNewDownloadDialog">
     <div class="p-1 md:p-2">
-      <WebBrowser @select-m3u8="handleSelectM3u8" />
       <TaskList
         @new-download="showNewDownloadDialog"
         @pause="handlePause"
@@ -13,9 +12,7 @@
       />
       <NewDownloadDialog
         :visible="showDialog"
-        :initial-data="dialogInitialData"
-        @close="handleCloseDialog"
-        @submit="handleStartDownload"
+        @close="showDialog = false"
       />
       <TaskDetailModal :visible="showDetailModal" :task="selectedTask" @close="showDetailModal = false" />
       <DeleteConfirmDialog
@@ -47,11 +44,10 @@ import NewDownloadDialog from '@/components/NewDownloadDialog.vue';
 import TaskDetailModal from '@/components/TaskDetailModal.vue';
 import DeleteConfirmDialog from '@/components/DeleteConfirmDialog.vue';
 import ConfirmDialog from '@/components/ConfirmDialog.vue';
-import WebBrowser from '@/components/WebBrowser.vue';
 import { useTasksStore } from '@/stores/tasks';
 import { useConfigStore } from '@/stores/config';
 import { useWebSocket } from '@/composables/useWebSocket';
-import { pauseDownload, resumeDownload, deleteDownload, startDownload, clearQueue, fetchTasks } from '@/utils/request';
+import { pauseDownload, resumeDownload, deleteDownload, clearQueue, fetchTasks } from '@/utils/request';
 import { toast } from '@/utils/toast';
 import type { DownloadTask } from '@/types/task';
 
@@ -67,7 +63,6 @@ const deleteUrls = ref<string[]>([]);
 const pendingPlayData = ref<{ task: DownloadTask; url: string } | null>(null);
 const playConfirmMessage = ref('');
 const playErrorText = ref('');
-const dialogInitialData = ref<{ url?: string; title?: string } | undefined>(undefined);
 
 onMounted(async () => {
   // WebSocket 连接已在 App.vue 中初始化，这里只需要确保连接存在
@@ -101,39 +96,9 @@ onMounted(async () => {
 });
 
 function showNewDownloadDialog() {
-  dialogInitialData.value = undefined;
   showDialog.value = true;
 }
 
-function handleCloseDialog() {
-  showDialog.value = false;
-  dialogInitialData.value = undefined;
-}
-
-async function handleStartDownload(list: any[]) {
-  try {
-    list.forEach((item) => {
-      if (!/\.html?$/.test(item.url)) {
-        tasksStore.updateTask(item.url, {
-          status: 'resume',
-          progress: 0,
-          speed: 0,
-          remainingTime: 0,
-          size: 0,
-        });
-      }
-    });
-    const result = await startDownload(list);
-    if (!result.code) {
-      toast({ text: result.message || '批量下载已开始', type: 'success' });
-    } else {
-      toast({ text: result.message || '下载失败', type: 'error' });
-    }
-  } catch (error) {
-    console.error('批量下载失败:', error);
-    toast({ text: `下载失败: ${error instanceof Error ? error.message : '未知错误'}`, type: 'error' });
-  }
-}
 
 async function handlePause(urls: string[] | 'all') {
   const urlList = urls === 'all' ? ['all'] : urls;
@@ -215,14 +180,6 @@ function handlePlayConfirm() {
 function doPlay(url: string) {
   const playUrl = `./play.html?url=${encodeURIComponent(url)}`;
   window.open(playUrl, '_blank', 'width=1000,height=600');
-}
-
-function handleSelectM3u8(data: { url: string; title: string }) {
-  dialogInitialData.value = {
-    url: data.url,
-    title: data.title,
-  };
-  showDialog.value = true;
 }
 
 function initElectronEvents() {

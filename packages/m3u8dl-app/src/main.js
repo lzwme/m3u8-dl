@@ -103,20 +103,27 @@ const T = {
         preload: path.resolve(__dirname, 'preload.js'),
       },
     });
-    const { DLServer } = require(path.resolve(baseDir, './cjs/server/download-server.js'));
-    const userHome = homedir();
 
-    const port = await utils.findFreePort();
-    process.env.DS_SAVE_DIR = path.resolve(userHome, 'Downloads');
+    if (isDev && process.env.DS_DEV_CREATE_DL_SERVER !== '1') {
+      window.webContents.openDevTools();
+      window.loadURL(process.env.DS_DEV_URL || 'http://localhost:5173');
+    } else {
+      const { DLServer } = require(path.resolve(baseDir, './cjs/server/download-server.js'));
+      const userHome = homedir();
+      const port = await utils.findFreePort();
 
-    const dlServer = new DLServer({
-      port,
-      cacheDir: process.env.DS_CACHE_DIR || path.resolve(userHome, '.m3u8-dl/cache'),
-      configPath: path.resolve(userHome, '.m3u8-dl/config.json'),
-    });
+      process.env.DS_SAVE_DIR = path.resolve(userHome, 'Downloads');
 
-    if (isDev) window.webContents.openDevTools();
-    window.loadURL(`http://localhost:${port}`);
+      const dlServer = new DLServer({
+        port,
+        cacheDir: process.env.DS_CACHE_DIR || path.resolve(userHome, '.m3u8-dl/cache'),
+        configPath: path.resolve(userHome, '.m3u8-dl/config.json'),
+      });
+
+      if (isDev) window.webContents.openDevTools();
+      window.loadURL(`http://localhost:${port}`);
+    }
+
 
     window.on('closed', () => (this.mainWindow = null));
     window.on('minimize', () => window.hide());
@@ -128,125 +135,226 @@ const T = {
     return window;
   },
   initWebBrowser(mainWindow) {
-    // 创建可见的浏览器窗口用于加载网页并提取 m3u8
-    this.webBrowserWindow = new BrowserWindow({
-      width: 1000,
-      height: 700,
-      show: false, // 初始不显示，等待前端请求显示
-      title: '网页浏览器',
-      webPreferences: {
-        nodeIntegration: false,
-        contextIsolation: true,
-        webSecurity: true,
-        partition: 'web-browser', // 使用独立的 session
-      },
-    });
-
-    const m3u8Urls = new Map();
+    const mediaUrls = new Map();
     let currentPageTitle = '';
     let currentUrl = '';
 
     const clearData = () => {
-      m3u8Urls.clear();
+      mediaUrls.clear();
       currentPageTitle = '';
     };
 
-    // 监听网络请求，提取 m3u8 地址
-    this.webBrowserWindow.webContents.session.webRequest.onBeforeRequest(
-      { urls: ['*://*/*'] },
-      (details) => {
-        const url = details.url;
-        // 检查是否是 m3u8 文件
-        if (/\.m3u8(\?|$|#)/i.test(url)) {
-          if (!m3u8Urls.has(url)) {
-            const title = currentPageTitle || '未命名视频';
-            m3u8Urls.set(url, title);
-            mainWindow.webContents.send('web-browser:m3u8-found', {
-              url,
-              title,
-              pageUrl: currentUrl,
-            });
-          }
-        }
+    /**
+     *
+     * @returns {BrowserWindow}
+     * @description 创建浏览器窗口
+     */
+    const createWebBrowserWindow = () => {
+      if (this.webBrowserWindow && !this.webBrowserWindow.isDestroyed()) {
+        return this.webBrowserWindow;
       }
-    );
 
-    // 监听页面导航
-    this.webBrowserWindow.webContents.on('will-navigate', (event, navigationUrl) => {
-      currentUrl = navigationUrl;
-      mainWindow.webContents.send('web-browser:navigation', { url: navigationUrl });
-    });
-
-    // 监听页面加载完成，获取页面标题和 URL
-    this.webBrowserWindow.webContents.on('did-finish-load', async () => {
-      try {
-        const title = await this.webBrowserWindow.webContents.executeJavaScript('document.title');
-        currentPageTitle = title || '';
-        currentUrl = this.webBrowserWindow.webContents.getURL();
-        mainWindow.webContents.send('web-browser:page-title', currentPageTitle);
-        mainWindow.webContents.send('web-browser:url-changed', currentUrl);
-
-        // 发送导航历史状态
-        mainWindow.webContents.send('web-browser:navigation-state', {
-          canGoBack: this.webBrowserWindow.webContents.canGoBack(),
-          canGoForward: this.webBrowserWindow.webContents.canGoForward(),
-        });
-
-        // 更新已发现的 m3u8 链接的标题（如果标题还是默认值）
-        for (const [url, oldTitle] of m3u8Urls) {
-          if (oldTitle === '未命名视频' && currentPageTitle) {
-            m3u8Urls.set(url, currentPageTitle);
-            mainWindow.webContents.send('web-browser:m3u8-found', {
-              url,
-              title: currentPageTitle,
-              pageUrl: currentUrl,
-            });
-          }
-        }
-      } catch (error) {
-        console.error('获取页面标题失败:', error);
-      }
-    });
-
-    // 监听加载状态
-    this.webBrowserWindow.webContents.on('did-start-loading', () => {
-      mainWindow.webContents.send('web-browser:loading', { loading: true });
-    });
-
-    this.webBrowserWindow.webContents.on('did-stop-loading', () => {
-      mainWindow.webContents.send('web-browser:loading', { loading: false });
-    });
-
-    // 监听加载错误
-    this.webBrowserWindow.webContents.on('did-fail-load', (event, errorCode, errorDescription) => {
-      mainWindow.webContents.send('web-browser:error', {
-        code: errorCode,
-        description: errorDescription,
+      // 创建可见的浏览器窗口用于加载网页并提取 m3u8
+      this.webBrowserWindow = new BrowserWindow({
+        width: 1000,
+        height: 700,
+        show: false, // 初始不显示，等待前端请求显示
+        title: '网页浏览器',
+        webPreferences: {
+          nodeIntegration: false,
+          contextIsolation: true,
+          webSecurity: false, // 禁用 webSecurity 以允许加载外部网页内容
+          partition: 'web-browser', // 使用独立的 session
+          devTools: isDev, // 开发模式下启用 devtools
+          // 禁用可能导致问题的功能
+          spellcheck: false,
+          enableWebSQL: false,
+          // 允许运行不安全内容
+          allowRunningInsecureContent: true,
+        },
       });
-    });
 
-    // 监听窗口关闭
-    this.webBrowserWindow.on('closed', () => {
-      this.webBrowserWindow = null;
-      mainWindow.webContents.send('web-browser:closed');
-    });
+      // 设置权限处理器，避免某些权限相关的错误
+      this.webBrowserWindow.webContents.session.setPermissionRequestHandler((details, callback) => {
+        // 允许基本权限，拒绝可能导致问题的权限
+        if (details.permission === 'notifications' || details.permission === 'geolocation') {
+          callback(false);
+        } else {
+          callback(true);
+        }
+      });
+
+      // 规范化 URL 用于去重比较（去除查询参数中的时间戳等动态参数）
+      const normalizeUrl = (urlString) => {
+        try {
+          const urlObj = new URL(urlString);
+          // 保留基础路径，去除查询参数（因为很多查询参数是动态的，如时间戳、token等）
+          return `${urlObj.protocol}//${urlObj.host}${urlObj.pathname}`;
+        } catch {
+          // 如果 URL 解析失败，返回原 URL
+          return urlString;
+        }
+      };
+
+      // 监听网络请求，提取 m3u8 和 mp4 视频地址
+      this.webBrowserWindow.webContents.session.webRequest.onBeforeRequest(
+        { urls: ['*://*/*'] },
+        (details, callback) => {
+          const url = details.url;
+          // 检查是否是 m3u8 或 mp4 视频文件
+          if (/\.(m3u8|mp4)(\?|$|#)/i.test(url)) {
+            // 使用规范化后的 URL 进行去重比较
+            const normalizedUrl = normalizeUrl(url);
+            let isNew = true;
+
+            // 检查是否已存在相同的基础 URL
+            for (const [existingUrl] of mediaUrls) {
+              if (normalizeUrl(existingUrl) === normalizedUrl) {
+                isNew = false;
+                break;
+              }
+            }
+
+            if (isNew) {
+              const title = currentPageTitle || '未命名视频';
+              mediaUrls.set(url, title);
+              mainWindow.webContents.send('web-browser:m3u8-found', {
+                url,
+                title,
+                pageUrl: currentUrl,
+              });
+            }
+          }
+          // 必须返回 {} 以允许请求继续，否则请求会被阻塞
+          callback({});
+        }
+      );
+
+      // 监听页面导航
+      this.webBrowserWindow.webContents.on('will-navigate', (event, navigationUrl) => {
+        console.log('[WebBrowser] 准备导航到:', navigationUrl);
+        currentUrl = navigationUrl;
+        mainWindow.webContents.send('web-browser:navigation', { url: navigationUrl });
+      });
+
+      // 监听 DOM 内容加载完成
+      this.webBrowserWindow.webContents.on('dom-ready', () => {
+        console.log('[WebBrowser] DOM 准备就绪');
+      });
+
+      // 监听页面加载完成，获取页面标题和 URL
+      this.webBrowserWindow.webContents.on('did-finish-load', async () => {
+        try {
+          const pageUrl = this.webBrowserWindow.webContents.getURL();
+          console.log('[WebBrowser] 页面加载完成:', pageUrl);
+
+          // 检查 DOM 是否为空
+          const bodyHTML = await this.webBrowserWindow.webContents.executeJavaScript(`
+            document.body ? document.body.innerHTML.length : 0
+          `);
+          console.log('[WebBrowser] DOM body 内容长度:', bodyHTML);
+
+          const title = await this.webBrowserWindow.webContents.executeJavaScript('document.title');
+          currentPageTitle = title || '';
+          currentUrl = pageUrl;
+
+          console.log('[WebBrowser] 页面标题:', currentPageTitle);
+
+          mainWindow.webContents.send('web-browser:page-title', currentPageTitle);
+          mainWindow.webContents.send('web-browser:url-changed', currentUrl);
+
+          // 发送导航历史状态
+          mainWindow.webContents.send('web-browser:navigation-state', {
+            canGoBack: this.webBrowserWindow.webContents.canGoBack(),
+            canGoForward: this.webBrowserWindow.webContents.canGoForward(),
+          });
+
+          // 更新已发现的 m3u8 链接的标题（如果标题还是默认值）
+          for (const [url, oldTitle] of mediaUrls) {
+            if (oldTitle === '未命名视频' && currentPageTitle) {
+              mediaUrls.set(url, currentPageTitle);
+              mainWindow.webContents.send('web-browser:m3u8-found', {
+                url,
+                title: currentPageTitle,
+                pageUrl: currentUrl,
+              });
+            }
+          }
+        } catch (error) {
+          console.error('[WebBrowser] 获取页面信息失败:', error);
+        }
+      });
+
+      // 监听加载状态
+      this.webBrowserWindow.webContents.on('did-start-loading', () => {
+        mainWindow.webContents.send('web-browser:loading', { loading: true });
+      });
+
+      this.webBrowserWindow.webContents.on('did-stop-loading', () => {
+        mainWindow.webContents.send('web-browser:loading', { loading: false });
+      });
+
+      // 监听加载错误
+      this.webBrowserWindow.webContents.on('did-fail-load', (event, errorCode, errorDescription, validatedURL, isMainFrame) => {
+        console.error('[WebBrowser] 加载失败:', errorCode, errorDescription, validatedURL, 'isMainFrame:', isMainFrame);
+        // -3: ERR_NAME_NOT_RESOLVED
+        if (isMainFrame && ![-3].includes(errorCode)) {
+          mainWindow.webContents.send('web-browser:error', {
+            code: errorCode,
+            description: errorDescription,
+            url: validatedURL,
+          });
+        }
+      });
+
+      // 监听页面崩溃
+      this.webBrowserWindow.webContents.on('render-process-gone', (event, details) => {
+        console.error('[WebBrowser] 渲染进程崩溃:', details);
+        mainWindow.webContents.send('web-browser:error', {
+          code: -1,
+          description: `渲染进程崩溃: ${details.reason || '未知原因'}`,
+        });
+      });
+
+      // 监听窗口关闭
+      this.webBrowserWindow.on('closed', () => {
+        this.webBrowserWindow = null;
+        mainWindow.webContents.send('web-browser:closed');
+      });
+
+      return this.webBrowserWindow;
+    };
+
+    // 初始化创建窗口
+    createWebBrowserWindow();
 
     // 处理 IPC 消息
     ipcMain.on('web-browser:load', (event, url) => {
-      if (this.webBrowserWindow && !this.webBrowserWindow.isDestroyed()) {
-        clearData();
-        currentUrl = url;
-        this.webBrowserWindow.loadURL(url);
-        this.webBrowserWindow.show();
-        this.webBrowserWindow.focus();
-      }
+      console.log('[WebBrowser] 加载 URL:', url);
+      const window = createWebBrowserWindow();
+      clearData();
+      currentUrl = url;
+
+      // 设置用户代理，模拟真实浏览器
+      window.webContents.setUserAgent('Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36');
+
+      window.loadURL(url).catch((error) => {
+        console.error('[WebBrowser] 加载 URL 失败:', error);
+        mainWindow.webContents.send('web-browser:error', {
+          code: -1,
+          description: `加载失败: ${error.message || '未知错误'}`,
+        });
+      });
+
+      window.show();
+      window.focus();
+      if (isDev) window.webContents.openDevTools();
     });
 
     ipcMain.on('web-browser:show', () => {
-      if (this.webBrowserWindow && !this.webBrowserWindow.isDestroyed()) {
-        this.webBrowserWindow.show();
-        this.webBrowserWindow.focus();
-      }
+      const window = createWebBrowserWindow();
+      window.show();
+      window.focus();
     });
 
     ipcMain.on('web-browser:hide', () => {
@@ -262,43 +370,40 @@ const T = {
     });
 
     ipcMain.on('web-browser:go-back', () => {
-      if (this.webBrowserWindow && !this.webBrowserWindow.isDestroyed()) {
-        if (this.webBrowserWindow.webContents.canGoBack()) {
-          this.webBrowserWindow.webContents.goBack();
-          // 延迟发送导航状态，等待页面加载
-          setTimeout(() => {
-            if (this.webBrowserWindow && !this.webBrowserWindow.isDestroyed()) {
-              mainWindow.webContents.send('web-browser:navigation-state', {
-                canGoBack: this.webBrowserWindow.webContents.canGoBack(),
-                canGoForward: this.webBrowserWindow.webContents.canGoForward(),
-              });
-            }
-          }, 100);
-        }
+      const window = createWebBrowserWindow();
+      if (window.webContents.canGoBack()) {
+        window.webContents.goBack();
+        // 延迟发送导航状态，等待页面加载
+        setTimeout(() => {
+          if (window && !window.isDestroyed()) {
+            mainWindow.webContents.send('web-browser:navigation-state', {
+              canGoBack: window.webContents.canGoBack(),
+              canGoForward: window.webContents.canGoForward(),
+            });
+          }
+        }, 100);
       }
     });
 
     ipcMain.on('web-browser:go-forward', () => {
-      if (this.webBrowserWindow && !this.webBrowserWindow.isDestroyed()) {
-        if (this.webBrowserWindow.webContents.canGoForward()) {
-          this.webBrowserWindow.webContents.goForward();
-          // 延迟发送导航状态，等待页面加载
-          setTimeout(() => {
-            if (this.webBrowserWindow && !this.webBrowserWindow.isDestroyed()) {
-              mainWindow.webContents.send('web-browser:navigation-state', {
-                canGoBack: this.webBrowserWindow.webContents.canGoBack(),
-                canGoForward: this.webBrowserWindow.webContents.canGoForward(),
-              });
-            }
-          }, 100);
-        }
+      const window = createWebBrowserWindow();
+      if (window.webContents.canGoForward()) {
+        window.webContents.goForward();
+        // 延迟发送导航状态，等待页面加载
+        setTimeout(() => {
+          if (window && !window.isDestroyed()) {
+            mainWindow.webContents.send('web-browser:navigation-state', {
+              canGoBack: window.webContents.canGoBack(),
+              canGoForward: window.webContents.canGoForward(),
+            });
+          }
+        }, 100);
       }
     });
 
     ipcMain.on('web-browser:reload', () => {
-      if (this.webBrowserWindow && !this.webBrowserWindow.isDestroyed()) {
-        this.webBrowserWindow.webContents.reload();
-      }
+      const window = createWebBrowserWindow();
+      window.webContents.reload();
     });
 
     ipcMain.on('web-browser:close', () => {
@@ -324,7 +429,13 @@ const T = {
       {
         label: '打开调试',
         type: 'normal',
-        click: () => this.mainWindow.webContents[this.mainWindow.webContents.isDevToolsOpened() ? 'closeDevTools' : 'openDevTools'](),
+        click: () => {
+          [this.mainWindow, this.webBrowserWindow].forEach(window => {
+            if (!window?.isDestroyed()) {
+              window.webContents[window.webContents.isDevToolsOpened() ? 'closeDevTools' : 'openDevTools']()
+            }
+          });
+        },
       },
       {
         type: 'separator',

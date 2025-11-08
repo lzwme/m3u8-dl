@@ -7,19 +7,42 @@
       @confirm="handlePasswordConfirm"
       ref="passwordDialogRef"
     />
+    <NewDownloadDialog
+      :visible="showGlobalDownloadDialog"
+      :initial-data="globalDialogInitialData"
+      @close="handleGlobalDialogClose"
+    />
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted } from 'vue';
+import { ref, onMounted, onUnmounted, provide } from 'vue';
 import { useConfigStore } from '@/stores/config';
 import { useWebSocket, reconnectWithToken } from '@/composables/useWebSocket';
 import PasswordDialog from '@/components/PasswordDialog.vue';
+import NewDownloadDialog from '@/components/NewDownloadDialog.vue';
 
 const configStore = useConfigStore();
 let wsDisconnect: (() => void) | null = null;
 const showPasswordDialog = ref(false);
 const passwordDialogRef = ref<InstanceType<typeof PasswordDialog> | null>(null);
+
+// 全局下载对话框状态
+const showGlobalDownloadDialog = ref(false);
+const globalDialogInitialData = ref<{ url?: string; title?: string } | undefined>(undefined);
+
+// 提供全局显示下载对话框的方法
+function showGlobalNewDownload(data?: { url?: string; title?: string }) {
+  globalDialogInitialData.value = data;
+  showGlobalDownloadDialog.value = true;
+}
+
+provide('showGlobalNewDownload', showGlobalNewDownload);
+
+function handleGlobalDialogClose() {
+  showGlobalDownloadDialog.value = false;
+  globalDialogInitialData.value = undefined;
+}
 
 // 处理未授权，显示密码对话框
 function handleUnauthorized() {

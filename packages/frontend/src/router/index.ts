@@ -1,33 +1,39 @@
-import { createRouter, createWebHistory } from 'vue-router';
+import { createRouter, createWebHashHistory } from 'vue-router';
 import About from '@/views/About.vue';
 import Config from '@/views/Config.vue';
 import Download from '@/views/Download.vue';
 import Completed from '@/views/Completed.vue';
+import WebBrowser from '@/views/WebBrowser.vue';
 
 const router = createRouter({
-  history: createWebHistory(),
+  history: createWebHashHistory(),
   routes: [
     {
       path: '/',
-      redirect: '/download',
+      redirect: '/page/download',
     },
     {
-      path: '/download',
+      path: '/page/download',
       name: 'download',
       component: Download,
     },
     {
-      path: '/completed',
+      path: '/page/web-browser',
+      name: 'web-browser',
+      component: WebBrowser,
+    },
+    {
+      path: '/page/completed',
       name: 'completed',
       component: Completed,
     },
     {
-      path: '/config',
+      path: '/page/config',
       name: 'config',
       component: Config,
     },
     {
-      path: '/about',
+      path: '/page/about',
       name: 'about',
       component: About,
     },

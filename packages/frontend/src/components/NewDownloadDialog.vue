@@ -64,8 +64,8 @@
         <button @click="close" class="px-6 py-2 text-gray-600 hover:bg-gray-100 rounded-lg border">
           取消
         </button>
-        <button @click="handleSubmit" class="px-6 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg">
-          开始下载
+        <button @click="handleSubmit" :disabled="submitting" class="px-6 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg disabled:opacity-50 disabled:cursor-not-allowed">
+          {{ submitting ? '提交中...' : '开始下载' }}
         </button>
       </div>
     </div>
@@ -74,9 +74,11 @@
 
 <script setup lang="ts">
 import { ref, watch } from 'vue';
-import { getM3u8Urls } from '@/utils/request';
+import { getM3u8Urls, startDownload } from '@/utils/request';
 import { toast } from '@/utils/toast';
+import { optimizeTitle, urlsTextFormat } from '@/utils/formatTitle';
 import { useConfigStore } from '@/stores/config';
+import { useTasksStore } from '@/stores/tasks';
 
 const props = defineProps<{
   visible: boolean;
@@ -88,10 +90,10 @@ const props = defineProps<{
 
 const emit = defineEmits<{
   (e: 'close'): void;
-  (e: 'submit', data: any[]): void;
 }>();
 
 const configStore = useConfigStore();
+const tasksStore = useTasksStore();
 
 const playUrl = ref('');
 const downloadUrls = ref('');
@@ -101,6 +103,7 @@ const ignoreSegments = ref('');
 const headers = ref('');
 const subUrlRegex = ref('');
 const extracting = ref(false);
+const submitting = ref(false);
 
 watch(
   () => props.visible,
@@ -110,10 +113,16 @@ watch(
       // 如果有初始数据，填充表单
       if (props.initialData) {
         if (props.initialData.url) {
-          downloadUrls.value = props.initialData.url;
-          if (props.initialData.title) {
-            filename.value = props.initialData.title;
-            downloadUrls.value = `${props.initialData.url} | ${props.initialData.title}`;
+          // 处理 URL，如果包含 title，则优化 title
+          const urlText = props.initialData.url;
+          // 检查是否包含 | 分隔符（格式：url | title）
+          if (urlText.includes('|')) {
+            const lines = urlsTextFormat(urlText).map(({url, name})=> {
+              return name ? `${url} | ${optimizeTitle(name)}` : url ;
+            });
+            downloadUrls.value = lines.join('\n');
+          } else {
+            downloadUrls.value = urlText;
           }
         }
       }
@@ -160,7 +169,7 @@ function close() {
   emit('close');
 }
 
-function handleSubmit() {
+async function handleSubmit() {
   const urlsText = downloadUrls.value.trim();
   if (!urlsText) {
     toast({ text: '请输入至少一个 M3U8 链接', type: 'error' });
@@ -168,18 +177,7 @@ function handleSubmit() {
   }
 
   // 解析链接和文件名
-  const urls = urlsText
-    .split('\n')
-    .map((line) => {
-      const parts = line.split(/[\s|$]+/).map((s) => s.trim());
-      let url = parts[0];
-      let name = parts[1] || '';
-      if (name.startsWith('http')) {
-        [name, url] = [url, name];
-      }
-      return { url, name };
-    })
-    .filter((item) => item.url.startsWith('http'));
+  const urls = urlsTextFormat(urlsText);
 
   // 验证链接格式
   if (!urls.length) {
@@ -201,7 +199,35 @@ function handleSubmit() {
     ignoreSegments: ignoreSegments.value.trim() || undefined,
   }));
 
-  emit('submit', downloadList);
-  close();
+  // 内置下载逻辑处理
+  submitting.value = true;
+  try {
+    // 更新任务状态
+    downloadList.forEach((item) => {
+      if (!/\.html?$/.test(item.url)) {
+        tasksStore.updateTask(item.url, {
+          status: 'resume',
+          progress: 0,
+          speed: 0,
+          remainingTime: 0,
+          size: 0,
+        });
+      }
+    });
+
+    // 提交下载请求
+    const result = await startDownload(downloadList);
+    if (!result.code) {
+      toast({ text: result.message || '批量下载已开始', type: 'success' });
+      close();
+    } else {
+      toast({ text: result.message || '下载失败', type: 'error' });
+    }
+  } catch (error) {
+    console.error('批量下载失败:', error);
+    toast({ text: `下载失败: ${error instanceof Error ? error.message : '未知错误'}`, type: 'error' });
+  } finally {
+    submitting.value = false;
+  }
 }
 </script>

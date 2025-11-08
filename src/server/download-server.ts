@@ -197,7 +197,8 @@ export class DLServer {
     this.wss = wss;
 
     app.use((req, res, next) => {
-      if (['/', '/index.html'].includes(req.path)) {
+      // 处理 SPA 路由：根路径和 /page/* 路径都返回 index.html
+      if (['/', '/index.html'].includes(req.path) || req.path.startsWith('/page/')) {
         const version = this.serverInfo.version;
         let indexHtml = readFileSync(resolve(rootDir, 'client/index.html'), 'utf-8').replaceAll('{{version}}', version);
 

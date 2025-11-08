@@ -25,6 +25,14 @@
           <i class="fas fa-download mr-3"></i>下载管理
         </button>
         <button
+          v-if="isElectron"
+          @click="switchSection('web-browser')"
+          class="nav-item w-full p-3 rounded-lg flex items-center"
+          :class="{ active: activeSection === 'web-browser' }"
+        >
+          <i class="fas fa-globe mr-3"></i>网页浏览
+        </button>
+        <button
           @click="switchSection('completed')"
           class="nav-item w-full p-3 rounded-lg flex items-center"
           :class="{ active: activeSection === 'completed' }"
@@ -57,7 +65,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted, watch } from 'vue';
+import { ref, computed, onMounted, onUnmounted, watch, inject } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
 import { useServerStore } from '@/stores/server';
 
@@ -67,10 +75,14 @@ const serverStore = useServerStore();
 
 const sidebarCollapsed = ref(window.innerWidth <= 768);
 const activeSection = ref('download');
+const isElectron = computed(() => typeof window !== 'undefined' && !!window.electron);
 
 const emit = defineEmits<{
   (e: 'new-download'): void;
 }>();
+
+// 注入全局显示下载对话框的方法
+const showGlobalNewDownload = inject<(data?: { url?: string; title?: string }) => void>('showGlobalNewDownload');
 
 function toggleSidebar() {
   sidebarCollapsed.value = !sidebarCollapsed.value;
@@ -83,7 +95,7 @@ function switchSection(section: string) {
     return;
   }
 
-  const targetPath = `/${section}`;
+  const targetPath = `/page/${section}`;
   console.log('[Layout] 准备导航到:', targetPath);
 
   // 如果已经在目标路径，直接返回
@@ -123,7 +135,12 @@ function openAriang() {
 }
 
 function showNewDownload() {
-  emit('new-download');
+  // 优先使用全局的下载对话框，如果没有则使用 emit（向后兼容）
+  if (showGlobalNewDownload) {
+    showGlobalNewDownload();
+  } else {
+    emit('new-download');
+  }
 }
 
 function handleResize() {
@@ -148,13 +165,15 @@ watch(
 watch(
   () => route.path,
   (path) => {
-    if (path.startsWith('/download')) {
+    if (path.startsWith('/page/download')) {
       activeSection.value = 'download';
-    } else if (path.startsWith('/completed')) {
+    } else if (path.startsWith('/page/web-browser')) {
+      activeSection.value = 'web-browser';
+    } else if (path.startsWith('/page/completed')) {
       activeSection.value = 'completed';
-    } else if (path.startsWith('/config')) {
+    } else if (path.startsWith('/page/config')) {
       activeSection.value = 'config';
-    } else if (path.startsWith('/about')) {
+    } else if (path.startsWith('/page/about')) {
       activeSection.value = 'about';
     }
   },
