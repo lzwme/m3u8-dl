@@ -13,6 +13,6 @@ export interface DownloadConfig {
   showLocalPlay: boolean;
   /** 最大并发下载数 */
   maxDownloads: number;
-  /** 是否使用全局安装的 ffmpeg 而不是内置的 ffmpeg-static。默认为 false */
-  useGlobalFfmpeg?: boolean;
+  /** ffmpeg 可执行文件路径。如果未指定，则尝试使用系统 PATH 中的 'ffmpeg' */
+  ffmpegPath?: string;
 }

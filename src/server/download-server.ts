@@ -67,7 +67,7 @@ export class DLServer {
       debug: process.env.DS_DEBUG === '1',
       saveDir: process.env.DS_SAVE_DIR || './downloads',
       threadNum: 4,
-      useGlobalFfmpeg: process.env.DS_USE_GLOBAL_FFMPEG === '1',
+      ffmpegPath: process.env.DS_FFMPEG_PATH || undefined,
     } as M3u8DLOptions,
   };
   /** 下载任务缓存 */
@@ -162,6 +162,19 @@ export class DLServer {
   }
   saveConfig(config: M3u8DLOptions, configPath?: string) {
     if (!configPath) configPath = this.options.configPath;
+
+    // 验证 ffmpegPath 是否存在
+    if (config.ffmpegPath?.trim()) {
+      const ffmpegPath = config.ffmpegPath.trim();
+      if (!existsSync(ffmpegPath)) {
+        throw new Error(`ffmpeg 路径不存在: ${ffmpegPath}`);
+      }
+      // 检查是否为文件（不是目录）
+      const stats = statSync(ffmpegPath);
+      if (!stats.isFile()) {
+        throw new Error(`ffmpeg 路径不是文件: ${ffmpegPath}`);
+      }
+    }
 
     for (const [key, value] of Object.entries(config)) {
       // @ts-expect-error 忽略类型错误
@@ -363,9 +376,15 @@ export class DLServer {
     });
 
     app.post('/api/config', (req, res) => {
-      const config = req.body as M3u8DLOptions;
-      this.saveConfig(config);
-      res.json({ message: 'Config updated successfully', code: 0 });
+      try {
+        const config = req.body as M3u8DLOptions;
+        this.saveConfig(config);
+        res.json({ message: 'Config updated successfully', code: 0 });
+      } catch (error) {
+        const errorMessage = error instanceof Error ? error.message : '配置保存失败';
+        logger.error('[saveConfig]', errorMessage);
+        res.status(400).json({ message: errorMessage, code: 1 });
+      }
     });
 
     app.get('/api/config', (_req, res) => {

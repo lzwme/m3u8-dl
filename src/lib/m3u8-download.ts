@@ -4,7 +4,6 @@ import { dirname, resolve, sep } from 'node:path';
 import { Barrier, formatTimeCost, rmrfAsync } from '@lzwme/fe-utils';
 import { formatByteSize } from '@lzwme/fe-utils/cjs/common/helper';
 import { blueBright, cyan, cyanBright, green, greenBright, magenta, magentaBright, yellowBright } from 'console-log-colors';
-import ffmpegStatic from 'ffmpeg-static';
 import type { M3u8DLOptions, M3u8DLProgressStats, M3u8DLResult, M3u8WorkerPool, TsItemInfo } from '../types/m3u8.js';
 import { formatOptions } from './format-options.js';
 import { localPlay, toLocalM3u8 } from './local-play.js';
@@ -94,7 +93,7 @@ const tsDlFile = resolve(__dirname, './ts-download.js');
 export const workPollPublic: M3u8WorkerPool = new WorkerPool(tsDlFile);
 
 async function m3u8InfoParse(u: string, o: M3u8DLOptions = {}) {
-  const ffmpegBin = o.useGlobalFfmpeg ? 'ffmpeg' : ffmpegStatic;
+  const ffmpegBin = o.ffmpegPath || 'ffmpeg';
   const ext = isSupportFfmpeg(ffmpegBin) ? '.mp4' : '.ts';
 
   const { url, options, urlMd5 } = formatOptions(u, o);

@@ -12,7 +12,7 @@ export const useConfigStore = defineStore('config', () => {
     showPreview: true,
     showLocalPlay: true,
     maxDownloads: 3,
-    useGlobalFfmpeg: false,
+    ffmpegPath: '',
   });
 
   const token = ref<string>('');

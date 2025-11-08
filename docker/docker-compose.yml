@@ -13,7 +13,7 @@ services:
       DS_SECRET: '' # 设置访问密码
       DS_DEBUG: ''
       DS_LIMTE_FILE_ACCESS: '1'
-      DS_USE_GLOBAL_FFMPEG: '1'
+      DS_FFMPEG_PATH: ''
     # command: >
     #   sh -c "node cjs/server/index.js"
     restart: unless-stopped

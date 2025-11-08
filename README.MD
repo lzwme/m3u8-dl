@@ -120,6 +120,23 @@ for (const filepath of fileList) {
   const r = await m3u8Download(filepath, { debug: true, filenmae: '测试视频' });
   console.log('文件已下载：', r.filepath);
 }
+
+// 示例：指定 ffmpeg 路径
+// 方式一：指定自定义 ffmpeg 路径
+import ffmpegStatic from 'ffmpeg-static';
+m3u8Download('test/t.m3u8', {
+  debug: true,
+  filenmae: '测试视频',
+  ffmpegPath: ffmpegStatic, // 使用 ffmpeg-static 包提供的路径
+});
+
+// 方式二：指定系统安装的 ffmpeg 完整路径
+m3u8Download('test/t.m3u8', {
+  debug: true,
+  filenmae: '测试视频',
+  ffmpegPath: '/usr/local/bin/ffmpeg', // Linux/Mac 系统路径
+  // ffmpegPath: 'C:\\ffmpeg\\bin\\ffmpeg.exe', // Windows 系统路径
+});
 ```
 
 ## 基于 Docker 部署
@@ -154,7 +171,7 @@ services:
       DS_CACHE_DIR: '/app/cache'
       DS_SECRET: '' # 设置访问密码
       DS_DEBUG: ''
-      DS_USE_GLOBAL_FFMPEG: '1'
+      DS_FFMPEG_PATH: ''  # 留空则使用系统 PATH 中的 ffmpeg
     # command: >
     #   sh -c "node cjs/server/index.js"
     restart: unless-stopped

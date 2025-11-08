@@ -177,6 +177,11 @@ const T = {
     return tray;
   },
   initEvents() {
+    app.on('ready', async () => {
+      this.mainWindow = await this.createMainWindow();
+      this.tray = this.createTray();
+    });
+
     // quit application when all windows are closed
     app.on('window-all-closed', () => {
       // on macOS it is common for applications to stay open until the user explicitly quits
@@ -202,12 +207,14 @@ const T = {
       }
     });
   },
+  init() {
+    // detect ffmpeg path from ffmpeg-static package
+    const ffmpegStatic = require('ffmpeg-static');
+    if (fs.existsSync(ffmpegStatic)) process.env.DS_FFMPEG_PATH = ffmpegStatic;
+  },
   start() {
+    this.init();
     this.initEvents();
-    app.on('ready', async () => {
-      this.mainWindow = await this.createMainWindow();
-      this.tray = this.createTray();
-    });
 
     // 多开检测、聚焦当前窗口
     const isFirstInstance = app.requestSingleInstanceLock()

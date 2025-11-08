@@ -27,10 +27,10 @@ export const getRetry = <T = string>(url: string, headers?: OutgoingHttpHeaders 
 
 export const logger = NLogger.getLogger('[M3U8-DL]', { color });
 
-let _isSupportFfmpeg: boolean = null;
+const ffmpegTestCache: Record<string, boolean> = {};
 export function isSupportFfmpeg(ffmpegBin: string) {
-  if (null == _isSupportFfmpeg) _isSupportFfmpeg = execSync(`${ffmpegBin} -version`).stderr === '';
-  return _isSupportFfmpeg;
+  if (!(ffmpegBin in ffmpegTestCache)) ffmpegTestCache[ffmpegBin] = execSync(`${ffmpegBin} -version`).stderr === '';
+  return ffmpegTestCache[ffmpegBin];
 }
 
 export function findFiles(apidir?: string, validate?: (filepath: string, stat: Stats) => boolean) {

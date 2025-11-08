@@ -2,13 +2,11 @@ import { createWriteStream, existsSync, readFileSync, statSync, unlinkSync, writ
 import { dirname, resolve } from 'node:path';
 import { execSync, formatByteSize, mkdirp } from '@lzwme/fe-utils';
 import { cyan, greenBright, magentaBright } from 'console-log-colors';
-import ffmpegStatic from 'ffmpeg-static';
 import type { M3u8DLOptions, TsItemInfo } from '../types/m3u8';
 import { isSupportFfmpeg, logger } from './utils';
 
 export async function m3u8Convert(options: M3u8DLOptions, data: TsItemInfo[]) {
-  const useGlobal = options.useGlobalFfmpeg || false;
-  const ffmpegBin = useGlobal ? 'ffmpeg' : ffmpegStatic;
+  const ffmpegBin = options.ffmpegPath || 'ffmpeg';
 
   let ffmpegSupport = isSupportFfmpeg(ffmpegBin);
   let filepath = resolve(options.saveDir, options.filename);
@@ -39,11 +37,7 @@ export async function m3u8Convert(options: M3u8DLOptions, data: TsItemInfo[]) {
     logger.debug('[convert to mp4]cmd:', cyan(cmd));
     const r = execSync(cmd);
     ffmpegSupport = !r.error;
-    if (r.error)
-      logger.error(
-        `Conversion to mp4 failed. Please confirm that \`${useGlobal ? 'ffmpeg' : 'ffmpeg-static'}\` is ${useGlobal ? 'installed' : 'available'}!`,
-        r.stderr
-      );
+    if (r.error) logger.error(`Conversion to mp4 failed. Please confirm that \`${ffmpegBin}\` is installed and available!`, r.stderr);
     else unlinkSync(ffconcatFile);
   }
 

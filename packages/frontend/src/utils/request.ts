@@ -1,5 +1,5 @@
 // biome-ignore-all lint/suspicious/noExplicitAny: any is used for compatibility
-import type { ApiResponse, OperationResponse, M3u8UrlsResponse, QueueStatus } from '@/types/api';
+import type { ApiResponse, M3u8UrlsResponse, OperationResponse, QueueStatus } from '@/types/api';
 import type { DownloadConfig } from '@/types/config';
 import type { DownloadTask } from '@/types/task';
 

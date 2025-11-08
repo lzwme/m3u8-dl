@@ -77,15 +77,10 @@
               </div>
 
               <div>
-                <label class="block text-sm font-bold text-gray-700 mb-1">使用全局 ffmpeg</label>
-                <div class="flex items-center mt-2">
-                  <label class="inline-flex items-center">
-                    <input v-model="configStore.config.useGlobalFfmpeg" type="checkbox"
-                      class="form-checkbox h-5 w-5 text-blue-500 rounded focus:ring-blue-500" />
-                    <span class="ml-2 text-gray-700">使用系统全局安装的 ffmpeg 而不是内置的 ffmpeg-static</span>
-                  </label>
-                </div>
-                <p class="mt-1 text-sm text-gray-500">请确保全局安装的 ffmpeg 路径已正确配置到 PATH 环境变量中</p>
+                <label class="block text-sm font-bold text-gray-700 mb-1">ffmpeg 可执行文件路径</label>
+                <input v-model="configStore.config.ffmpegPath" type="text"
+                  class="w-full p-2 border rounded-lg focus:ring-blue-500" placeholder="留空则使用系统 PATH 中的 ffmpeg" />
+                <p class="mt-1 text-sm text-gray-500">指定 ffmpeg 可执行文件的完整路径。如果留空，则尝试使用系统 PATH 环境变量中的 ffmpeg</p>
               </div>
             </div>
 
