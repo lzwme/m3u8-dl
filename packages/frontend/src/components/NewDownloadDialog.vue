@@ -80,6 +80,10 @@ import { useConfigStore } from '@/stores/config';
 
 const props = defineProps<{
   visible: boolean;
+  initialData?: {
+    url?: string;
+    title?: string;
+  };
 }>();
 
 const emit = defineEmits<{
@@ -103,6 +107,16 @@ watch(
   (visible) => {
     if (visible) {
       saveDir.value = configStore.config.saveDir || '';
+      // 如果有初始数据，填充表单
+      if (props.initialData) {
+        if (props.initialData.url) {
+          downloadUrls.value = props.initialData.url;
+          if (props.initialData.title) {
+            filename.value = props.initialData.title;
+            downloadUrls.value = `${props.initialData.url} | ${props.initialData.title}`;
+          }
+        }
+      }
     } else {
       // 重置表单
       playUrl.value = '';

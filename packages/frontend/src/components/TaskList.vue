@@ -75,12 +75,12 @@
             title="按状态筛选"
             aria-label="按状态筛选"
           >
-            <option value="">全部状态</option>
+            <option value="">全部</option>
             <option value="resume">下载中</option>
             <option value="pending">等待中</option>
             <option value="pause">已暂停</option>
             <option value="error">异常</option>
-            <option value="done">已完成</option>
+            <!-- <option value="done">已完成</option> -->
           </select>
           <button
             @click="clearFilters"

@@ -23,6 +23,12 @@ export const useTasksStore = defineStore('tasks', () => {
     );
     let taskList = taskValues;
 
+    // 过滤掉已完成的任务（已完成的任务只在已完成页面显示）
+    taskList = taskList.filter(task => {
+      const isCompleted = task.status === 'done' || (task.progress !== undefined && task.progress >= 100);
+      return !isCompleted;
+    });
+
     // 搜索过滤
     if (searchQuery.value) {
       const query = searchQuery.value.toLowerCase();

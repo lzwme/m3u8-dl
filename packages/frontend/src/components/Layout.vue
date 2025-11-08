@@ -25,6 +25,13 @@
           <i class="fas fa-download mr-3"></i>下载管理
         </button>
         <button
+          @click="switchSection('completed')"
+          class="nav-item w-full p-3 rounded-lg flex items-center"
+          :class="{ active: activeSection === 'completed' }"
+        >
+          <i class="fas fa-check-circle mr-3"></i>已完成
+        </button>
+        <button
           @click="switchSection('config')"
           class="nav-item w-full p-3 rounded-lg flex items-center"
           :class="{ active: activeSection === 'config' }"
@@ -50,7 +57,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, onUnmounted, watch } from 'vue';
+import { ref, onMounted, onUnmounted, watch } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
 import { useServerStore } from '@/stores/server';
 
@@ -143,6 +150,8 @@ watch(
   (path) => {
     if (path.startsWith('/download')) {
       activeSection.value = 'download';
+    } else if (path.startsWith('/completed')) {
+      activeSection.value = 'completed';
     } else if (path.startsWith('/config')) {
       activeSection.value = 'config';
     } else if (path.startsWith('/about')) {
