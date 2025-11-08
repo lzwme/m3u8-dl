@@ -154,6 +154,7 @@ services:
       DS_CACHE_DIR: '/app/cache'
       DS_SECRET: '' # 设置访问密码
       DS_DEBUG: ''
+      DS_USE_GLOBAL_FFMPEG: '1'
     # command: >
     #   sh -c "node cjs/server/index.js"
     restart: unless-stopped

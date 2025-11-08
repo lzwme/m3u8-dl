@@ -1,9 +1,38 @@
+@import "tailwindcss";
+
+:root {
+  /* 颜色系统 */
+  --color-primary: #3b82f6;
+  --color-primary-hover: #2563eb;
+  --color-success: #10b981;
+  --color-warning: #f59e0b;
+  --color-danger: #ef4444;
+  --color-info: #3b82f6;
+
+  /* 边框颜色 */
+  --color-border: #e5e7eb;
+
+  /* 间距系统 */
+  --spacing-xs: 0.25rem;
+  --spacing-sm: 0.5rem;
+  --spacing-md: 1rem;
+  --spacing-lg: 1.5rem;
+  --spacing-xl: 2rem;
+}
+
+/* 全局默认边框颜色 */
+*, ::after, ::before {
+  border-color: var(--color-border);
+  box-sizing: border-box;
+  border-style: solid;
+}
+
 ::placeholder {
   font-size: 14px;
 }
 
-.swal2-html-container textarea, input {
-  font-size: 16px !important;
+button {
+  cursor: pointer;
 }
 
 #app {
@@ -66,9 +95,12 @@
   .menu-toggle {
     display: block !important;
   }
+}
 
-  .main-content {
-    margin-left: 0 !important;
+/* 平板适配 */
+@media (min-width: 769px) and (max-width: 1024px) {
+  .sidebar {
+    width: 12rem;
   }
 }
 
@@ -134,4 +166,17 @@
 
 .custom-toast-info {
   border-left: 4px solid #17a2b8;
+}
+
+
+.modal-overlay {
+  background-color: rgba(0, 0, 0, 0.5);
+  font-size: 14px;
+}
+
+.modal-overlay textarea,
+.modal-overlay input {
+  font-size: 16px;
+  padding-top: 0.25rem;
+  padding-bottom: 0.25rem;
 }

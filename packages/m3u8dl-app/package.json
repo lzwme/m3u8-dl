@@ -1,5 +1,5 @@
 {
-  "name": "m3u8dl-app",
+  "name": "@lzwme/m3u8-dl-app",
   "version": "1.0.0",
   "description": "m3u8 download app",
   "main": "src/main.js",
@@ -20,10 +20,11 @@
   "dependencies": {
     "electron-updater": "^6.6.2",
     "express": "^5.1.0",
-    "ws": "^8.18.2"
+    "ffmpeg-static": "^5.2.0",
+    "ws": "^8.18.3"
   },
   "devDependencies": {
-    "electron": "36.4.0",
+    "electron": "39.1.1",
     "electron-builder": "^26.0.12"
   }
 }

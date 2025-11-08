@@ -1,14 +1,14 @@
 import { existsSync, readFileSync, rmSync, statSync, unlinkSync, writeFileSync } from 'node:fs';
-import { dirname, resolve } from 'node:path';
 import { homedir } from 'node:os';
+import { dirname, resolve } from 'node:path';
 import { assign, getUrlParams, md5, mkdirp } from '@lzwme/fe-utils';
 import { cyan, gray, green, red } from 'console-log-colors';
 import type { Express } from 'express';
 import type { Server } from 'ws';
 import { fileDownload } from '../lib/file-download.js';
 import { formatOptions } from '../lib/format-options.js';
-import { m3u8DLStop, m3u8Download } from '../lib/m3u8-download.js';
 import { getM3u8Urls } from '../lib/getM3u8Urls.js';
+import { m3u8DLStop, m3u8Download } from '../lib/m3u8-download.js';
 import { logger } from '../lib/utils.js';
 import type { M3u8DLOptions, M3u8DLProgressStats, M3u8DLResult, M3u8WorkerPool, TsItemInfo } from '../types/m3u8.js';
 import { VideoParser } from '../video-parser/index.js';
@@ -67,6 +67,7 @@ export class DLServer {
       debug: process.env.DS_DEBUG === '1',
       saveDir: process.env.DS_SAVE_DIR || './downloads',
       threadNum: 4,
+      useGlobalFfmpeg: process.env.DS_USE_GLOBAL_FFMPEG === '1',
     } as M3u8DLOptions,
   };
   /** 下载任务缓存 */
@@ -368,12 +369,12 @@ export class DLServer {
     });
 
     app.get('/api/config', (_req, res) => {
-      res.json({ ...this.cfg.dlOptions, ...this.cfg.webOptions });
+      res.json({ code: 0, data: { ...this.cfg.dlOptions, ...this.cfg.webOptions } });
     });
 
     // API to get all download progress
     app.get('/api/tasks', (_req, res) => {
-      res.json(Object.fromEntries(this.dlCacheClone()));
+      res.json({ code: 0, data: Object.fromEntries(this.dlCacheClone()) });
     });
 
     // API to get queue status
@@ -382,9 +383,12 @@ export class DLServer {
       const activeTasks = Array.from(this.dlCache.entries()).filter(([_, item]) => item.status === 'resume');
 
       res.json({
-        queueLength: pendingTasks.length,
-        activeDownloads: activeTasks.map(([url]) => url),
-        maxConcurrent: this.cfg.webOptions.maxDownloads,
+        code: 0,
+        data: {
+          queueLength: pendingTasks.length,
+          activeDownloads: activeTasks.map(([url]) => url),
+          maxConcurrent: this.cfg.webOptions.maxDownloads,
+        },
       });
     });
 

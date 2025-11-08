@@ -6,7 +6,7 @@ release
 dist
 /esm
 /cjs
-/docs
+docs
 downloads
 cache
 tmp
@@ -26,4 +26,6 @@ tsCheckWhiteList.json
 *.m3u8
 # /*(^.d).ts
 /*.mp4
-/client/ariang/
+/client/
+!/client/local/cdn
+!/client/logo.png

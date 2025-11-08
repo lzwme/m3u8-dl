@@ -1,6 +1,6 @@
-import { Request, color } from '@lzwme/fe-utils';
-import { formatHeaders, logger } from './utils.js';
 import type { OutgoingHttpHeaders } from 'node:http';
+import { color, Request } from '@lzwme/fe-utils';
+import { formatHeaders, logger } from './utils.js';
 
 export interface GetM3u8UrlsOption {
   url: string;

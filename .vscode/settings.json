@@ -4,7 +4,6 @@
   "editor.codeActionsOnSave": {
     // "source.fixAll.eslint": "explicit"
   },
-  "editor.defaultFormatter": "esbenp.prettier-vscode",
   "editor.formatOnSave": false,
   "editor.renderWhitespace": "all",
   "javascript.validate.enable": false,
@@ -29,13 +28,7 @@
   },
   "git.rebaseWhenSync": true,
   "[json]": {
-    "editor.defaultFormatter": "esbenp.prettier-vscode"
-  },
-  "[javascript]": {
-    "editor.defaultFormatter": "esbenp.prettier-vscode"
-  },
-  "[jsonc]": {
-    "editor.defaultFormatter": "esbenp.prettier-vscode"
+    "editor.defaultFormatter": "vscode.json-language-features"
   },
   "editor.fontSize": 18
 }
