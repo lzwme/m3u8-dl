@@ -156,6 +156,7 @@ import { useTasksStore } from '@/stores/tasks';
 import TaskItem from './TaskItem.vue';
 import EmptyState from './EmptyState.vue';
 import type { DownloadTask } from '@/types/task';
+import { toast } from '@/utils/toast';
 
 const { t } = useI18n();
 
@@ -242,9 +243,17 @@ function preview(url: string) {
 }
 
 function localPlay(task: DownloadTask) {
+
+  const localPath = task.localVideo || task.localM3u8;
+  if (!localPath) {
+    console.error('[TaskList] localPlay: task 缺少本地文件路径', task);
+    toast({ text: t('error.noLocalFile'), type: 'error' });
+    return;
+  }
+
   const url =
     location.origin +
-    `/localplay/${encodeURIComponent(task.localVideo || '') || task.localM3u8}`;
+    `/localplay/${localPath}`;
   emit('local-play', { task, url });
 }
 </script>

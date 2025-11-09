@@ -99,6 +99,7 @@ export default {
     downloadFailed: 'Download failed',
     requestFailed: 'Request failed',
     unknownError: 'Unknown error',
+    noLocalFile: 'No local file found',
   },
   taskList: {
     title: 'Download Tasks',

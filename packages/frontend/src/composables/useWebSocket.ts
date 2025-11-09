@@ -118,7 +118,7 @@ function _connect(token: string) {
     // 如果正在验证密码，延迟显示成功提示，等待实际验证结果
     // 如果验证成功，会在收到 serverInfo 消息后显示成功提示
     if (!isPasswordVerifying) {
-      toast({ text: 'ws连接成功', type: 'success' });
+      toast({ text: 'WebSocket connected', type: 'success' });
     }
     globalReconnectDelay = 3000;
   };
@@ -147,7 +147,7 @@ function _connect(token: string) {
     }
 
     toast({
-      text: `连接已断开，${globalReconnectDelay / 1000}s 后将重试...`,
+      text: `Connection lost, will retry in ${globalReconnectDelay / 1000}s...`,
       type: 'error',
     });
 

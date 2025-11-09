@@ -97,6 +97,7 @@ export default {
     downloadFailed: '下载失败',
     requestFailed: '请求失败',
     unknownError: '未知错误',
+    noLocalFile: '未找到本地文件',
   },
   taskList: {
     title: '下载任务',
