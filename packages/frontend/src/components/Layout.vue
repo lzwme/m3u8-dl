@@ -6,14 +6,14 @@
     <div class="sidebar p-4" :class="{ show: !sidebarCollapsed }">
       <div class="mb-8">
         <div class="flex items-center mb-4">
-          <img src="/logo.png" alt="M3U8 下载器" class="w-8 h-8 mr-2" />
-          <h1 class="text-xl font-bold text-gray-800">M3U8 下载器</h1>
+          <img src="/logo.png" :alt="$t('layout.title')" class="w-8 h-8 mr-2" />
+          <h1 class="text-xl font-bold text-gray-800">{{ $t('layout.title') }}</h1>
         </div>
         <button
           @click="showNewDownload"
           class="w-full bg-blue-500 hover:bg-blue-600 text-white p-2 rounded-lg flex items-center justify-center transition-colors"
         >
-          <i class="fas fa-plus mr-2"></i>新建下载
+          <i class="fas fa-plus mr-2"></i>{{ $t('layout.newDownload') }}
         </button>
       </div>
       <nav class="space-y-2">
@@ -22,7 +22,7 @@
           class="nav-item w-full p-3 rounded-lg flex items-center"
           :class="{ active: activeSection === 'download' }"
         >
-          <i class="fas fa-download mr-3"></i>下载管理
+          <i class="fas fa-download mr-3"></i>{{ $t('layout.downloadManagement') }}
         </button>
         <button
           v-if="isElectron"
@@ -30,33 +30,36 @@
           class="nav-item w-full p-3 rounded-lg flex items-center"
           :class="{ active: activeSection === 'web-browser' }"
         >
-          <i class="fas fa-globe mr-3"></i>网页浏览
+          <i class="fas fa-globe mr-3"></i>{{ $t('layout.webBrowser') }}
         </button>
         <button
           @click="switchSection('completed')"
           class="nav-item w-full p-3 rounded-lg flex items-center"
           :class="{ active: activeSection === 'completed' }"
         >
-          <i class="fas fa-check-circle mr-3"></i>已完成
+          <i class="fas fa-check-circle mr-3"></i>{{ $t('layout.completed') }}
         </button>
         <button
           @click="switchSection('config')"
           class="nav-item w-full p-3 rounded-lg flex items-center"
           :class="{ active: activeSection === 'config' }"
         >
-          <i class="fas fa-cog mr-3"></i>配置设置
+          <i class="fas fa-cog mr-3"></i>{{ $t('layout.config') }}
         </button>
         <button
           @click="switchSection('about')"
           class="nav-item w-full p-3 rounded-lg flex items-center"
           :class="{ active: activeSection === 'about' }"
         >
-          <i class="fas fa-info-circle mr-3"></i>关于项目
+          <i class="fas fa-info-circle mr-3"></i>{{ $t('layout.about') }}
         </button>
         <button @click="openAriang" class="nav-item w-full p-3 rounded-lg flex items-center">
-          <i class="fas fa-link mr-3"></i>Ariang
+          <i class="fas fa-link mr-3"></i>{{ $t('layout.ariang') }}
         </button>
       </nav>
+      <div class="mt-4 pt-4 border-t">
+        <LanguageSwitcher />
+      </div>
     </div>
     <div class="main-content" :class="{ 'sidebar-collapsed': sidebarCollapsed }">
       <slot />
@@ -68,6 +71,7 @@
 import { ref, computed, onMounted, onUnmounted, watch, inject } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
 import { useServerStore } from '@/stores/server';
+import LanguageSwitcher from './LanguageSwitcher.vue';
 
 const router = useRouter();
 const route = useRoute();

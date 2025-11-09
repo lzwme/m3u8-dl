@@ -65,8 +65,8 @@ export function optimizeTitle(title: string): string {
 export function urlsTextFormat(urlsText: string) {
   return String(urlsText || '')
     .split('\n')
-    .map((line) => {
-      const parts = line.split(/[\s|$]+/).map((s) => s.trim());
+    .map(line => {
+      const parts = line.split(/[\s|$]+/).map(s => s.trim());
       let url = parts[0];
       let name = parts[1] || '';
       if (name.startsWith('http')) {
@@ -74,5 +74,5 @@ export function urlsTextFormat(urlsText: string) {
       }
       return { url, name };
     })
-    .filter((item) => item.url.startsWith('http'));
+    .filter(item => item.url.startsWith('http'));
 }

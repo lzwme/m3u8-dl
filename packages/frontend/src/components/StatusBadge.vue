@@ -7,6 +7,9 @@
 
 <script setup lang="ts">
 import { computed } from 'vue';
+import { useI18n } from 'vue-i18n';
+
+const { t } = useI18n();
 
 const props = defineProps<{
   status: string;
@@ -15,11 +18,11 @@ const props = defineProps<{
 
 const statusText = computed(() => {
   const statusMap: Record<string, string> = {
-    pending: '等待中',
-    resume: '下载中',
-    pause: '已暂停',
-    error: props.errmsg || '异常',
-    done: '已完成',
+    pending: t('download.status.pending'),
+    resume: t('download.status.resume'),
+    pause: t('download.status.pause'),
+    error: props.errmsg || t('download.status.error'),
+    done: t('download.status.done'),
   };
   return statusMap[props.status] || props.status;
 });

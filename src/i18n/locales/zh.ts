@@ -1,0 +1,96 @@
+export default {
+  cli: {
+    command: {
+      download: {
+        description: 'm3u8 url。也可以是本地 txt 文件，指定一组 m3u8，适用于批量下载的场景',
+      },
+      server: {
+        description: '启动下载中心web服务',
+      },
+      search: {
+        description: 'm3u8视频在线搜索与下载',
+      },
+    },
+    option: {
+      silent: '开启静默模式。',
+      debug: '开启调试模式。',
+      filename: '指定下载文件的保存名称。默认取 url md5 值。若指定了多个 url 地址，则会在末尾增加序号',
+      threadNum: '并发下载线程数。默认为 cpu * 2。可设置不同数值观察下载效果',
+      force: '启用强制执行模式。文件已存在时，是否仍继续下载和生成',
+      noProgress: '是否不打印进度信息',
+      play: '是否边下边看',
+      cacheDir: '临时文件保存目录。默认为 cache',
+      saveDir: '下载文件保存的路径。默认为当前目录',
+      noDelCache: '下载成功后是否删除临时文件。默认为 true。保存临时文件可以在重复下载时识别缓存',
+      noConvert: '下载成功后，是否不合并转换为 mp4 文件。默认为 true。',
+      ffmpegPath: '指定 ffmpeg 可执行文件路径。如果未指定，则尝试使用系统 PATH 中的 ffmpeg',
+      headers: '自定义请求头。格式为 key1=value1\nkey2=value2',
+      type: '指定下载类型。默认根据URL自动识别，如果是批量下载多个不同 URL 类型，请不要设置。可选值：m3u8, file, parser',
+      ignoreSegments: '忽略的视频片段，用-分割起始时间点，多个用逗号分隔。如：0-10,20-30',
+      port: '指定web服务端口。默认为6600',
+      token: '指定web服务密码（请求头authorization）。默认为空',
+      url: '影视搜索的接口地址(m3u8采集站标准接口)',
+      apidir: '指定自定义视频搜索 api 所在的目录或具体路径',
+      lang: '指定语言。可选值：zh, en',
+    },
+  },
+  api: {
+    error: {
+      unauthorized: '未授权，禁止访问',
+      configSaveFailed: '配置保存失败',
+      unknown: '未知错误',
+      downloadFailed: '下载失败',
+      accessDenied: '访问被拒绝',
+      invalidUrl: '无效的 url 参数',
+      notFound: '未找到',
+    },
+    success: {
+      configUpdated: '配置更新成功',
+      queueCleared: '已清空 {count} 个等待中的下载任务',
+      downloadStarted: '已开始下载 {count} 个任务',
+      paused: '已暂停 {count} 个下载任务',
+      resumed: '已恢复 {count} 个下载任务',
+      noResumableTasks: '没有找到可恢复的下载任务',
+      deleted: '已删除 {count} 个下载任务',
+    },
+  },
+  download: {
+    status: {
+      starting: 'Starting download for',
+      fileExists: 'file already exist:',
+      completed: '下载完成',
+      failed: '下载失败',
+      retry: '重试',
+    },
+    error: {
+      parseFailed: '解析 M3U8 失败',
+      downloadFailed: '下载失败',
+      retryFailed: '重试失败',
+    },
+  },
+  error: {
+    download: {
+      failed: '下载失败',
+      parseFailed: '解析失败',
+    },
+    unknown: '未知错误',
+  },
+  prompt: {
+    search: {
+      keyword: '请输入关键字',
+      selectVideo: '查找到了 {count} 条结果，请选择：',
+      continueDownload: '存在上次未完成的下载【{name}】，是否继续？',
+      playWhileDownload: '【{name}】是否边下边播？',
+      noResults: '没有搜到结果',
+      getVideoInfoFailed: '获取视频信息失败!',
+      noPlayUrl: '未获取到播放地址信息',
+      reSearch: '重新搜索',
+      allDownload: '全部下载',
+    },
+  },
+  common: {
+    exit: '退出',
+    cancel: '取消',
+    confirm: '确认',
+  },
+};

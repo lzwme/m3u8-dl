@@ -15,7 +15,7 @@
       />
       <ConfirmDialog
         :visible="showPlayConfirmDialog"
-        title="确认播放"
+        :title="$t('confirm.play')"
         @close="showPlayConfirmDialog = false"
         @confirm="handlePlayConfirm"
       >
@@ -30,6 +30,7 @@
 
 <script setup lang="ts">
 import { ref } from 'vue';
+import { useI18n } from 'vue-i18n';
 import Layout from '@/components/Layout.vue';
 import CompletedList from '@/components/CompletedList.vue';
 import TaskDetailModal from '@/components/TaskDetailModal.vue';
@@ -39,6 +40,8 @@ import { useTasksStore } from '@/stores/tasks';
 import { deleteDownload } from '@/utils/request';
 import { toast } from '@/utils/toast';
 import type { DownloadTask } from '@/types/task';
+
+const { t } = useI18n();
 
 const tasksStore = useTasksStore();
 
@@ -65,7 +68,7 @@ function handleDelete(urls: string[]) {
 async function handleDeleteConfirm(options: { deleteCache: boolean; deleteVideo: boolean }) {
   const result = await deleteDownload(deleteUrls.value, options.deleteCache, options.deleteVideo);
   if (!result.code) {
-    toast({ text: result.message || '已删除选中的下载', type: 'success' });
+    toast({ text: result.message || t('toast.deleteSuccess'), type: 'success' });
     tasksStore.deleteTasks(deleteUrls.value);
   }
   deleteUrls.value = [];
@@ -76,8 +79,8 @@ function handleLocalPlay(data: { task: DownloadTask; url: string }) {
 
   // 如果任务状态为异常，显示确认对话框
   if (task.status === 'error') {
-    playErrorText.value = task.errmsg ? `错误信息：${task.errmsg}` : '';
-    playConfirmMessage.value = '该任务状态为异常，可能无法正常播放。\n\n确定要继续播放吗？';
+    playErrorText.value = task.errmsg ? t('confirm.playError', { error: task.errmsg }) : '';
+    playConfirmMessage.value = t('confirm.playConfirmMessage');
     pendingPlayData.value = { task, url };
     showPlayConfirmDialog.value = true;
     return;

@@ -2,7 +2,7 @@
   <div v-if="isElectron" class="web-browser-container border border-gray-300 rounded-lg p-4 mb-4 bg-white">
     <div class="flex items-center justify-between mb-3">
       <h3 class="text-lg font-semibold text-gray-800">
-        <i class="fas fa-globe mr-2"></i>网页浏览提取下载地址
+        <i class="fas fa-globe mr-2"></i>{{ $t('webBrowser.title') }}
       </h3>
       <div class="flex gap-2">
         <button
@@ -10,21 +10,21 @@
           @click="hideBrowser"
           class="px-3 py-1 bg-gray-500 text-white rounded hover:bg-gray-600 text-sm"
         >
-          <i class="fas fa-eye-slash mr-1"></i>隐藏浏览器
+          <i class="fas fa-eye-slash mr-1"></i>{{ $t('webBrowser.hideBrowser') }}
         </button>
         <button
           v-else-if="currentUrl"
           @click="showBrowser"
           class="px-3 py-1 bg-green-500 text-white rounded hover:bg-green-600 text-sm"
         >
-          <i class="fas fa-eye mr-1"></i>显示浏览器
+          <i class="fas fa-eye mr-1"></i>{{ $t('webBrowser.showBrowser') }}
         </button>
         <button
           v-if="loading"
           @click="stopLoading"
           class="px-3 py-1 bg-red-500 text-white rounded hover:bg-red-600 text-sm"
         >
-          <i class="fas fa-stop mr-1"></i>停止
+          <i class="fas fa-stop mr-1"></i>{{ $t('webBrowser.stop') }}
         </button>
       </div>
     </div>
@@ -33,7 +33,7 @@
       <input
         v-model="url"
         type="text"
-        placeholder="输入网页地址，将自动提取页面中的 m3u8 和 mp4 视频链接"
+        :placeholder="$t('webBrowser.urlPlaceholder')"
         class="flex-1 border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400"
         :disabled="loading"
         @keyup.enter="loadUrl"
@@ -43,7 +43,7 @@
         :disabled="loading || !url.trim()"
         class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed"
       >
-        {{ loading ? '加载中...' : '加载' }}
+        {{ loading ? $t('webBrowser.loading') : $t('webBrowser.load') }}
       </button>
     </div>
 
@@ -54,7 +54,7 @@
           @click="goBack"
           :disabled="!canGoBack"
           class="px-2 py-1 bg-white border border-gray-300 rounded hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
-          title="后退"
+          :title="$t('common.back')"
         >
           <i class="fas fa-arrow-left"></i>
         </button>
@@ -62,14 +62,14 @@
           @click="goForward"
           :disabled="!canGoForward"
           class="px-2 py-1 bg-white border border-gray-300 rounded hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
-          title="前进"
+          :title="$t('common.forward')"
         >
           <i class="fas fa-arrow-right"></i>
         </button>
         <button
           @click="reload"
           class="px-2 py-1 bg-white border border-gray-300 rounded hover:bg-gray-50"
-          title="刷新"
+          :title="$t('common.refresh')"
         >
           <i class="fas fa-sync-alt"></i>
         </button>
@@ -90,7 +90,7 @@
       <div class="flex items-center justify-between mb-2">
         <div class="flex items-center gap-3">
           <h4 class="text-sm font-semibold text-gray-700">
-            找到 {{ m3u8List.length }} 个视频链接
+            {{ $t('webBrowser.foundVideos', { count: m3u8List.length }) }}
           </h4>
           <label class="flex items-center gap-1 text-sm text-gray-600 cursor-pointer">
             <input
@@ -99,10 +99,10 @@
               @change="toggleSelectAll"
               class="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
             />
-            <span>全选</span>
+            <span>{{ $t('download.selectAll') }}</span>
           </label>
           <span v-if="selectedCount > 0" class="text-sm text-blue-600 font-medium">
-            已选择 {{ selectedCount }} 个
+            {{ $t('download.selected') }} {{ selectedCount }}
           </span>
         </div>
         <div class="flex gap-2">
@@ -111,13 +111,13 @@
             @click="batchDownload"
             class="px-3 py-1 bg-green-500 text-white rounded hover:bg-green-600 text-sm"
           >
-            批量下载 ({{ selectedCount }})
+            {{ $t('download.batchDownload') }} ({{ selectedCount }})
           </button>
           <button
             @click="clearList"
             class="text-sm text-gray-500 hover:text-gray-700"
           >
-            清空列表
+            {{ $t('webBrowser.clearList') }}
           </button>
         </div>
       </div>
@@ -139,7 +139,7 @@
             <div class="flex-1 min-w-0 cursor-pointer" @click="selectM3u8(item)">
               <div class="flex items-center gap-2 mb-1">
                 <div class="text-sm font-medium text-gray-800 truncate" :title="item.title">
-                  {{ item.title || `视频 ${index + 1}` }}
+                  {{ item.title || $t('webBrowser.unnamedVideo') }}
                 </div>
                 <span class="text-xs px-2 py-0.5 bg-blue-100 text-blue-700 rounded" :title="getFileType(item.url)">
                   {{ getFileType(item.url).toUpperCase() }}
@@ -149,14 +149,14 @@
                 {{ item.url }}
               </div>
               <div v-if="item.pageUrl && item.pageUrl !== currentUrl" class="text-xs text-gray-400 mt-1 truncate" :title="item.pageUrl">
-                来源: {{ item.pageUrl }}
+                {{ $t('webBrowser.source') }}: {{ item.pageUrl }}
               </div>
             </div>
             <button
               @click.stop="selectM3u8(item)"
               class="ml-2 px-3 py-1 bg-blue-500 text-white rounded hover:bg-blue-600 text-sm whitespace-nowrap"
             >
-              下载
+              {{ $t('webBrowser.download') }}
             </button>
           </div>
         </div>
@@ -164,14 +164,17 @@
     </div>
 
     <div v-else-if="!loading && url" class="text-sm text-gray-500 text-center py-4">
-      暂无提取到的视频链接，请等待页面加载完成或尝试其他网页
+      {{ $t('webBrowser.noVideos') }}
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted, computed } from 'vue';
+import { useI18n } from 'vue-i18n';
 import { toast } from '@/utils/toast';
+
+const { t } = useI18n();
 
 defineProps<{
   visible?: boolean;
@@ -196,17 +199,17 @@ const selectedIndices = ref<Set<number>>(new Set());
 function loadUrl() {
   const targetUrl = url.value.trim();
   if (!targetUrl) {
-    toast({ text: '请输入网页地址', type: 'error' });
+    toast({ text: t('webBrowser.enterUrl'), type: 'error' });
     return;
   }
 
   if (!/^https?:\/\//.test(targetUrl)) {
-    toast({ text: '请输入正确的网页地址（以 http:// 或 https:// 开头）', type: 'error' });
+    toast({ text: t('webBrowser.enterValidUrl'), type: 'error' });
     return;
   }
 
   if (!isElectron.value) {
-    toast({ text: '此功能仅在 Electron 客户端中可用', type: 'error' });
+    toast({ text: t('webBrowser.electronOnly'), type: 'error' });
     return;
   }
 
@@ -236,7 +239,7 @@ function selectM3u8(item: { url: string; title: string }) {
   // 统一使用 batch-download 事件，即使是单个视频也作为数组传递
   emit('batch-download', [{
     url: item.url,
-    title: item.title || '未命名视频',
+    title: item.title || t('webBrowser.unnamedVideo'),
   }]);
 }
 
@@ -273,7 +276,7 @@ const selectedCount = computed(() => {
 
 function batchDownload() {
   if (selectedIndices.value.size === 0) {
-    toast({ text: '请至少选择一个视频链接', type: 'error' });
+    toast({ text: t('webBrowser.selectAtLeastOne'), type: 'error' });
     return;
   }
 
@@ -281,7 +284,7 @@ function batchDownload() {
     .map(index => m3u8List.value[index])
     .map(item => ({
       url: item.url,
-      title: item.title || '未命名视频',
+      title: item.title || t('webBrowser.unnamedVideo'),
     }));
 
   emit('batch-download', selectedItems);
@@ -322,10 +325,10 @@ function handleM3u8Found(data: { url: string; title: string; pageUrl?: string })
   if (!exists) {
     m3u8List.value.push({
       url: data.url,
-      title: data.title || pageTitle.value || '未命名视频',
+      title: data.title || pageTitle.value || t('webBrowser.unnamedVideo'),
       pageUrl: data.pageUrl || currentUrl.value,
     });
-    toast({ text: `发现新的视频链接: ${data.title || '未命名视频'}`, type: 'success' });
+    toast({ text: t('webBrowser.newVideoFound', { title: data.title || t('webBrowser.unnamedVideo') }), type: 'success' });
   }
   // 注意：新添加的链接不会自动选中，需要用户手动选择
 }
@@ -334,8 +337,8 @@ function handlePageTitle(title: string) {
   pageTitle.value = title;
   // 更新已存在的 m3u8 项的标题（如果标题为空）
   m3u8List.value.forEach(item => {
-    if (!item.title || item.title === '未命名视频') {
-      item.title = title || '未命名视频';
+    if (!item.title || item.title === t('webBrowser.unnamedVideo')) {
+      item.title = title || t('webBrowser.unnamedVideo');
     }
   });
 }
@@ -398,15 +401,15 @@ function handleLoading(data: { loading: boolean }) {
   if (!data.loading) {
     // 加载完成
     if (m3u8List.value.length === 0) {
-      toast({ text: '页面加载完成，但未发现视频链接', type: 'info' });
+      toast({ text: t('webBrowser.pageLoadCompleteNoVideos'), type: 'info' });
     } else {
-      toast({ text: `页面加载完成，共发现 ${m3u8List.value.length} 个视频链接`, type: 'success' });
+      toast({ text: t('webBrowser.pageLoadComplete', { count: m3u8List.value.length }), type: 'success' });
     }
   }
 }
 
 function handleError(data: { code: number; description: string }) {
-  error.value = `加载失败: ${data.description || `错误代码 ${data.code}`}`;
+  error.value = `${t('error.requestFailed')}: ${data.description || `${t('error.unknownError')} ${data.code}`}`;
   loading.value = false;
   toast({ text: error.value, type: 'error' });
 }

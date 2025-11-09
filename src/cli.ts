@@ -2,6 +2,7 @@ import { resolve } from 'node:path';
 import { type PackageJson, readJsonFileSync } from '@lzwme/fe-utils';
 import { program } from 'commander';
 import { cyanBright } from 'console-log-colors';
+import { getLang, setLanguage, t } from './lib/i18n.js';
 import { logger } from './lib/utils.js';
 import { VideoSerachAndDL } from './lib/video-search.js';
 import { m3u8BatchDownload } from './m3u8-batch-download';
@@ -11,34 +12,41 @@ const pkg = readJsonFileSync<PackageJson>(resolve(__dirname, '../package.json'))
 
 process.on('unhandledRejection', r => {
   console.error(r);
-  logger.info('[退出][unhandledRejection]', (r as Error).message);
+  const lang = getLang();
+  logger.info(`[${t('common.exit', lang)}][unhandledRejection]`, (r as Error).message);
   process.exit();
 });
 
 process.on('SIGINT', signal => {
-  logger.info('[SIGINT]强制退出', signal);
+  const lang = getLang();
+  logger.info(`[SIGINT]${t('common.exit', lang)}`, signal);
   process.exit();
 });
+
+// Initialize language before using t()
+const initialLang = getLang();
+setLanguage(initialLang);
 
 program
   .version(pkg.version, '-v, --version')
   .description(cyanBright(pkg.description))
-  .argument('<m3u8Urls...>', 'm3u8 url。也可以是本地 txt 文件，指定一组 m3u8，适用于批量下载的场景')
-  .option('--silent', '开启静默模式。')
-  .option('--debug', '开启调试模式。')
-  .option('-f, --filename <name>', '指定下载文件的保存名称。默认取 url md5 值。若指定了多个 url 地址，则会在末尾增加序号')
-  .option('-n, --thread-num <number>', '并发下载线程数。默认为 cpu * 2。可设置不同数值观察下载效果')
-  .option('-F, --force', '启用强制执行模式。文件已存在时，是否仍继续下载和生成')
-  .option('--no-progress', '是否不打印进度信息')
-  .option('-p, --play', '是否边下边看')
-  .option('-C, --cache-dir <dirpath>', '临时文件保存目录。默认为 cache')
-  .option('-S, --save-dir <dirpath>', '下载文件保存的路径。默认为当前目录')
-  .option('--no-del-cache', '下载成功后是否删除临时文件。默认为 true。保存临时文件可以在重复下载时识别缓存')
-  .option('--no-convert', '下载成功后，是否不合并转换为 mp4 文件。默认为 true。')
-  .option('--ffmpeg-path <path>', '指定 ffmpeg 可执行文件路径。如果未指定，则尝试使用系统 PATH 中的 ffmpeg')
-  .option('-H, --headers <headers>', '自定义请求头。格式为 key1=value1\nkey2=value2')
-  .option('-T, --type <type>', '指定下载类型。默认根据URL自动识别，如果是批量下载多个不同 URL 类型，请不要设置。可选值：m3u8, file, parser')
-  .option('-I, --ignore-segments <time-segments>', '忽略的视频片段，用-分割起始时间点，多个用逗号分隔。如：0-10,20-30')
+  .argument('<m3u8Urls...>', t('cli.command.download.description', initialLang))
+  .option('--silent', t('cli.option.silent', initialLang))
+  .option('--debug', t('cli.option.debug', initialLang))
+  .option('-f, --filename <name>', t('cli.option.filename', initialLang))
+  .option('-n, --thread-num <number>', t('cli.option.threadNum', initialLang))
+  .option('-F, --force', t('cli.option.force', initialLang))
+  .option('--no-progress', t('cli.option.noProgress', initialLang))
+  .option('-p, --play', t('cli.option.play', initialLang))
+  .option('-C, --cache-dir <dirpath>', t('cli.option.cacheDir', initialLang))
+  .option('-S, --save-dir <dirpath>', t('cli.option.saveDir', initialLang))
+  .option('--no-del-cache', t('cli.option.noDelCache', initialLang))
+  .option('--no-convert', t('cli.option.noConvert', initialLang))
+  .option('--ffmpeg-path <path>', t('cli.option.ffmpegPath', initialLang))
+  .option('-H, --headers <headers>', t('cli.option.headers', initialLang))
+  .option('-T, --type <type>', t('cli.option.type', initialLang))
+  .option('-I, --ignore-segments <time-segments>', t('cli.option.ignoreSegments', initialLang))
+  .option('--lang <lang>', t('cli.option.lang', initialLang))
   .action(async (urls: string[]) => {
     const options = getOptions();
     logger.debug(urls, options);
@@ -52,9 +60,10 @@ program
 
 program
   .command('server')
-  .description('启动下载中心web服务')
-  .option('-P, --port <port>', '指定web服务端口。默认为6600')
-  .option('-t, --token <token>', '指定web服务密码（请求头authorization）。默认为空')
+  .description(t('cli.command.server.description', initialLang))
+  .option('-P, --port <port>', t('cli.option.port', initialLang))
+  .option('-t, --token <token>', t('cli.option.token', initialLang))
+  .option('--lang <lang>', t('cli.option.lang', initialLang))
   .action((options: { port?: number; token?: string; debug?: boolean; cacheDir?: string }) => {
     const opts = getOptions();
     if (opts.debug) options.debug = true;
@@ -69,10 +78,11 @@ program
 program
   .command('search [keyword]')
   .alias('s')
-  .option('-u,--url <api...>', '影视搜索的接口地址(m3u8采集站标准接口)')
-  .option('-d, --apidir <dirpath>', '指定自定义视频搜索 api 所在的目录或具体路径')
+  .option('-u,--url <api...>', t('cli.option.url', initialLang))
+  .option('-d, --apidir <dirpath>', t('cli.option.apidir', initialLang))
+  .option('--lang <lang>', t('cli.option.lang', initialLang))
   // .option('-R,--remote-config-url <url>', '自定义远程配置加载地址。默认从主仓库配置读取')
-  .description('m3u8视频在线搜索与下载')
+  .description(t('cli.command.search.description', initialLang))
   .action(async (keyword, options: { url?: string[]; remoteConfigUrl?: string }) => {
     await VideoSerachAndDL(keyword, options, getOptions());
   });
@@ -80,7 +90,13 @@ program
 program.parse(process.argv);
 
 function getOptions() {
-  const options = program.opts<CliOptions>();
+  const options = program.opts<CliOptions & { lang?: string }>();
+
+  // Set global language if specified
+  if (options.lang) {
+    setLanguage(getLang(options.lang));
+  }
+
   if (options.debug) {
     logger.updateOptions({ levelType: 'debug' });
   } else if (options.silent) {

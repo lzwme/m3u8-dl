@@ -24,13 +24,13 @@
             @click="close"
             class="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
           >
-            取消
+            {{ $t('common.cancel') }}
           </button>
           <button
             @click="handleConfirm"
             class="px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg transition-colors"
           >
-            确认
+            {{ $t('common.confirm') }}
           </button>
         </div>
       </div>
@@ -39,6 +39,10 @@
 </template>
 
 <script setup lang="ts">
+import { useI18n } from 'vue-i18n';
+
+const { t } = useI18n();
+
 defineProps<{
   visible: boolean;
   title?: string;

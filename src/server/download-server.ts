@@ -3,11 +3,12 @@ import { homedir } from 'node:os';
 import { dirname, resolve } from 'node:path';
 import { assign, getUrlParams, md5, mkdirp } from '@lzwme/fe-utils';
 import { cyan, gray, green, red } from 'console-log-colors';
-import type { Express } from 'express';
+import type { Express, Request } from 'express';
 import type { Server } from 'ws';
 import { fileDownload } from '../lib/file-download.js';
 import { formatOptions } from '../lib/format-options.js';
 import { getM3u8Urls } from '../lib/getM3u8Urls.js';
+import { getLang, LANG_CODES, t } from '../lib/i18n.js';
 import { m3u8DLStop, m3u8Download } from '../lib/m3u8-download.js';
 import { logger } from '../lib/utils.js';
 import type { M3u8DLOptions, M3u8DLProgressStats, M3u8DLResult, M3u8WorkerPool, TsItemInfo } from '../types/m3u8.js';
@@ -353,6 +354,32 @@ export class DLServer {
       this.wsSend('progress', nextItem[0]);
     }
   }
+  private getLangFromRequest(req: Request): string {
+    // Try to get lang from query parameter
+    const queryLang = req.query?.lang as string;
+    if (queryLang && LANG_CODES.has(queryLang)) {
+      return queryLang;
+    }
+
+    // Try to get lang from Accept-Language header
+    const acceptLanguage = req.headers['accept-language'];
+    if (acceptLanguage) {
+      const langCode = acceptLanguage.toLowerCase().split(',')[0].split('-')[0].trim();
+      if (LANG_CODES.has(langCode)) {
+        return langCode;
+      }
+    }
+
+    // Try to get lang from body
+    const bodyLang = (req.body as { lang?: string })?.lang;
+    if (bodyLang && LANG_CODES.has(bodyLang)) {
+      return bodyLang;
+    }
+
+    // Fallback to default
+    return getLang();
+  }
+
   private wsSend(type = 'progress', data?: unknown) {
     if (type === 'tasks' && !data) {
       data = Object.fromEntries(this.dlCacheClone());
@@ -380,9 +407,11 @@ export class DLServer {
       try {
         const config = req.body as M3u8DLOptions;
         this.saveConfig(config);
-        res.json({ message: 'Config updated successfully', code: 0 });
+        const lang = this.getLangFromRequest(req);
+        res.json({ message: t('api.success.configUpdated', lang), code: 0 });
       } catch (error) {
-        const errorMessage = error instanceof Error ? error.message : '配置保存失败';
+        const lang = this.getLangFromRequest(req);
+        const errorMessage = error instanceof Error ? error.message : t('api.error.configSaveFailed', lang);
         logger.error('[saveConfig]', errorMessage);
         res.status(400).json({ message: errorMessage, code: 1 });
       }
@@ -413,7 +442,7 @@ export class DLServer {
     });
 
     // API to clear queue
-    app.post('/api/queue/clear', (_req, res) => {
+    app.post('/api/queue/clear', (req, res) => {
       let count = 0;
       for (const [url, item] of this.dlCache.entries()) {
         if (item.status === 'pending') {
@@ -423,26 +452,28 @@ export class DLServer {
       }
 
       if (count) this.wsSend('tasks');
-      res.json({ message: `已清空 ${count} 个等待中的下载任务`, code: 0 });
+      const lang = this.getLangFromRequest(req);
+      res.json({ message: t('api.success.queueCleared', lang, { count }), code: 0 });
     });
 
     // API to update task priority
-    app.post('/api/priority', (req, res) => {
-      const { url, priority } = req.body;
-      const item = this.dlCache.get(url);
-      if (!item) {
-        res.json({ message: '任务不存在', code: 1 });
-        return;
-      }
+    // app.post('/api/priority', (req, res) => {
+    //   const { url, priority } = req.body;
+    //   const item = this.dlCache.get(url);
+    //   if (!item) {
+    //     res.json({ message: '任务不存在', code: 1 });
+    //     return;
+    //   }
 
-      item.options.priority = priority;
-      this.saveCache();
-      res.json({ message: '已更新任务优先级', code: 0 });
-    });
+    //   item.options.priority = priority;
+    //   this.saveCache();
+    //   res.json({ message: '已更新任务优先级', code: 0 });
+    // });
 
     // API to start m3u8 download
     app.post('/api/download', (req, res) => {
       const { url, options = {}, list = [] } = req.body;
+      const lang = this.getLangFromRequest(req);
 
       try {
         if (list.length) {
@@ -452,10 +483,10 @@ export class DLServer {
           }
         } else if (url) this.startDownload(url, options);
 
-        res.json({ message: `Download started: ${list.length || 1}`, code: 0 });
+        res.json({ message: t('api.success.downloadStarted', lang, { count: list.length || 1 }), code: 0 });
         this.wsSend('tasks');
       } catch (error) {
-        res.status(500).json({ error: `Download failed: ${(error as Error).message}` });
+        res.status(500).json({ error: `${t('api.error.downloadFailed', lang)}: ${(error as Error).message || ''}` });
       }
     });
 
@@ -479,7 +510,8 @@ export class DLServer {
         this.wsSend('progress', list);
         this.startNextPending();
       }
-      res.json({ message: `已暂停 ${list.length} 个下载任务`, code: 0, count: list.length });
+      const lang = this.getLangFromRequest(req);
+      res.json({ message: t('api.success.paused', lang, { count: list.length }), code: 0, count: list.length });
     });
 
     // API to resume download
@@ -498,7 +530,12 @@ export class DLServer {
       }
 
       if (list.length) this.wsSend('progress', list);
-      res.json({ message: list.length ? `已恢复 ${list.length} 个下载任务` : '没有找到可恢复的下载任务', code: 0, count: list.length });
+      const lang = this.getLangFromRequest(req);
+      res.json({
+        message: list.length ? t('api.success.resumed', lang, { count: list.length }) : t('api.success.noResumableTasks', lang),
+        code: 0,
+        count: list.length,
+      });
     });
 
     // API to delete download
@@ -539,7 +576,8 @@ export class DLServer {
         this.saveCache();
         this.startNextPending();
       }
-      res.json({ message: `已删除 ${list.length} 个下载任务`, code: 0, count: list.length });
+      const lang = this.getLangFromRequest(req);
+      res.json({ message: t('api.success.deleted', lang, { count: list.length }), code: 0, count: list.length });
     });
 
     app.get(/^\/localplay\/(.*)$/, (req, res) => {
@@ -568,7 +606,8 @@ export class DLServer {
 
           if (!isAllow) {
             logger.error('[Localplay] Access denied:', filepath);
-            res.send({ message: 'Access denied', code: 403 });
+            const lang = this.getLangFromRequest(req);
+            res.send({ message: t('api.error.accessDenied', lang), code: 403 });
             return;
           }
         }
@@ -598,14 +637,16 @@ export class DLServer {
       }
 
       logger.error('[Localplay]file not found:', red(filepath));
-      res.status(404).send({ message: 'Not Found', code: 404 });
+      const lang = this.getLangFromRequest(req);
+      res.status(404).send({ message: t('api.error.notFound', lang), code: 404 });
     });
 
     app.post('/api/getM3u8Urls', (req, res) => {
       const { url, headers, subUrlRegex } = req.body;
+      const lang = this.getLangFromRequest(req);
 
       if (!url) {
-        res.json({ code: 1001, message: '无效的 url 参数' });
+        res.json({ code: 1001, message: t('api.error.invalidUrl', lang) });
       } else {
         getM3u8Urls({ url, headers, subUrlRegex })
           .then(d => res.json({ code: 0, data: Array.from(d) }))

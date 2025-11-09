@@ -7,7 +7,7 @@ const url = require('node:url');
 const isDev = !app.isPackaged;
 const baseDir = path.resolve(__dirname, isDev ? '../../..' : '..');
 const config = {
-  title: 'M3U8下载器',
+  title: 'M3U8 Downloader',
   logo: path.resolve(baseDir, 'client/logo.png'),
 };
 
@@ -90,7 +90,7 @@ const T = {
   webBrowserWindow: null,
   async createMainWindow() {
     const window = new BrowserWindow({
-      title: 'M3U8 下载器',
+      title: config.title,
       icon: config.logo,
       menuBarVisible: false,
       autoHideMenuBar: true,
@@ -112,7 +112,15 @@ const T = {
       const userHome = homedir();
       const port = await utils.findFreePort();
 
-      process.env.DS_SAVE_DIR = path.resolve(userHome, 'Downloads');
+      if (!process.env.DS_SAVE_DIR) process.env.DS_SAVE_DIR = path.resolve(userHome, 'Downloads');
+
+      try {
+        if (!process.env.DS_FFMPEG_PATH) {
+          // detect ffmpeg path from ffmpeg-static package
+          const ffmpegStatic = require('ffmpeg-static');
+          if (fs.existsSync(ffmpegStatic)) process.env.DS_FFMPEG_PATH = ffmpegStatic;
+        }
+      } catch (_error) {}
 
       const dlServer = new DLServer({
         port,
@@ -505,9 +513,6 @@ const T = {
     });
   },
   init() {
-    // detect ffmpeg path from ffmpeg-static package
-    const ffmpegStatic = require('ffmpeg-static');
-    if (fs.existsSync(ffmpegStatic)) process.env.DS_FFMPEG_PATH = ffmpegStatic;
   },
   start() {
     this.init();

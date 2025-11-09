@@ -15,9 +15,10 @@ const rootPkg = readJsonFileSync(path.resolve(rootDir, 'package.json'));
 const T = {
   prepare() {
     const appPkg = readJsonFileSync(path.resolve(baseDir, './package.json'));
-    appPkg.name = 'M3U8下载器';
+    appPkg.name = 'M3U8 Downloader';
     appPkg.version = rootPkg.version;
     appPkg.dependencies = {
+      'ffmpeg-static': '^5.2.0',
       ...rootPkg.dependencies,
       ...appPkg.dependencies,
     };

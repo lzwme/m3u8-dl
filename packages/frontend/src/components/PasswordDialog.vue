@@ -10,20 +10,20 @@
             <i class="fas fa-lock text-red-600"></i>
           </div>
           <div>
-            <h2 class="text-xl font-semibold text-gray-900">需要访问密码</h2>
-            <p class="text-sm text-gray-500 mt-1">请输入正确的访问密码以继续</p>
+            <h2 class="text-xl font-semibold text-gray-900">{{ $t('config.passwordRequired') }}</h2>
+            <p class="text-sm text-gray-500 mt-1">{{ $t('config.passwordRequiredHint') }}</p>
           </div>
         </div>
 
         <div class="mb-6">
-          <label class="block text-sm font-medium text-gray-700 mb-2">访问密码</label>
+          <label class="block text-sm font-medium text-gray-700 mb-2">{{ $t('config.token') }}</label>
           <input
             ref="passwordInput"
             v-model="password"
             type="password"
             maxlength="256"
             class="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            placeholder="请输入访问密码"
+            :placeholder="$t('config.tokenPlaceholder')"
             @keyup.enter="handleConfirm"
           />
           <p v-if="errorMessage" class="mt-2 text-sm text-red-600">{{ errorMessage }}</p>
@@ -35,7 +35,7 @@
             :disabled="submitting || !password.trim()"
             class="px-6 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            {{ submitting ? '验证中...' : '确认' }}
+            {{ submitting ? $t('config.verifying') : $t('common.confirm') }}
           </button>
         </div>
       </div>
@@ -45,6 +45,9 @@
 
 <script setup lang="ts">
 import { ref, watch, nextTick } from 'vue';
+import { useI18n } from 'vue-i18n';
+
+const { t } = useI18n();
 
 const props = defineProps<{
   visible: boolean;

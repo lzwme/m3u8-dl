@@ -3,112 +3,112 @@
     <div class="p-1 md:p-2">
       <div class="space-y-6">
         <div class="bg-white rounded-lg shadow p-6 mb-6">
-          <h2 class="text-xl font-semibold mb-6">下载设置</h2>
+          <h2 class="text-xl font-semibold mb-6">{{ $t('config.downloadSettings') }}</h2>
           <form @submit.prevent="handleUpdateConfig" class="space-y-6">
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
-                <label class="block text-sm font-bold text-gray-700 mb-1">单任务并发下载线程数</label>
+                <label class="block text-sm font-bold text-gray-700 mb-1">{{ $t('config.threadNum') }}</label>
                 <input v-model.number="configStore.config.threadNum" type="number" min="0" max="16"
-                  class="w-full p-2 border rounded-lg focus:ring-blue-500" placeholder=" 请输入线程数（1-16）" />
+                  class="w-full p-2 border rounded-lg focus:ring-blue-500" :placeholder="$t('config.threadNumPlaceholder')" />
                 <p class="mt-1 text-sm text-gray-500">
-                  建议不超过 8 个，对单个服务器的并发请求数过多可能会导致被封 IP
+                  {{ $t('config.threadNumHint') }}
                 </p>
               </div>
 
               <div>
-                <label class="block text-sm font-bold text-gray-700 mb-1">最多同时下载视频数</label>
+                <label class="block text-sm font-bold text-gray-700 mb-1">{{ $t('config.maxDownloads') }}</label>
                 <input v-model.number="configStore.config.maxDownloads" type="number" min="1" max="10"
-                  class="w-full p-2 border rounded-lg focus:ring-blue-500" placeholder="请输入最大并发下载数（1-10）" />
-                <p class="mt-1 text-sm text-gray-500">最多同时下载任务数量，默认为 3</p>
+                  class="w-full p-2 border rounded-lg focus:ring-blue-500" :placeholder="$t('config.maxDownloadsPlaceholder')" />
+                <p class="mt-1 text-sm text-gray-500">{{ $t('config.maxDownloadsHint') }}</p>
               </div>
 
               <div>
-                <label class="block text-sm font-bold text-gray-700 mb-1">视频保存目录</label>
+                <label class="block text-sm font-bold text-gray-700 mb-1">{{ $t('config.saveDir') }}</label>
                 <div class="flex">
                   <input v-model="configStore.config.saveDir" type="text"
-                    class="w-full p-2 border rounded-lg focus:ring-blue-500" placeholder="请输入保存目录路径" />
+                    class="w-full p-2 border rounded-lg focus:ring-blue-500" :placeholder="$t('config.saveDirPlaceholder')" />
                 </div>
-                <p class="mt-1 text-sm text-gray-500">默认为当前目录下 downloads 文件夹</p>
+                <p class="mt-1 text-sm text-gray-500">{{ $t('config.saveDirHint') }}</p>
               </div>
 
               <div>
-                <label class="block text-sm font-bold text-gray-700 mb-1">下载完成后删除ts分片缓存</label>
+                <label class="block text-sm font-bold text-gray-700 mb-1">{{ $t('config.ffmpegPath') }}</label>
+                <input v-model="configStore.config.ffmpegPath" type="text"
+                  class="w-full p-2 border rounded-lg focus:ring-blue-500" :placeholder="$t('config.ffmpegPathPlaceholder')" />
+                <p class="mt-1 text-sm text-gray-500">{{ $t('config.ffmpegPathHint') }}</p>
+              </div>
+
+              <div>
+                <label class="block text-sm font-bold text-gray-700 mb-1">{{ $t('config.delCache') }}</label>
                 <div class="flex items-center mt-2">
                   <label class="inline-flex items-center">
                     <input v-model="configStore.config.delCache" type="checkbox"
                       class="form-checkbox h-5 w-5 text-blue-500 rounded focus:ring-blue-500" />
-                    <span class="ml-2 text-gray-700">删除分片文件</span>
+                    <span class="ml-2 text-gray-700">{{ $t('config.delCacheLabel') }}</span>
                   </label>
                 </div>
-                <p class="mt-1 text-sm text-gray-500">保存临时文件可以在重复下载时识别缓存</p>
+                <p class="mt-1 text-sm text-gray-500">{{ $t('config.delCacheHint') }}</p>
               </div>
 
               <div>
-                <label class="block text-sm font-bold text-gray-700 mb-1">下载完成后转换格式</label>
+                <label class="block text-sm font-bold text-gray-700 mb-1">{{ $t('config.convert') }}</label>
                 <div class="flex items-center mt-2">
                   <label class="inline-flex items-center">
                     <input v-model="configStore.config.convert" type="checkbox"
                       class="form-checkbox h-5 w-5 text-blue-500 rounded focus:ring-blue-500" />
-                    <span class="ml-2 text-gray-700">合并转换为 MP4/TS 文件</span>
+                    <span class="ml-2 text-gray-700">{{ $t('config.convertLabel') }}</span>
                   </label>
                 </div>
               </div>
 
               <div>
-                <label class="block text-sm font-bold text-gray-700 mb-1">显示预览按钮</label>
+                <label class="block text-sm font-bold text-gray-700 mb-1">{{ $t('config.showPreview') }}</label>
                 <div class="flex items-center mt-2">
                   <label class="inline-flex items-center">
                     <input v-model="configStore.config.showPreview" type="checkbox"
                       class="form-checkbox h-5 w-5 text-blue-500 rounded focus:ring-blue-500" />
-                    <span class="ml-2 text-gray-700">在下载列表中显示预览按钮</span>
+                    <span class="ml-2 text-gray-700">{{ $t('config.showPreviewLabel') }}</span>
                   </label>
                 </div>
               </div>
 
               <div>
-                <label class="block text-sm font-bold text-gray-700 mb-1">显示边下边播按钮</label>
+                <label class="block text-sm font-bold text-gray-700 mb-1">{{ $t('config.showLocalPlay') }}</label>
                 <div class="flex items-center mt-2">
                   <label class="inline-flex items-center">
                     <input v-model="configStore.config.showLocalPlay" type="checkbox"
                       class="form-checkbox h-5 w-5 text-blue-500 rounded focus:ring-blue-500" />
-                    <span class="ml-2 text-gray-700">在下载列表中显示边下边播按钮</span>
+                    <span class="ml-2 text-gray-700">{{ $t('config.showLocalPlayLabel') }}</span>
                   </label>
                 </div>
-              </div>
-
-              <div>
-                <label class="block text-sm font-bold text-gray-700 mb-1">ffmpeg 可执行文件路径</label>
-                <input v-model="configStore.config.ffmpegPath" type="text"
-                  class="w-full p-2 border rounded-lg focus:ring-blue-500" placeholder="留空则使用系统 PATH 中的 ffmpeg" />
-                <p class="mt-1 text-sm text-gray-500">指定 ffmpeg 可执行文件的完整路径。如果留空，则尝试使用系统 PATH 环境变量中的 ffmpeg</p>
               </div>
             </div>
 
             <div class="flex justify-end space-x-4">
               <button type="submit" class="px-6 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg">
-                保存配置
+                {{ $t('config.save') }}
               </button>
             </div>
           </form>
         </div>
 
         <div class="bg-white rounded-lg shadow p-6">
-          <h2 class="text-xl font-semibold mb-6">本地设置</h2>
+          <h2 class="text-xl font-semibold mb-6">{{ $t('config.localConfig') }}</h2>
           <form @submit.prevent="handleUpdateLocalConfig" class="space-y-6">
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
-                <label class="block text-sm font-bold text-gray-700 mb-1">访问密码</label>
+                <label class="block text-sm font-bold text-gray-700 mb-1">{{ $t('config.token') }}</label>
                 <div class="flex">
                   <input v-model="token" type="password" maxlength="256"
-                    class="w-full p-2 border rounded-lg focus:ring-blue-500" placeholder="请输入访问密码" />
+                    class="w-full p-2 border rounded-lg focus:ring-blue-500" :placeholder="$t('config.tokenPlaceholder')" />
                 </div>
-                <p class="mt-1 text-sm text-gray-500">若服务端设置了访问密码(token)，请在此输入</p>
+                <p class="mt-1 text-sm text-gray-500">{{ $t('config.tokenHint') }}</p>
               </div>
             </div>
 
             <div class="flex justify-end space-x-4">
               <button type="submit" class="px-6 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg">
-                保存配置
+                {{ $t('config.save') }}
               </button>
             </div>
           </form>
@@ -120,10 +120,13 @@
 
 <script setup lang="ts">
 import { ref, onMounted } from 'vue';
+import { useI18n } from 'vue-i18n';
 import Layout from '@/components/Layout.vue';
 import { useConfigStore } from '@/stores/config';
 import { useWebSocket } from '@/composables/useWebSocket';
 import { toast } from '@/utils/toast';
+
+const { t } = useI18n();
 
 const configStore = useConfigStore();
 const token = ref(configStore.token || '');
@@ -138,7 +141,7 @@ onMounted(async () => {
 async function handleUpdateConfig() {
   const result = await configStore.updateConfig();
   toast({
-    text: result.message || '配置已更新',
+    text: result.message || t('config.configUpdated'),
     type: result.code ? 'error' : 'success',
   });
 }
@@ -168,7 +171,7 @@ async function handleUpdateLocalConfig() {
   } else {
     localStorage.removeItem('token');
   }
-  toast({ text: '本地配置已更新', type: 'success' });
+  toast({ text: t('config.localConfigUpdated'), type: 'success' });
 }
 </script>
 

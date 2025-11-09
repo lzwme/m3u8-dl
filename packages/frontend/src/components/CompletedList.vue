@@ -2,9 +2,9 @@
   <div class="bg-white rounded-lg shadow">
     <div class="p-4">
       <div class="flex justify-between items-center">
-        <h2 class="text-xl font-semibold">已完成任务</h2>
+        <h2 class="text-xl font-semibold">{{ $t('completedList.title') }}</h2>
         <div class="flex items-center space-x-2">
-          <span class="text-sm text-gray-600">共 {{ completedTasks.length }} 项</span>
+          <span class="text-sm text-gray-600">{{ $t('completedList.total', { count: completedTasks.length }) }}</span>
         </div>
       </div>
     </div>
@@ -13,27 +13,27 @@
     <div class="px-4 pb-2 border-b">
       <div class="flex items-center space-x-4">
         <div class="flex items-center space-x-2">
-          <label class="text-sm text-gray-600">排序方式：</label>
+          <label class="text-sm text-gray-600">{{ $t('completedList.sortBy') }}</label>
           <select
             v-model="sortField"
             @change="handleSortChange"
             class="px-3 py-1 text-sm border rounded-lg focus:ring-blue-500 focus:border-blue-500"
           >
-            <option value="startTime">开始时间</option>
-            <option value="endTime">结束时间</option>
-            <option value="name">名称</option>
-            <option value="size">大小</option>
-            <option value="saveDir">保存位置</option>
+            <option value="startTime">{{ $t('completedList.sortStartTime') }}</option>
+            <option value="endTime">{{ $t('completedList.sortEndTime') }}</option>
+            <option value="name">{{ $t('completedList.sortName') }}</option>
+            <option value="size">{{ $t('completedList.sortSize') }}</option>
+            <option value="saveDir">{{ $t('completedList.sortSaveDir') }}</option>
           </select>
         </div>
         <div class="flex items-center space-x-2">
           <button
             @click="toggleSortOrder"
             class="px-3 py-1 text-sm bg-gray-100 hover:bg-gray-200 rounded-lg flex items-center"
-            :title="sortOrder === 'asc' ? '升序' : '降序'"
+            :title="sortOrder === 'asc' ? $t('completedList.ascending') : $t('completedList.descending')"
           >
             <i class="fas" :class="sortOrder === 'asc' ? 'fa-sort-up' : 'fa-sort-down'"></i>
-            <span class="ml-1">{{ sortOrder === 'asc' ? '升序' : '降序' }}</span>
+            <span class="ml-1">{{ sortOrder === 'asc' ? $t('completedList.ascending') : $t('completedList.descending') }}</span>
           </button>
         </div>
         <div class="flex-1"></div>
@@ -42,7 +42,7 @@
             type="text"
             v-model="searchInput"
             class="px-3 py-1 text-sm border rounded-lg focus:ring-blue-500 focus:border-blue-500"
-            placeholder="搜索任务名称或URL地址"
+            :placeholder="$t('completedList.searchPlaceholder')"
             @input="handleSearch"
           />
           <i class="fas fa-search text-gray-400"></i>
@@ -65,19 +65,19 @@
               />
             </th>
             <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-              操作
+              {{ $t('completedList.action') }}
             </th>
             <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-              任务名称
+              {{ $t('completedList.taskName') }}
             </th>
             <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-              文件大小
+              {{ $t('completedList.fileSize') }}
             </th>
             <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-              开始时间
+              {{ $t('completedList.startTime') }}
             </th>
             <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-              结束时间
+              {{ $t('completedList.endTime') }}
             </th>
           </tr>
         </thead>
@@ -100,22 +100,22 @@
                 <button
                   @click="showTaskDetail(task)"
                   class="text-blue-600 hover:text-blue-800"
-                  title="查看详情"
+                  :title="$t('completedList.viewDetail')"
                 >
                   <i class="fas fa-info-circle"></i>
                 </button>
                 <button
-                  v-if="config?.showLocalPlay && task.localVideo"
+                  v-if="task.localVideo"
                   @click="localPlay(task)"
                   class="text-green-600 hover:text-green-800"
-                  title="播放"
+                  :title="$t('completedList.play')"
                 >
                   <i class="fas fa-play-circle"></i>
                 </button>
                 <button
                   @click="deleteTask(task.url)"
                   class="text-red-600 hover:text-red-800"
-                  title="删除"
+                  :title="$t('completedList.delete')"
                 >
                   <i class="fas fa-trash"></i>
                 </button>
@@ -147,7 +147,7 @@
             <td colspan="6" class="px-4 py-8 text-center text-gray-500">
               <div class="flex flex-col items-center">
                 <i class="fas fa-inbox text-4xl mb-2 text-gray-300"></i>
-                <p>暂无已完成的任务</p>
+                <p>{{ $t('completedList.noCompletedTasks') }}</p>
               </div>
             </td>
           </tr>
@@ -160,13 +160,13 @@
       v-if="selectedTasks.length > 0"
       class="px-4 py-3 bg-blue-50 border-t flex items-center justify-between"
     >
-      <span class="text-sm text-gray-700">已选择 {{ selectedTasks.length }} 项</span>
+      <span class="text-sm text-gray-700">{{ $t('completedList.selected', { count: selectedTasks.length }) }}</span>
       <div class="flex items-center space-x-2">
         <button
           @click="handleBatchDelete"
           class="px-3 py-1 text-sm bg-red-500 hover:bg-red-600 text-white rounded"
         >
-          <i class="fas fa-trash mr-1"></i>删除选中
+          <i class="fas fa-trash mr-1"></i>{{ $t('completedList.deleteSelected') }}
         </button>
       </div>
     </div>
@@ -175,10 +175,13 @@
 
 <script setup lang="ts">
 import { computed, ref } from 'vue';
+import { useI18n } from 'vue-i18n';
 import { useTasksStore } from '@/stores/tasks';
 import { useConfigStore } from '@/stores/config';
 import { formatSize } from '@/utils/format';
 import type { DownloadTask } from '@/types/task';
+
+const { t } = useI18n();
 
 const tasksStore = useTasksStore();
 const configStore = useConfigStore();
@@ -301,7 +304,10 @@ function toggleTaskSelection(url: string) {
 function formatDateTime(timestamp?: number): string {
   if (!timestamp) return '-';
   const date = new Date(timestamp);
-  return date.toLocaleString('zh-CN', {
+  // Use locale from i18n
+  const { locale } = useI18n();
+  const dateLocale = locale.value === 'zh' ? 'zh-CN' : 'en-US';
+  return date.toLocaleString(dateLocale, {
     year: 'numeric',
     month: '2-digit',
     day: '2-digit',
@@ -311,7 +317,6 @@ function formatDateTime(timestamp?: number): string {
   });
 }
 
-// 在模板中使用 configStore.config.showLocalPlay，Pinia 会自动解包 ref
 // 为了类型安全，使用 computed 来访问
 const config = computed(() => configStore.config);
 

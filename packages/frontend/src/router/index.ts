@@ -1,8 +1,8 @@
 import { createRouter, createWebHashHistory } from 'vue-router';
 import About from '@/views/About.vue';
+import Completed from '@/views/Completed.vue';
 import Config from '@/views/Config.vue';
 import Download from '@/views/Download.vue';
-import Completed from '@/views/Completed.vue';
 import WebBrowser from '@/views/WebBrowser.vue';
 
 const router = createRouter({

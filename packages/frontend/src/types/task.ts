@@ -12,6 +12,7 @@ export interface DownloadTask {
   avgSpeedDesc?: string;
   remainingTime?: number;
   downloadedSize?: number;
+  duration?: number;
   size?: number;
   tsCount?: number;
   tsSuccess?: number;

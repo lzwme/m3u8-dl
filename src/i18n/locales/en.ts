@@ -1,0 +1,99 @@
+export default {
+  cli: {
+    command: {
+      download: {
+        description: 'm3u8 url. Can also be a local txt file specifying a group of m3u8 URLs, suitable for batch download scenarios',
+      },
+      server: {
+        description: 'Start download center web service',
+      },
+      search: {
+        description: 'm3u8 video online search and download',
+      },
+    },
+    option: {
+      silent: 'Enable silent mode.',
+      debug: 'Enable debug mode.',
+      filename:
+        'Specify the save name of the downloaded file. Default is url md5 value. If multiple url addresses are specified, sequence numbers will be added at the end',
+      threadNum: 'Concurrent download thread count. Default is cpu * 2. Can set different values to observe download effects',
+      force: 'Enable force execution mode. Whether to continue downloading and generating when file already exists',
+      noProgress: 'Whether not to print progress information',
+      play: 'Whether to play while downloading',
+      cacheDir: 'Temporary file save directory. Default is cache',
+      saveDir: 'Path to save downloaded files. Default is current directory',
+      noDelCache:
+        'Whether to delete temporary files after successful download. Default is true. Saving temporary files can identify cache when re-downloading',
+      noConvert: 'After successful download, whether not to merge and convert to mp4 file. Default is true.',
+      ffmpegPath: 'Specify ffmpeg executable file path. If not specified, will try to use ffmpeg from system PATH',
+      headers: 'Custom request headers. Format: key1=value1\nkey2=value2',
+      type: 'Specify download type. Default is auto-detect based on URL. If batch downloading multiple different URL types, do not set this. Options: m3u8, file, parser',
+      ignoreSegments:
+        'Ignore video segments, use - to separate start and end time points, multiple separated by commas. Example: 0-10,20-30',
+      port: 'Specify web service port. Default is 6600',
+      token: 'Specify web service password (authorization header). Default is empty',
+      url: 'Video search API address (m3u8 collection site standard API)',
+      apidir: 'Specify the directory or specific path where custom video search API is located',
+      lang: 'Specify language. Options: zh, en',
+    },
+  },
+  api: {
+    error: {
+      unauthorized: 'Unauthorized access',
+      configSaveFailed: 'Config save failed',
+      unknown: 'Unknown error',
+      downloadFailed: 'Download failed',
+      accessDenied: 'Access denied',
+      invalidUrl: 'Invalid url parameter',
+      notFound: 'Not Found',
+    },
+    success: {
+      configUpdated: 'Config updated successfully',
+      queueCleared: 'Cleared {count} pending download tasks',
+      downloadStarted: 'Started {count} download task(s)',
+      paused: 'Paused {count} download task(s)',
+      resumed: 'Resumed {count} download task(s)',
+      noResumableTasks: 'No resumable download tasks found',
+      deleted: 'Deleted {count} download task(s)',
+    },
+  },
+  download: {
+    status: {
+      starting: 'Starting download for',
+      fileExists: 'file already exist:',
+      completed: 'Download completed',
+      failed: 'Download failed',
+      retry: 'Retry',
+    },
+    error: {
+      parseFailed: 'Failed to parse M3U8',
+      downloadFailed: 'Download failed',
+      retryFailed: 'Retry failed',
+    },
+  },
+  error: {
+    download: {
+      failed: 'Download failed',
+      parseFailed: 'Parse failed',
+    },
+    unknown: 'Unknown error',
+  },
+  prompt: {
+    search: {
+      keyword: 'Please enter keyword',
+      selectVideo: 'Found {count} results, please select:',
+      continueDownload: 'There is an unfinished download from last time 【{name}】, continue?',
+      playWhileDownload: '【{name}】Play while downloading?',
+      noResults: 'No results found',
+      getVideoInfoFailed: 'Failed to get video information!',
+      noPlayUrl: 'No playback URL information obtained',
+      reSearch: 'Re-search',
+      allDownload: 'Download All',
+    },
+  },
+  common: {
+    exit: 'Exit',
+    cancel: 'Cancel',
+    confirm: 'Confirm',
+  },
+};

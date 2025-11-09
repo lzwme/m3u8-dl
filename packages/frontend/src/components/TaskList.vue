@@ -2,55 +2,55 @@
   <div class="bg-white rounded-lg shadow">
     <div class="p-4">
       <div class="flex justify-between items-center">
-        <h2 class="text-xl font-semibold">下载任务</h2>
+        <h2 class="text-xl font-semibold">{{ $t('taskList.title') }}</h2>
         <div class="flex space-x-2">
           <button
             @click="$emit('new-download')"
             class="px-3 py-1 text-sm bg-blue-500 hover:bg-blue-600 text-white rounded"
           >
-            <i class="fas fa-plus mr-1"></i>新建
+            <i class="fas fa-plus mr-1"></i>{{ $t('taskList.new') }}
           </button>
           <button
             v-if="selectedTasks.length > 0"
             @click="$emit('pause', selectedTasks)"
             class="px-3 py-1 text-sm bg-yellow-500 text-white rounded hover:bg-yellow-600"
           >
-            <i class="fas fa-pause mr-1"></i>暂停选中
+            <i class="fas fa-pause mr-1"></i>{{ $t('taskList.pauseSelected') }}
           </button>
           <button
             v-if="selectedTasks.length > 0"
             @click="$emit('resume', selectedTasks)"
             class="px-3 py-1 text-sm bg-green-500 text-white rounded hover:bg-green-600"
           >
-            <i class="fas fa-play mr-1"></i>开始选中
+            <i class="fas fa-play mr-1"></i>{{ $t('taskList.resumeSelected') }}
           </button>
           <button
             v-if="selectedTasks.length > 0"
             @click="$emit('delete', selectedTasks)"
             class="px-3 py-1 text-sm bg-red-500 text-white rounded hover:bg-red-600"
           >
-            <i class="fas fa-trash mr-1"></i>删除选中
+            <i class="fas fa-trash mr-1"></i>{{ $t('taskList.deleteSelected') }}
           </button>
           <button
             v-if="selectedTasks.length === 0"
             @click="$emit('pause', 'all')"
             class="px-3 py-1 text-sm bg-yellow-500 text-white rounded hover:bg-yellow-600"
           >
-            <i class="fas fa-pause mr-1"></i>全部暂停
+            <i class="fas fa-pause mr-1"></i>{{ $t('taskList.pauseAll') }}
           </button>
           <button
             v-if="selectedTasks.length === 0"
             @click="$emit('resume', 'all')"
             class="px-3 py-1 text-sm bg-green-500 text-white rounded hover:bg-green-600"
           >
-            <i class="fas fa-play mr-1"></i>全部开始
+            <i class="fas fa-play mr-1"></i>{{ $t('taskList.resumeAll') }}
           </button>
           <button
             v-if="selectedTasks.length === 0"
             @click="$emit('clear-queue')"
             class="px-3 py-1 text-sm bg-red-500 text-white rounded hover:bg-red-600"
           >
-            <i class="fas fa-trash mr-1"></i>清空队列
+            <i class="fas fa-trash mr-1"></i>{{ $t('taskList.clearQueue') }}
           </button>
         </div>
       </div>
@@ -61,8 +61,8 @@
               type="text"
               v-model="searchInput"
               class="w-full pl-10 pr-4 py-2 border rounded-lg focus:ring-blue-500 focus:border-blue-500"
-              placeholder="搜索任务名称或URL"
-              aria-label="搜索任务"
+              :placeholder="$t('taskList.searchPlaceholder')"
+              :aria-label="$t('taskList.searchLabel')"
             />
             <i class="fas fa-search absolute left-3 top-3 text-gray-400"></i>
           </div>
@@ -72,21 +72,21 @@
             :value="statusFilter"
             @change="updateStatusFilter"
             class="px-3 py-2 border rounded-lg focus:ring-blue-500 focus:border-blue-500"
-            title="按状态筛选"
-            aria-label="按状态筛选"
+            :title="$t('taskList.filterByStatus')"
+            :aria-label="$t('taskList.filterByStatus')"
           >
-            <option value="">全部</option>
-            <option value="resume">下载中</option>
-            <option value="pending">等待中</option>
-            <option value="pause">已暂停</option>
-            <option value="error">异常</option>
+            <option value="">{{ $t('taskList.all') }}</option>
+            <option value="resume">{{ $t('taskList.status.resume') }}</option>
+            <option value="pending">{{ $t('taskList.status.pending') }}</option>
+            <option value="pause">{{ $t('taskList.status.pause') }}</option>
+            <option value="error">{{ $t('taskList.status.error') }}</option>
             <!-- <option value="done">已完成</option> -->
           </select>
           <button
             @click="clearFilters"
             class="px-3 py-2 text-gray-600 hover:text-gray-800"
-            title="清除筛选条件"
-            aria-label="清除筛选条件"
+            :title="$t('taskList.clearFilters')"
+            :aria-label="$t('taskList.clearFilters')"
           >
             <i class="fas fa-times"></i>
           </button>
@@ -103,24 +103,24 @@
             :indeterminate="isIndeterminate"
             @change="toggleSelectAll"
             class="form-checkbox h-5 w-5 text-blue-500 rounded focus:ring-blue-500 mr-2"
-            title="全选/反选"
+            :title="$t('taskList.selectAll')"
           />
-          <span class="text-gray-700 text-sm">全选/反选</span>
+          <span class="text-gray-700 text-sm">{{ $t('taskList.selectAll') }}</span>
           <span class="ml-4 text-gray-400 text-xs">
-            已选 {{ selectedTasks.length }} / {{ filteredTasks.length }}
+            {{ $t('taskList.selected') }} {{ selectedTasks.length }} / {{ filteredTasks.length }}
           </span>
         </div>
         <div class="flex items-center">
           <i class="fas fa-tasks text-blue-600 mr-1"></i>
-          <span>总数: {{ filteredTasks.length }}</span>
+          <span>{{ $t('taskList.total') }}: {{ filteredTasks.length }}</span>
         </div>
         <div class="flex items-center">
           <i class="fas fa-clock text-yellow-500 mr-1"></i>
-          <span>等待中: {{ queueStatus.queueLength }}</span>
+          <span>{{ $t('taskList.pending') }}: {{ queueStatus.queueLength }}</span>
         </div>
         <div class="flex items-center">
           <i class="fas fa-download text-green-500 mr-1"></i>
-          <span>下载中: {{ queueStatus.activeDownloads.length }}</span>
+          <span>{{ $t('taskList.downloading') }}: {{ queueStatus.activeDownloads.length }}</span>
         </div>
       </div>
     </div>
@@ -151,10 +151,13 @@
 
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue';
+import { useI18n } from 'vue-i18n';
 import { useTasksStore } from '@/stores/tasks';
 import TaskItem from './TaskItem.vue';
 import EmptyState from './EmptyState.vue';
 import type { DownloadTask } from '@/types/task';
+
+const { t } = useI18n();
 
 const tasksStore = useTasksStore();
 
