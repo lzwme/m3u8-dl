@@ -120,10 +120,24 @@ async function m3u8InfoParse(u: string, o: M3u8DLOptions = {}) {
     result.m3u8Info = m3u8Info;
 
     if (options.ignoreSegments) {
+      const totalDuration = m3u8Info.duration;
       const timeSegments = options.ignoreSegments
         .split(',')
-        .map(d => d.split(/[- ]+/).map(d => +d.trim()))
-        .filter(d => d[0] && d[1] && d[0] !== d[1]);
+        .map(d => {
+          const trimmed = d.trim();
+          // 支持 END-60 格式，表示末尾N秒
+          const parts = trimmed.split(/[- ]+/).map(d => d.trim());
+          if (parts.length === 2 && parts[0].toUpperCase() === 'END') {
+            const seconds = +parts[1];
+            if (!Number.isNaN(seconds) && seconds > 0) {
+              const start = Math.max(0, totalDuration - seconds);
+              return [start, totalDuration];
+            }
+          }
+          // 原有的 start-end 格式
+          return parts.map(d => +d);
+        })
+        .filter(d => d[0] !== undefined && d[1] !== undefined && !Number.isNaN(d[0]) && !Number.isNaN(d[1]) && d[0] !== d[1]);
 
       if (timeSegments.length) {
         const total = m3u8Info.data.length;
