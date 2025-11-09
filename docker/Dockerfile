@@ -9,6 +9,8 @@ RUN npm i -g pnpm
 RUN pnpm install
 RUN pnpm add -P express ws
 RUN pnpm build
+# 下载 CDN 静态资源到本地
+RUN pnpm download-cdn
 # 下载ariang
 RUN wget https://github.com/mayswind/AriaNg/releases/download/1.3.10/AriaNg-1.3.10-AllInOne.zip -O ariang.zip
 RUN unzip ariang.zip -d /app/client/ariang

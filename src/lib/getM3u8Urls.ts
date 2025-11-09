@@ -1,5 +1,5 @@
 import type { OutgoingHttpHeaders } from 'node:http';
-import { color, Request, concurrency } from '@lzwme/fe-utils';
+import { color, concurrency, Request } from '@lzwme/fe-utils';
 import { formatHeaders, logger } from './utils.js';
 
 export interface GetM3u8UrlsOption {

@@ -49,6 +49,17 @@ const T = {
     //   .forEach(filepath => rmrf(filepath) & total++);
 
     // console.log('node_modules 清理完成，共清理文件：', total);
+
+    // 下载 CDN 静态资源到本地（用于 electron 构建）
+    console.log('[electron]下载 CDN 静态资源...');
+    try {
+      execSync(`node ${path.resolve(rootDir, 'scripts/download-cdn-resources.js')}`, {
+        stdio: 'inherit',
+        cwd: rootDir,
+      });
+    } catch (error) {
+      console.warn('[electron]CDN 资源下载失败，继续构建:', error.message);
+    }
   },
   async start() {
     this.prepare();

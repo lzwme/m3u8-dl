@@ -24,6 +24,12 @@
           <p class="text-gray-600 whitespace-pre-line">{{ playConfirmMessage }}</p>
         </template>
       </ConfirmDialog>
+      <VideoPlayer
+        :visible="showVideoPlayer"
+        :initial-url="playUrl"
+        :initial-task="playTask"
+        @close="showVideoPlayer = false"
+      />
     </div>
   </Layout>
 </template>
@@ -36,6 +42,7 @@ import CompletedList from '@/components/CompletedList.vue';
 import TaskDetailModal from '@/components/TaskDetailModal.vue';
 import DeleteConfirmDialog from '@/components/DeleteConfirmDialog.vue';
 import ConfirmDialog from '@/components/ConfirmDialog.vue';
+import VideoPlayer from '@/components/VideoPlayer.vue';
 import { useTasksStore } from '@/stores/tasks';
 import { deleteDownload } from '@/utils/request';
 import { toast } from '@/utils/toast';
@@ -48,11 +55,14 @@ const tasksStore = useTasksStore();
 const showDetailModal = ref(false);
 const showDeleteDialog = ref(false);
 const showPlayConfirmDialog = ref(false);
+const showVideoPlayer = ref(false);
 const selectedTask = ref<DownloadTask | null>(null);
 const deleteUrls = ref<string[]>([]);
 const pendingPlayData = ref<{ task: DownloadTask; url: string } | null>(null);
 const playConfirmMessage = ref('');
 const playErrorText = ref('');
+const playUrl = ref('');
+const playTask = ref<DownloadTask | null>(null);
 
 function showTaskDetail(task: DownloadTask) {
   selectedTask.value = task;
@@ -87,18 +97,19 @@ function handleLocalPlay(data: { task: DownloadTask; url: string }) {
   }
 
   // 正常状态直接播放
-  doPlay(url);
+  doPlay(url, task);
 }
 
 function handlePlayConfirm() {
   if (pendingPlayData.value) {
-    doPlay(pendingPlayData.value.url);
+    doPlay(pendingPlayData.value.url, pendingPlayData.value.task);
     pendingPlayData.value = null;
   }
 }
 
-function doPlay(url: string) {
-  const playUrl = `./play.html?url=${encodeURIComponent(url)}`;
-  window.open(playUrl, '_blank', 'width=1000,height=600');
+function doPlay(url: string, task?: DownloadTask | null) {
+  playUrl.value = url;
+  playTask.value = task || null;
+  showVideoPlayer.value = true;
 }
 </script>

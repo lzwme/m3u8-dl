@@ -22,6 +22,7 @@
     "build": "npm run clean && npm run build:cjs && npm run build:frontend",
     "build:cjs": "tsc -p tsconfig.cjs.json",
     "build:frontend": "pnpm -F @lzwme/m3u8-dl-frontend build",
+    "download-cdn": "node scripts/download-cdn-resources.js",
     "doc": "typedoc src/ --exclude **/*.spec.ts --out docs --tsconfig tsconfig.module.json",
     "version": "standard-version",
     "dist": "npm run build",

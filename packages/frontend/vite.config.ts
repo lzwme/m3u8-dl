@@ -25,26 +25,15 @@ export default defineConfig({
   server: {
     port: 5173,
     proxy: {
-      '/api': {
-        target: 'http://localhost:6600',
-        changeOrigin: true,
-        rewrite: (path) => path, // 保持路径不变
-      },
-      '/localplay': {
-        target: 'http://localhost:6600',
-        changeOrigin: true,
-        rewrite: (path) => path, // 保持路径不变
-      },
-      '/ws': {
-        target: 'ws://localhost:6600',
-        ws: true,
-        changeOrigin: true,
-      },
-      '/play.html': {
-        target: 'http://localhost:6600',
-        changeOrigin: true,
-        rewrite: (path) => path, // 保持路径不变
-      },
+      ...['/api', '/localplay', '/local', '/ws', '/play.html'].reduce((acc, path) => ({
+        ...acc,
+        [path]: {
+          target: 'http://localhost:6600',
+          changeOrigin: true,
+          ws: path === '/ws',
+          rewrite: (path) => path, // 保持路径不变
+        },
+      }), {}),
     },
   },
   // 定义全局变量，用于版本号替换

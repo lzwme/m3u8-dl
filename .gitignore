@@ -27,5 +27,4 @@ tsCheckWhiteList.json
 # /*(^.d).ts
 /*.mp4
 /client/
-!/client/local/cdn
-!/client/logo.png
+!/client/local/cdn/font-awesome

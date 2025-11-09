@@ -32,6 +32,12 @@
           <p class="text-gray-600 whitespace-pre-line">{{ playConfirmMessage }}</p>
         </template>
       </ConfirmDialog>
+      <VideoPlayer
+        :visible="showVideoPlayer"
+        :initial-url="playUrl"
+        :initial-task="playTask"
+        @close="showVideoPlayer = false"
+      />
     </div>
   </Layout>
 </template>
@@ -45,6 +51,7 @@ import NewDownloadDialog from '@/components/NewDownloadDialog.vue';
 import TaskDetailModal from '@/components/TaskDetailModal.vue';
 import DeleteConfirmDialog from '@/components/DeleteConfirmDialog.vue';
 import ConfirmDialog from '@/components/ConfirmDialog.vue';
+import VideoPlayer from '@/components/VideoPlayer.vue';
 import { useTasksStore } from '@/stores/tasks';
 import { useConfigStore } from '@/stores/config';
 import { useWebSocket } from '@/composables/useWebSocket';
@@ -61,11 +68,14 @@ const showDialog = ref(false);
 const showDetailModal = ref(false);
 const showDeleteDialog = ref(false);
 const showPlayConfirmDialog = ref(false);
+const showVideoPlayer = ref(false);
 const selectedTask = ref<DownloadTask | null>(null);
 const deleteUrls = ref<string[]>([]);
 const pendingPlayData = ref<{ task: DownloadTask; url: string } | null>(null);
 const playConfirmMessage = ref('');
 const playErrorText = ref('');
+const playUrl = ref('');
+const playTask = ref<DownloadTask | null>(null);
 
 onMounted(async () => {
   // WebSocket 连接已在 App.vue 中初始化，这里只需要确保连接存在
@@ -170,19 +180,20 @@ function handleLocalPlay(data: { task: DownloadTask; url: string }) {
   }
 
   // 正常状态直接播放
-  doPlay(url);
+  doPlay(url, task);
 }
 
 function handlePlayConfirm() {
   if (pendingPlayData.value) {
-    doPlay(pendingPlayData.value.url);
+    doPlay(pendingPlayData.value.url, pendingPlayData.value.task);
     pendingPlayData.value = null;
   }
 }
 
-function doPlay(url: string) {
-  const playUrl = `./play.html?url=${encodeURIComponent(url)}`;
-  window.open(playUrl, '_blank', 'width=1000,height=600');
+function doPlay(url: string, task?: DownloadTask | null) {
+  playUrl.value = url;
+  playTask.value = task || null;
+  showVideoPlayer.value = true;
 }
 
 function initElectronEvents() {

@@ -199,18 +199,34 @@ export class DLServer {
 
     app.use((req, res, next) => {
       // 处理 SPA 路由：根路径和 /page/* 路径都返回 index.html
-      if (['/', '/index.html'].includes(req.path) || req.path.startsWith('/page/')) {
+      const isIndexPage = ['/', '/index.html'].includes(req.path) || req.path.startsWith('/page/');
+      const isPlayPage = req.path.startsWith('/play.html');
+      if (isIndexPage || isPlayPage) {
         const version = this.serverInfo.version;
-        let indexHtml = readFileSync(resolve(rootDir, 'client/index.html'), 'utf-8').replaceAll('{{version}}', version);
+        let htmlContent = readFileSync(resolve(rootDir, `client/${isPlayPage ? 'play' : 'index'}.html`), 'utf-8').replaceAll(
+          '{{version}}',
+          version
+        );
 
         if (existsSync(resolve(rootDir, 'client/local/cdn'))) {
-          indexHtml = indexHtml
-            .replaceAll('https://s4.zstatic.net/ajax/libs', 'local/cdn')
-            .replaceAll(/integrity="[^"]+"\n?/g, '')
-            .replace('https://cdn.tailwindcss.com/3.4.16', 'local/cdn/tailwindcss/3.4.16/tailwindcss.min.js');
+          // 提取所有 zstatic.net 的 js 和 css 资源地址，若子路径存在于 local/cdn 目录下则替换为本地路径
+          const zstaticRegex = /https:\/\/s4\.zstatic\.net\/ajax\/libs\/[^\s"'`<>]+\.(js|css)/g;
+          const zstaticMatches = htmlContent.match(zstaticRegex);
+
+          if (zstaticMatches) {
+            for (const match of zstaticMatches) {
+              const relativePath = match.split('libs/')[1];
+              const localPath = resolve(rootDir, `client/local/cdn/${relativePath}`);
+              if (existsSync(localPath)) {
+                htmlContent = htmlContent.replaceAll(match, `local/cdn/${relativePath}`);
+              }
+            }
+
+            htmlContent = htmlContent.replaceAll(/integrity="[^"]+"\n?/g, '');
+          }
         }
 
-        res.setHeader('content-type', 'text/html').send(indexHtml);
+        res.setHeader('content-type', 'text/html').send(htmlContent);
       } else {
         next();
       }
