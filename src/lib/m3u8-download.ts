@@ -5,6 +5,7 @@ import { Barrier, formatTimeCost, rmrfAsync } from '@lzwme/fe-utils';
 import { formatByteSize } from '@lzwme/fe-utils/cjs/common/helper';
 import { blueBright, cyan, cyanBright, green, greenBright, magenta, magentaBright, yellowBright } from 'console-log-colors';
 import type { M3u8DLOptions, M3u8DLProgressStats, M3u8DLResult, M3u8WorkerPool, TsItemInfo } from '../types/m3u8.js';
+import { getLang, t } from './i18n.js';
 import { formatOptions } from './format-options.js';
 import { localPlay, toLocalM3u8 } from './local-play.js';
 import { m3u8Convert } from './m3u8-convert.js';
@@ -111,8 +112,9 @@ async function m3u8InfoParse(u: string, o: M3u8DLOptions = {}) {
 
   if (!options.force && existsSync(filepath)) return result;
 
+  const lang = getLang(o.lang);
   const m3u8Info = await parseM3U8(url, resolve(options.cacheDir, urlMd5), options.headers as IncomingHttpHeaders).catch(e => {
-    logger.error('[parseM3U8][failed]', e.message);
+    logger.error(t('download.status.parseFailed', lang), e.message);
     console.log(e);
   });
 
@@ -156,7 +158,7 @@ async function m3u8InfoParse(u: string, o: M3u8DLOptions = {}) {
         const ignoredCount = total - m3u8Info.data.length;
         if (ignoredCount) {
           m3u8Info.tsCount = m3u8Info.data.length;
-          logger.info(`[parseM3U8][ignoreSegments] ignored ${cyanBright(ignoredCount)} segments`);
+          logger.info(t('download.status.segmentsIgnored', lang, { count: cyanBright(ignoredCount) }));
           m3u8Info.duration = +Number(m3u8Info.duration).toFixed(2);
         }
       }
@@ -221,12 +223,13 @@ export async function m3u8Download(url: string, options: M3u8DLOptions = {}) {
   }
 
   // 原有的下载逻辑
-  logger.info('Starting download for', cyanBright(url));
+  const lang = getLang(options.lang);
+  logger.info(t('download.status.starting', lang), cyanBright(url));
   const result: M3u8DLResult = await m3u8InfoParse(url, options);
   options = result.options;
 
   if (!options.force && existsSync(result.filepath) && !result.m3u8Info) {
-    logger.info('file already exist:', result.filepath);
+    logger.info(t('download.status.fileExists', lang), result.filepath);
     result.isExist = true;
     return result;
   }
@@ -266,14 +269,14 @@ export async function m3u8Download(url: string, options: M3u8DLOptions = {}) {
           if (!res || err) {
             if (err) {
               console.log('\n');
-              logger.error('[TS-DL][error]', info.index, err, res || '');
+              logger.error(t('download.status.tsDownloadError', lang), info.index, err, res || '');
             }
 
             if (typeof info.success !== 'number') info.success = 0;
             else info.success--;
 
             if (info.success >= -3) {
-              logger.warn(`[retry][times: ${info.success}]`, info.index, info.uri);
+              logger.warn(t('download.status.retryTimes', lang, { times: info.success }), info.index, info.uri);
               setTimeout(() => runTask([info]), 1000);
               return;
             }
@@ -336,8 +339,8 @@ export async function m3u8Download(url: string, options: M3u8DLOptions = {}) {
     };
     if (options.showProgress) {
       console.info(
-        `\nTotal segments: ${cyan(m3u8Info.tsCount)}, duration: ${green(`${m3u8Info.duration}sec`)}.`,
-        `Parallel jobs: ${magenta(options.threadNum)}`
+        `\n${t('download.status.totalSegments', lang, { count: cyan(m3u8Info.tsCount), duration: green(`${m3u8Info.duration}sec`) })}.`,
+        t('download.status.parallelJobs', lang, { count: magenta(options.threadNum) })
       );
     }
 
@@ -350,15 +353,22 @@ export async function m3u8Download(url: string, options: M3u8DLOptions = {}) {
     workPoll.close();
 
     if (stats.tsFailed > 0) {
-      logger.warn('Download Failed! Please retry!', stats.tsFailed);
+      stats.errmsg = t('download.status.segmentsFailed', lang, { count: stats.tsFailed });
+      result.errmsg = stats.errmsg;
+      logger.warn(t('download.status.downloadFailedRetry', lang), stats.tsFailed);
     } else if (options.convert !== false) {
+      stats.errmsg = t('download.status.mergingVideo', lang);
+      if (options.onProgress) options.onProgress(stats.tsCount, m3u8Info.tsCount, null, stats);
       result.filepath = await m3u8Convert(options, m3u8Info.data);
+      stats.errmsg = result.filepath ? '' : t('download.status.mergeFailed', lang);
 
       if (result.filepath && existsSync(result.filepath)) {
         stats.size = statSync(result.filepath).size;
         if (options.delCache) rmrfAsync(dirname(m3u8Info.data[0].tsOut));
       }
     }
+
+    if (options.onProgress) options.onProgress(stats.tsCount, m3u8Info.tsCount, null, stats);
   }
 
   logger.debug('Done!', url, result.m3u8Info);

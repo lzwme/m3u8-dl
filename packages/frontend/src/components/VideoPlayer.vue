@@ -1,7 +1,7 @@
 <template>
   <div
     v-if="visible"
-    class="fixed inset-0 bg-black z-50 flex flex-col"
+    class="fixed inset-0 bg-black z-100 flex flex-col"
     @keydown.esc="handleClose"
     tabindex="0"
   >
@@ -43,46 +43,69 @@
         ></iframe>
       </div>
 
+      <!-- 遮罩层 - 仅小屏幕显示 -->
+      <Transition name="fade">
+        <div
+          v-if="showPlaylist && videoList.length > 1"
+          class="playlist-overlay md:hidden fixed inset-0 bg-black/50 backdrop-blur-sm z-40"
+          @click="togglePlaylist"
+        ></div>
+      </Transition>
+
       <!-- 视频列表侧边栏 -->
-      <div
-        v-if="showPlaylist && videoList.length > 1"
-        class="w-80 bg-gray-900 text-white overflow-y-auto flex-shrink-0 border-l border-gray-700"
-      >
-        <div class="p-4">
-          <h3 class="text-sm font-semibold mb-3 text-gray-300">播放列表 ({{ videoList.length }})</h3>
-          <div class="space-y-2">
-            <div
-              v-for="task in videoList"
-              :key="task.url"
-              @click="switchVideo(task)"
-              :class="[
-                'p-3 rounded-lg cursor-pointer transition-colors',
-                currentTask?.url === task.url
-                  ? 'bg-blue-600 text-white'
-                  : 'bg-gray-800 hover:bg-gray-700 text-gray-200'
-              ]"
-            >
-              <div class="flex items-start justify-between gap-2">
-                <div class="flex-1 min-w-0">
-                  <div class="font-medium text-sm truncate mb-1">
-                    {{ task.filename || task.showName || task.url }}
+      <Transition name="slide">
+        <div
+          v-if="showPlaylist && videoList.length > 1"
+          class="playlist-sidebar w-80 bg-gray-900 text-white overflow-y-auto flex-shrink-0 border-l border-gray-700"
+        >
+          <div class="p-4">
+            <!-- 标题栏 -->
+            <div class="flex items-center justify-between mb-3">
+              <h3 class="text-sm font-semibold text-gray-300">播放列表 ({{ videoList.length }})</h3>
+              <!-- 关闭按钮 - 仅小屏幕显示 -->
+              <button
+                @click="togglePlaylist"
+                class="md:hidden text-gray-300 hover:text-white transition-colors p-2 rounded-lg hover:bg-gray-800"
+                :title="$t('common.close')"
+              >
+                <i class="fas fa-times"></i>
+              </button>
+            </div>
+
+            <div class="space-y-2">
+              <div
+                v-for="task in videoList"
+                :key="task.url"
+                @click="switchVideo(task)"
+                :class="[
+                  'p-3 rounded-lg cursor-pointer transition-colors',
+                  currentTask?.url === task.url
+                    ? 'bg-blue-600 text-white'
+                    : 'bg-gray-800 hover:bg-gray-700 text-gray-200'
+                ]"
+              >
+                <div class="flex items-start justify-between gap-2">
+                  <div class="flex-1 min-w-0">
+                    <div class="font-medium text-sm truncate mb-1">
+                      {{ task.filename || task.showName || task.url }}
+                    </div>
+                    <div class="text-xs text-gray-400 flex items-center gap-2 flex-wrap">
+                      <span>进度: {{ task.progress || 0 }}%</span>
+                      <span v-if="task.status" class="px-1.5 py-0.5 rounded text-xs" :class="getStatusClass(task.status)">
+                        {{ getStatusText(task.status) }}
+                      </span>
+                    </div>
                   </div>
-                  <div class="text-xs text-gray-400 flex items-center gap-2">
-                    <span>进度: {{ task.progress || 0 }}%</span>
-                    <span v-if="task.status" class="px-1.5 py-0.5 rounded text-xs" :class="getStatusClass(task.status)">
-                      {{ getStatusText(task.status) }}
-                    </span>
-                  </div>
+                  <i
+                    v-if="currentTask?.url === task.url"
+                    class="fas fa-play text-blue-300 flex-shrink-0 mt-1"
+                  ></i>
                 </div>
-                <i
-                  v-if="currentTask?.url === task.url"
-                  class="fas fa-play text-blue-300 flex-shrink-0 mt-1"
-                ></i>
               </div>
             </div>
           </div>
         </div>
-      </div>
+      </Transition>
     </div>
   </div>
 </template>
@@ -282,5 +305,47 @@ onUnmounted(() => {
   left: 0;
   right: 0;
   bottom: 0;
+}
+
+/* 遮罩层淡入淡出动画 */
+.fade-enter-active,
+.fade-leave-active {
+  transition: opacity 0.3s ease;
+}
+
+.fade-enter-from,
+.fade-leave-to {
+  opacity: 0;
+}
+
+/* 侧边栏滑入滑出动画 */
+.slide-enter-active,
+.slide-leave-active {
+  transition: transform 0.3s ease, opacity 0.3s ease;
+}
+
+@media (max-width: 767px) {
+  /* 小屏幕时侧边栏使用 fixed 定位 */
+  .playlist-sidebar {
+    position: fixed;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 50;
+    border-left: none;
+    width: 85vw;
+    max-width: 320px;
+    box-shadow: -4px 0 24px rgba(0, 0, 0, 0.5);
+  }
+
+  .slide-enter-from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+
+  .slide-leave-to {
+    transform: translateX(100%);
+    opacity: 0;
+  }
 }
 </style>

@@ -113,10 +113,11 @@ button {
   padding: 0.5rem;
   background: white;
   border-radius: 0.5rem;
+  /* box-shadow: 0 2px 4px #9bdff5; */
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-  box-shadow: 0 2px 4px #9bdff5;
   width: 42px;
   height: 42px;
+  cursor: pointer;
 }
 
 .main-content {

@@ -249,9 +249,10 @@ export class DLServer {
       if (this.options.token && req.headers.authorization !== this.options.token) {
         const ignorePaths = ['/healthcheck', '/localplay'];
         if (!ignorePaths.some(d => req.url.includes(d))) {
+          const lang = this.getLangFromRequest(req);
           const clientIp = req.headers['x-forwarded-for'] || req.socket.remoteAddress;
           logger.warn('Unauthorized access:', clientIp, req.url, req.headers.authorization);
-          res.status(401).json({ message: '未授权，禁止访问', code: 401 });
+          res.status(401).json({ message: t('api.error.unauthorized', lang), code: 1008 });
           return;
         }
       }
@@ -420,13 +421,12 @@ export class DLServer {
     });
 
     app.post('/api/config', (req, res) => {
+      const lang = this.getLangFromRequest(req);
       try {
         const config = req.body as M3u8DLOptions;
         this.saveConfig(config);
-        const lang = this.getLangFromRequest(req);
         res.json({ message: t('api.success.configUpdated', lang), code: 0 });
       } catch (error) {
-        const lang = this.getLangFromRequest(req);
         const errorMessage = error instanceof Error ? error.message : t('api.error.configSaveFailed', lang);
         logger.error('[saveConfig]', errorMessage);
         res.status(400).json({ message: errorMessage, code: 1 });

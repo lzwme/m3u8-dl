@@ -2,12 +2,14 @@ import { resolve } from 'node:path';
 import { download, formatByteSize, formatTimeCost } from '@lzwme/fe-utils';
 import { blueBright, cyan, gray, greenBright, magentaBright, yellowBright } from 'console-log-colors';
 import type { M3u8DLOptions, M3u8DLProgressStats, M3u8DLResult } from '../types';
+import { getLang, t } from './i18n.js';
 import { formatOptions } from './format-options.js';
 import { formatHeaders, logger } from './utils.js';
 
 export async function fileDownload(u: string, opts: M3u8DLOptions): Promise<M3u8DLResult> {
   logger.debug('fileDownload', u, opts);
   const { url, options } = formatOptions(u, opts);
+  const lang = getLang(options.lang);
   const startTime = Date.now();
   const stats: M3u8DLProgressStats = {
     url,
@@ -27,7 +29,7 @@ export async function fileDownload(u: string, opts: M3u8DLOptions): Promise<M3u8
     filename: options.filename,
     localVideo: resolve(options.saveDir, options.filename),
   };
-  logger.debug('开始下载', gray(url), cyan(stats.localVideo));
+  logger.debug(t('download.status.starting', lang), gray(url), cyan(stats.localVideo));
   if (options.onInited) options.onInited(stats, null, null);
 
   try {
@@ -71,17 +73,18 @@ export async function fileDownload(u: string, opts: M3u8DLOptions): Promise<M3u8
     stats.endTime = Date.now();
 
     return {
-      errmsg: r.filepath ? '下载完成' : '下载失败',
+      errmsg: r.filepath ? t('download.status.completed', lang) : t('download.status.failed', lang),
       ...r,
       stats,
     };
   } catch (error) {
-    logger.error('下载失败', (error as Error).message, gray(url));
-    stats.errmsg = (error as Error).message;
+    const errorMessage = (error as Error).message;
+    logger.error(t('download.status.failed', lang), errorMessage, gray(url));
+    stats.errmsg = errorMessage;
 
     return {
       isExist: false,
-      errmsg: `下载失败: ${(error as Error).message}`,
+      errmsg: t('download.status.downloadFailedWithMessage', lang, { message: errorMessage }),
       stats,
     };
   }
