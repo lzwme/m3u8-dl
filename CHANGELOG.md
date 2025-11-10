@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [1.6.0-0](https://github.com/lzwme/m3u8-dl/compare/v1.5.0...v1.6.0-0) (2025-11-10)
+
+
+### Features
+
+* add completed tasks page with sorting and search functionality ([4fc51d2](https://github.com/lzwme/m3u8-dl/commit/4fc51d20cb5d732a0c41664ca61849169053a50b))
+* add fullscreen video player with playlist ([efd3cef](https://github.com/lzwme/m3u8-dl/commit/efd3cefb78ad414379a96da439909a2e7f5e3c99))
+* add support for END-60 format in ignoreSegments ([892a8c9](https://github.com/lzwme/m3u8-dl/commit/892a8c990a48cd3794eba6bf9688d7b8d037675d))
+* add web browser module and improve download dialog ([57aa26e](https://github.com/lzwme/m3u8-dl/commit/57aa26ebb6a707c081fdda792e76d34980065dee))
+
 ## [1.5.0](https://github.com/lzwme/m3u8-dl/compare/v1.4.3...v1.5.0) (2025-11-07)
 
 
