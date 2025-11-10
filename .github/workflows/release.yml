@@ -60,7 +60,7 @@ jobs:
       #       ${{ runner.os }}-pnpm-store
 
       - name: Install dependencies
-        run: npm install --no-package-lock
+        run: pnpm install --no-frozen-lockfile
 
       - name: Get release tag
         id: get-tag
@@ -79,7 +79,7 @@ jobs:
         if: matrix.os == 'ubuntu-latest'
         run: |
           cd packages/m3u8dl-app
-          npm install --no-package-lock
+          pnpm install --no-frozen-lockfile
           npm run build -- --linux
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -90,7 +90,7 @@ jobs:
         if: matrix.os == 'macos-latest'
         run: |
           cd packages/m3u8dl-app
-          npm install --no-package-lock
+          pnpm install --no-frozen-lockfile
           npm run build -- --mac
         env:
           # CSC_LINK: ${{ secrets.CSC_LINK }}
@@ -105,7 +105,7 @@ jobs:
         if: matrix.os == 'windows-latest'
         run: |
           cd packages/m3u8dl-app
-          npm install --no-package-lock
+          pnpm install --no-frozen-lockfile
           npm run build -- --win
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}

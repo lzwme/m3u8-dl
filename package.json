@@ -5,7 +5,10 @@
   "main": "cjs/index.js",
   "types": "cjs/index.d.ts",
   "license": "MIT",
-  "repository": "https://github.com/lzwme/m3u8-dl.git",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/lzwme/m3u8-dl.git"
+  },
   "author": {
     "name": "renxia",
     "email": "lzwy0820@qq.com",
