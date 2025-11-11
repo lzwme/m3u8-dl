@@ -67,11 +67,11 @@ const T = {
     const r = await build({
       targets: platform.createTarget(),
       config: {
-        productName: 'M3U8 Downloader',
+        productName: 'M3U8-DL',
         buildVersion: rootPkg.version,
         appId: 'cn.lzwme.m3u8dl',
-        artifactName: 'm3u8dl-app-${os}_${arch}-${version}.${ext}',
-        electronVersion: '36.4.0',
+        artifactName: '${productName}-${os}_${arch}-${version}.${ext}',
+        // electronVersion: '39.1.1',
         copyright: `Copyright © ${new Date().getFullYear()} \${author}`,
         compression: 'normal',
         electronDownload: {

@@ -19,10 +19,12 @@
 import { ref, onMounted, onUnmounted, provide } from 'vue';
 import { useConfigStore } from '@/stores/config';
 import { useWebSocket, reconnectWithToken } from '@/composables/useWebSocket';
+import { useVersionCheck } from '@/composables/useVersionCheck';
 import PasswordDialog from '@/components/PasswordDialog.vue';
 import NewDownloadDialog from '@/components/NewDownloadDialog.vue';
 
 const configStore = useConfigStore();
+const { checkNewVersion } = useVersionCheck();
 let wsDisconnect: (() => void) | null = null;
 const showPasswordDialog = ref(false);
 const passwordDialogRef = ref<InstanceType<typeof PasswordDialog> | null>(null);
@@ -77,6 +79,11 @@ onMounted(async () => {
 
   // 尝试连接 WebSocket
   connect();
+
+  // 应用初始化后检测新版本。延迟一下，避免与 WebSocket 连接冲突
+  setTimeout(async () => {
+    await checkNewVersion(true);
+  }, 5000);
 });
 
 onUnmounted(() => {

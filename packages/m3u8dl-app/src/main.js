@@ -51,12 +51,13 @@ const initAutoUpdater = mWindow => {
 
   autoUpdater.on('checking-for-update', () => sendUpdateMessage(messages.checking));
 
-  autoUpdater.on('update-available', () => {
+  autoUpdater.on('update-available', (info) => {
+    console.log('update-available:', info);
     dialog
       .showMessageBox({
         type: 'info',
         title: '应用有新的更新',
-        message: '发现新版本，是否现在更新？',
+        message: `发现新版本[${info.version}]，是否现在更新？\n${info.releaseNotes}`,
         buttons: ['是', '否'],
       })
       .then(({ response }) => {

@@ -1,7 +1,7 @@
 <template>
   <div v-if="visible" class="fixed inset-0 modal-overlay flex items-center justify-center z-50"
     @click.self="close">
-    <div class="bg-white rounded-lg p-6 max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+    <div class="bg-white rounded-lg p-6 max-w-4xl w-full max-h-[98vh] overflow-y-auto">
       <div class="flex justify-between items-center mb-4">
         <h2 class="text-xl text-center w-full font-semibold">{{ $t('newDownload.title') }}</h2>
         <button @click="close" class="text-gray-500 hover:text-gray-700">

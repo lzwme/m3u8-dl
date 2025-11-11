@@ -50,12 +50,12 @@
               <strong>{{ $t('about.checkVersion') }}：</strong>
               <button
                 v-if="!serverInfo.appUpdateMessage"
-                @click="checkNewVersion"
+                @click="handleCheckVersion"
                 class="px-2 py-1 text-sm bg-green-600 hover:bg-green-700 text-white rounded"
               >
                 <i class="fas fa-check mr-1"></i>{{ $t('about.checkVersion') }}
               </button>
-              <span v-if="serverInfo.newVersion" class="text-blue-600"
+              <span v-if="serverInfo.newVersion" class="text-red-600 ml-2"
                 >{{ $t('about.newVersionFound', { version: serverInfo.newVersion }) }}</span
               >
               <span v-if="serverInfo.appUpdateMessage" class="text-green-600">{{
@@ -80,40 +80,141 @@
         </div>
 
         <div>
-          <h3 class="text-lg font-medium text-green-700 mb-2">{{ $t('about.features') }}</h3>
-          <ul class="list-disc list-inside text-gray-600 space-y-2">
-            <li>{{ $t('about.feature1') }}</li>
-            <li>{{ $t('about.feature2') }}</li>
-            <li>{{ $t('about.feature3') }}</li>
-            <li>{{ $t('about.feature4') }}</li>
-            <li>{{ $t('about.feature5') }}</li>
-            <li>{{ $t('about.feature6') }}</li>
-            <li>{{ $t('about.feature7') }}</li>
-            <li>{{ $t('about.feature8') }}</li>
-          </ul>
+          <h3 class="text-lg font-medium text-green-700 mb-4">{{ $t('about.features') }}</h3>
+
+          <div class="space-y-4">
+            <!-- 核心下载功能 -->
+            <div class="bg-gray-50 p-4 rounded-lg">
+              <h4 class="text-base font-semibold text-gray-800 mb-3">{{ $t('about.coreFeatures') }}</h4>
+              <ul class="list-disc list-inside text-gray-600 space-y-1.5 text-sm">
+                <li>{{ $t('about.coreFeature1') }}</li>
+                <li>{{ $t('about.coreFeature2') }}</li>
+                <li>{{ $t('about.coreFeature3') }}</li>
+                <li>{{ $t('about.coreFeature4') }}</li>
+                <li>{{ $t('about.coreFeature5') }}</li>
+                <li>{{ $t('about.coreFeature6') }}</li>
+                <li>{{ $t('about.coreFeature7') }}</li>
+                <li>{{ $t('about.coreFeature8') }}</li>
+              </ul>
+            </div>
+
+            <!-- WebUI 下载管理 -->
+            <div class="bg-gray-50 p-4 rounded-lg">
+              <h4 class="text-base font-semibold text-gray-800 mb-3">{{ $t('about.webUIFeatures') }}</h4>
+              <ul class="list-disc list-inside text-gray-600 space-y-1.5 text-sm">
+                <li>{{ $t('about.webUIFeature1') }}</li>
+                <li>{{ $t('about.webUIFeature2') }}</li>
+                <li>{{ $t('about.webUIFeature3') }}</li>
+                <li>{{ $t('about.webUIFeature4') }}</li>
+                <li>{{ $t('about.webUIFeature5') }}</li>
+                <li>{{ $t('about.webUIFeature6') }}</li>
+              </ul>
+            </div>
+
+            <!-- 视频解析功能 -->
+            <div class="bg-gray-50 p-4 rounded-lg">
+              <h4 class="text-base font-semibold text-gray-800 mb-3">{{ $t('about.parserFeatures') }}</h4>
+              <ul class="list-disc list-inside text-gray-600 space-y-1.5 text-sm">
+                <li>{{ $t('about.parserFeature1') }}</li>
+                <li>{{ $t('about.parserFeature2') }}</li>
+                <li>{{ $t('about.parserFeature3') }}</li>
+              </ul>
+            </div>
+
+            <!-- 智能提取功能 -->
+            <div class="bg-gray-50 p-4 rounded-lg">
+              <h4 class="text-base font-semibold text-gray-800 mb-3">{{ $t('about.extractFeatures') }}</h4>
+              <ul class="list-disc list-inside text-gray-600 space-y-1.5 text-sm">
+                <li>{{ $t('about.extractFeature1') }}</li>
+                <li>{{ $t('about.extractFeature2') }}</li>
+                <li>{{ $t('about.extractFeature3') }}</li>
+              </ul>
+            </div>
+
+            <!-- 视频搜索功能 -->
+            <div class="bg-gray-50 p-4 rounded-lg">
+              <h4 class="text-base font-semibold text-gray-800 mb-3">{{ $t('about.searchFeatures') }}</h4>
+              <ul class="list-disc list-inside text-gray-600 space-y-1.5 text-sm">
+                <li>{{ $t('about.searchFeature1') }}</li>
+                <li>{{ $t('about.searchFeature2') }}</li>
+              </ul>
+            </div>
+
+            <!-- 多种使用方式 -->
+            <div class="bg-gray-50 p-4 rounded-lg">
+              <h4 class="text-base font-semibold text-gray-800 mb-3">{{ $t('about.usageFeatures') }}</h4>
+              <ul class="list-disc list-inside text-gray-600 space-y-1.5 text-sm">
+                <li>{{ $t('about.usageFeature1') }}</li>
+                <li>{{ $t('about.usageFeature2') }}</li>
+                <li>{{ $t('about.usageFeature3') }}</li>
+                <li>{{ $t('about.usageFeature4') }}</li>
+                <li>{{ $t('about.usageFeature5') }}</li>
+              </ul>
+            </div>
+
+            <!-- 国际化支持 -->
+            <div class="bg-gray-50 p-4 rounded-lg">
+              <h4 class="text-base font-semibold text-gray-800 mb-3">{{ $t('about.i18nFeatures') }}</h4>
+              <ul class="list-disc list-inside text-gray-600 space-y-1.5 text-sm">
+                <li>{{ $t('about.i18nFeature1') }}</li>
+                <li>{{ $t('about.i18nFeature2') }}</li>
+              </ul>
+            </div>
+          </div>
         </div>
 
         <div>
           <h3 class="text-lg font-medium text-green-700 mb-2">{{ $t('about.installation') }}</h3>
-          <div class="bg-gray-50 p-4 rounded-lg">
-            <p class="text-gray-600 mb-2">{{ $t('about.globalInstall') }}</p>
-            <pre
-              class="bg-gray-800 text-gray-100 p-3 rounded-lg overflow-x-auto"
-            >npm i -g @lzwme/m3u8-dl<br>m3u8dl -h</pre>
-            <p class="text-gray-600 mt-4 mb-2">{{ $t('about.useNpx') }}</p>
-            <pre class="bg-gray-800 text-gray-100 p-3 rounded-lg overflow-x-auto">npx @lzwme/m3u8-dl -h</pre>
+          <div class="bg-gray-50 p-4 rounded-lg space-y-4">
+            <div>
+              <p class="text-gray-600 mb-2">{{ $t('about.globalInstall') }}</p>
+              <pre
+                class="bg-gray-800 text-gray-100 p-3 rounded-lg overflow-x-auto text-sm"
+              >npm i -g @lzwme/m3u8-dl<br>m3u8dl -h</pre>
+            </div>
+            <div>
+              <p class="text-gray-600 mb-2">{{ $t('about.useNpx') }}</p>
+              <pre class="bg-gray-800 text-gray-100 p-3 rounded-lg overflow-x-auto text-sm">npx @lzwme/m3u8-dl -h</pre>
+            </div>
+            <div>
+              <p class="text-gray-600 mb-2">{{ $t('about.desktopApp') }}</p>
+              <p class="text-gray-600 mb-2 text-sm">{{ $t('about.desktopAppText') }}</p>
+              <ul class="list-disc list-inside text-gray-600 space-y-1 text-sm ml-2">
+                <li>
+                  <a
+                    :href="$t('about.desktopAppLink1')"
+                    target="_blank"
+                    rel="noopener"
+                    class="text-blue-500 hover:text-blue-600"
+                    >{{ $t('about.desktopAppLink1') }}</a
+                  >
+                </li>
+                <li>
+                  <a
+                    :href="$t('about.desktopAppLink2')"
+                    target="_blank"
+                    rel="noopener"
+                    class="text-blue-500 hover:text-blue-600"
+                    >{{ $t('about.desktopAppLink2') }}</a
+                  >
+                </li>
+              </ul>
+            </div>
           </div>
         </div>
 
         <div>
           <h3 class="text-lg font-medium text-green-700 mb-2">{{ $t('about.docker') }}</h3>
-          <div class="bg-gray-50 p-4 rounded-lg">
-            <p class="text-gray-600 mb-2">{{ $t('about.dockerCommand') }}</p>
-            <pre
-              class="bg-gray-800 text-gray-100 p-3 rounded-lg overflow-x-auto"
-            >docker run -d --name m3u8-dl -p 6600:6600 -v ./downloads:/app/downloads -v ./cache:/app/cache lzwme/m3u8-dl</pre>
-            <p class="text-gray-600 mt-4 mb-2">{{ $t('about.dockerCompose') }}</p>
-            <pre class="bg-gray-800 text-gray-100 p-3 rounded-lg overflow-x-auto">version: '3'
+          <div class="bg-gray-50 p-4 rounded-lg space-y-4">
+            <div>
+              <p class="text-gray-600 mb-2">{{ $t('about.dockerCommand') }}</p>
+              <pre
+                class="bg-gray-800 text-gray-100 p-3 rounded-lg overflow-x-auto text-sm"
+              >docker run -d --name m3u8-dl -p 6600:6600 -v ./downloads:/app/downloads -v ./cache:/app/cache lzwme/m3u8-dl</pre>
+            </div>
+            <div>
+              <p class="text-gray-600 mb-2">{{ $t('about.dockerCompose') }}</p>
+              <pre class="bg-gray-800 text-gray-100 p-3 rounded-lg overflow-x-auto text-sm">version: '3'
 services:
   m3u8-dl:
     image: lzwme/m3u8-dl
@@ -124,7 +225,8 @@ services:
       - ./downloads:/app/downloads
       - ./cache:/app/cache
     restart: unless-stopped</pre>
-            <p class="text-gray-600 mt-4">
+            </div>
+            <p class="text-gray-600 text-sm">
               {{ $t('about.dockerDeployComplete', { url: 'http://localhost:6600' }) }}
             </p>
           </div>
@@ -137,44 +239,17 @@ services:
 
 <script setup lang="ts">
 import { computed, onMounted } from 'vue';
-import { useI18n } from 'vue-i18n';
 import Layout from '@/components/Layout.vue';
 import { useServerStore } from '@/stores/server';
-import { toast } from '@/utils/toast';
+import { useVersionCheck } from '@/composables/useVersionCheck';
 import { formatSpeed, formatSize } from '@/utils/format';
-
-const { t } = useI18n();
 
 const serverStore = useServerStore();
 const serverInfo = computed(() => serverStore.serverInfo);
+const { checkNewVersion } = useVersionCheck();
 
-async function checkNewVersion() {
-  try {
-    const response = await fetch('https://registry.npmmirror.com/@lzwme/m3u8-dl/latest');
-    const r = await response.json();
-    if (r.version) {
-      if (r.version === serverInfo.value.version) {
-        toast({ text: t('about.latestVersion', { version: r.version }), type: 'success' });
-      } else {
-        serverStore.updateServerInfo({ newVersion: r.version });
-        if (window.electron) {
-          window.electron.ipc.send('checkForUpdate');
-        } else {
-          toast({
-            text: t('about.newVersionAvailable', { version: r.version, url: 'https://github.com/lzwme/m3u8-dl/releases' }),
-            type: 'success',
-            duration: 10000,
-          });
-        }
-      }
-    }
-  } catch (error) {
-    console.error('检查新版本失败:', error);
-    toast({
-      text: t('about.versionCheckFailed', { error: error instanceof Error ? error.message : t('error.unknownError') }),
-      type: 'error',
-    });
-  }
+async function handleCheckVersion() {
+  await checkNewVersion(true);
 }
 
 onMounted(() => {

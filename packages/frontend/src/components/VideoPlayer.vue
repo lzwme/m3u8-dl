@@ -321,7 +321,36 @@ onUnmounted(() => {
 /* 侧边栏滑入滑出动画 */
 .slide-enter-active,
 .slide-leave-active {
-  transition: transform 0.3s ease, opacity 0.3s ease;
+  transition: transform 0.3s ease, opacity 0.3s ease, width 0.3s ease, margin-right 0.3s ease;
+}
+
+.slide-enter-from,
+.slide-leave-to {
+  opacity: 0;
+}
+
+/* 大屏幕时使用宽度动画 */
+@media (min-width: 768px) {
+  .slide-enter-active.playlist-sidebar,
+  .slide-leave-active.playlist-sidebar {
+    overflow: hidden;
+  }
+
+  .slide-enter-from.playlist-sidebar {
+    width: 0 !important;
+    min-width: 0 !important;
+    margin-right: 0;
+    opacity: 0;
+    border-left: none;
+  }
+
+  .slide-leave-to.playlist-sidebar {
+    width: 0 !important;
+    min-width: 0 !important;
+    margin-right: 0;
+    opacity: 0;
+    border-left: none;
+  }
 }
 
 @media (max-width: 767px) {
@@ -336,8 +365,10 @@ onUnmounted(() => {
     width: 85vw;
     max-width: 320px;
     box-shadow: -4px 0 24px rgba(0, 0, 0, 0.5);
+    transform: translateX(0);
   }
 
+  /* 小屏幕时添加滑入动画 */
   .slide-enter-from {
     transform: translateX(100%);
     opacity: 0;

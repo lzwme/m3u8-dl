@@ -5,44 +5,27 @@
         <i class="fas fa-globe mr-2"></i>{{ $t('webBrowser.title') }}
       </h3>
       <div class="flex gap-2">
-        <button
-          v-if="browserVisible"
-          @click="hideBrowser"
-          class="px-3 py-1 bg-gray-500 text-white rounded hover:bg-gray-600 text-sm"
-        >
+        <button v-if="browserVisible" @click="hideBrowser"
+          class="px-3 py-1 bg-gray-500 text-white rounded hover:bg-gray-600 text-sm">
           <i class="fas fa-eye-slash mr-1"></i>{{ $t('webBrowser.hideBrowser') }}
         </button>
-        <button
-          v-else-if="currentUrl"
-          @click="showBrowser"
-          class="px-3 py-1 bg-green-500 text-white rounded hover:bg-green-600 text-sm"
-        >
+        <button v-else-if="currentUrl" @click="showBrowser"
+          class="px-3 py-1 bg-green-500 text-white rounded hover:bg-green-600 text-sm">
           <i class="fas fa-eye mr-1"></i>{{ $t('webBrowser.showBrowser') }}
         </button>
-        <button
-          v-if="loading"
-          @click="stopLoading"
-          class="px-3 py-1 bg-red-500 text-white rounded hover:bg-red-600 text-sm"
-        >
+        <button v-if="loading" @click="stopLoading"
+          class="px-3 py-1 bg-red-500 text-white rounded hover:bg-red-600 text-sm">
           <i class="fas fa-stop mr-1"></i>{{ $t('webBrowser.stop') }}
         </button>
       </div>
     </div>
 
     <div class="flex gap-2 mb-3">
-      <input
-        v-model="url"
-        type="text"
-        :placeholder="$t('webBrowser.urlPlaceholder')"
+      <input v-model="url" type="text" :placeholder="$t('webBrowser.urlPlaceholder')"
         class="flex-1 border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400"
-        :disabled="loading"
-        @keyup.enter="loadUrl"
-      />
-      <button
-        @click="loadUrl"
-        :disabled="loading || !url.trim()"
-        class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed"
-      >
+        :disabled="loading" @keyup.enter="loadUrl" />
+      <button @click="loadUrl" :disabled="loading || !url.trim()"
+        class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed">
         {{ loading ? $t('webBrowser.loading') : $t('webBrowser.load') }}
       </button>
     </div>
@@ -50,27 +33,18 @@
     <!-- 导航控制 -->
     <div v-if="currentUrl" class="mb-3 p-2 bg-gray-50 rounded border border-gray-200">
       <div class="flex items-center gap-2 mb-2">
-        <button
-          @click="goBack"
-          :disabled="!canGoBack"
+        <button @click="goBack" :disabled="!canGoBack"
           class="px-2 py-1 bg-white border border-gray-300 rounded hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
-          :title="$t('common.back')"
-        >
+          :title="$t('common.back')">
           <i class="fas fa-arrow-left"></i>
         </button>
-        <button
-          @click="goForward"
-          :disabled="!canGoForward"
+        <button @click="goForward" :disabled="!canGoForward"
           class="px-2 py-1 bg-white border border-gray-300 rounded hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
-          :title="$t('common.forward')"
-        >
+          :title="$t('common.forward')">
           <i class="fas fa-arrow-right"></i>
         </button>
-        <button
-          @click="reload"
-          class="px-2 py-1 bg-white border border-gray-300 rounded hover:bg-gray-50"
-          :title="$t('common.refresh')"
-        >
+        <button @click="reload" class="px-2 py-1 bg-white border border-gray-300 rounded hover:bg-gray-50"
+          :title="$t('common.refresh')">
           <i class="fas fa-sync-alt"></i>
         </button>
         <div class="flex-1 text-xs text-gray-600 truncate ml-2" :title="currentUrl">
@@ -93,12 +67,8 @@
             {{ $t('webBrowser.foundVideos', { count: m3u8List.length }) }}
           </h4>
           <label class="flex items-center gap-1 text-sm text-gray-600 cursor-pointer">
-            <input
-              type="checkbox"
-              :checked="allSelected"
-              @change="toggleSelectAll"
-              class="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-            />
+            <input type="checkbox" :checked="allSelected" @change="toggleSelectAll"
+              class="rounded border-gray-300 text-blue-600 focus:ring-blue-500" />
             <span>{{ $t('download.selectAll') }}</span>
           </label>
           <span v-if="selectedCount > 0" class="text-sm text-blue-600 font-medium">
@@ -106,36 +76,22 @@
           </span>
         </div>
         <div class="flex gap-2">
-          <button
-            v-if="selectedCount > 0"
-            @click="batchDownload"
-            class="px-3 py-1 bg-green-500 text-white rounded hover:bg-green-600 text-sm"
-          >
+          <button v-if="selectedCount > 0" @click="batchDownload"
+            class="px-3 py-1 bg-green-500 text-white rounded hover:bg-green-600 text-sm">
             {{ $t('download.batchDownload') }} ({{ selectedCount }})
           </button>
-          <button
-            @click="clearList"
-            class="text-sm text-gray-500 hover:text-gray-700"
-          >
+          <button @click="clearList" class="text-sm text-gray-500 hover:text-gray-700">
             {{ $t('webBrowser.clearList') }}
           </button>
         </div>
       </div>
-      <div class="border border-gray-200 rounded-lg overflow-hidden max-h-96 overflow-y-auto">
-        <div
-          v-for="(item, index) in m3u8List"
-          :key="index"
+      <div class="m3u8-list-container border border-gray-200 rounded-lg overflow-hidden overflow-y-auto">
+        <div v-for="(item, index) in m3u8List" :key="index"
           class="p-3 border-b border-gray-100 hover:bg-gray-50 transition-colors"
-          :class="{ 'bg-blue-50': isSelected(index) }"
-        >
+          :class="{ 'bg-blue-50': isSelected(index) }">
           <div class="flex items-start gap-3">
-            <input
-              type="checkbox"
-              :checked="isSelected(index)"
-              @change="toggleSelect(index)"
-              @click.stop
-              class="mt-1 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-            />
+            <input type="checkbox" :checked="isSelected(index)" @change="toggleSelect(index)" @click.stop
+              class="mt-1 rounded border-gray-300 text-blue-600 focus:ring-blue-500" />
             <div class="flex-1 min-w-0 cursor-pointer" @click="selectM3u8(item)">
               <div class="flex items-center gap-2 mb-1">
                 <div class="text-sm font-medium text-gray-800 truncate" :title="item.title">
@@ -148,14 +104,13 @@
               <div class="text-xs text-gray-500 truncate" :title="item.url">
                 {{ item.url }}
               </div>
-              <div v-if="item.pageUrl && item.pageUrl !== currentUrl" class="text-xs text-gray-400 mt-1 truncate" :title="item.pageUrl">
+              <div v-if="item.pageUrl && item.pageUrl !== currentUrl" class="text-xs text-gray-400 mt-1 truncate"
+                :title="item.pageUrl">
                 {{ $t('webBrowser.source') }}: {{ item.pageUrl }}
               </div>
             </div>
-            <button
-              @click.stop="selectM3u8(item)"
-              class="ml-2 px-3 py-1 bg-blue-500 text-white rounded hover:bg-blue-600 text-sm whitespace-nowrap"
-            >
+            <button @click.stop="selectM3u8(item)"
+              class="ml-2 px-3 py-1 bg-blue-500 text-white rounded hover:bg-blue-600 text-sm whitespace-nowrap">
               {{ $t('webBrowser.download') }}
             </button>
           </div>
@@ -322,14 +277,37 @@ function handleM3u8Found(data: { url: string; title: string; pageUrl?: string })
     return itemNormalized === normalizedUrl;
   });
 
-  if (!exists) {
-    m3u8List.value.push({
-      url: data.url,
-      title: data.title || pageTitle.value || t('webBrowser.unnamedVideo'),
-      pageUrl: data.pageUrl || currentUrl.value,
-    });
-    toast({ text: t('webBrowser.newVideoFound', { title: data.title || t('webBrowser.unnamedVideo') }), type: 'success' });
+  if (exists) return;
+
+  const newItem = {
+    url: data.url,
+    title: data.title || pageTitle.value || t('webBrowser.unnamedVideo'),
+    pageUrl: data.pageUrl || currentUrl.value,
+  };
+  // 检查是否需要替换已存在的链接
+  // 对于已存在的 .m3u8 链接，如果去掉文件名后的前缀包含在新链接中，则替换
+  let replaced = false;
+  for (let i = 0; i < m3u8List.value.length; i++) {
+    const item = m3u8List.value[i];
+    if (item.url.toLowerCase().endsWith('.m3u8')) {
+      // 提取前缀：去掉最后一个 / 之后的部分（文件名）
+      const lastSlashIndex = item.url.lastIndexOf('/');
+      if (lastSlashIndex !== -1) {
+        const prefix = item.url.substring(0, lastSlashIndex + 1); // 包含最后的 /
+        if (data.url.includes(prefix)) {
+          // 新链接包含旧链接的前缀，说明新链接更具体，替换它
+          m3u8List.value[i] = newItem;
+          replaced = true;
+          break;
+        }
+      }
+    }
   }
+
+  // 如果没有替换，则添加新链接
+  if (!replaced) m3u8List.value.push(newItem);
+
+  toast({ text: t('webBrowser.newVideoFound', { title: data.title || t('webBrowser.unnamedVideo') }), type: 'success' });
   // 注意：新添加的链接不会自动选中，需要用户手动选择
 }
 
@@ -446,5 +424,9 @@ onUnmounted(() => {
 <style scoped>
 .web-browser-container {
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.m3u8-list-container {
+  max-height: calc(100vh - 280px);
 }
 </style>

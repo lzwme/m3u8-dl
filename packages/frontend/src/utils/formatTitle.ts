@@ -63,7 +63,7 @@ export function optimizeTitle(title: string): string {
  * @returns url 和 name 的数组
  */
 export function urlsTextFormat(urlsText: string) {
-  return String(urlsText || '')
+  const items = String(urlsText || '')
     .split('\n')
     .map(line => {
       const parts = line.split(/[\s|$]+/).map(s => s.trim());
@@ -75,4 +75,24 @@ export function urlsTextFormat(urlsText: string) {
       return { url, name };
     })
     .filter(item => item.url.startsWith('http'));
+
+  // 统计每个 name 出现的次数
+  const nameCountMap = new Map<string, number>();
+  items.forEach(item => {
+    nameCountMap.set(item.name, (nameCountMap.get(item.name) || 0) + 1);
+  });
+
+  // 对于重复的 name，从第二个开始添加后缀
+  const nameIndexMap = new Map<string, number>();
+  return items.map(item => {
+    const count = nameCountMap.get(item.name) || 0;
+    if (count > 1) {
+      const index = (nameIndexMap.get(item.name) || 0) + 1;
+      nameIndexMap.set(item.name, index);
+      if (index > 1) {
+        return { ...item, name: `${item.name} (${index})` };
+      }
+    }
+    return item;
+  });
 }

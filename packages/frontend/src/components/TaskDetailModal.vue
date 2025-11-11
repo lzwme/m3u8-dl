@@ -4,7 +4,7 @@
     class="fixed inset-0 modal-overlay flex items-center justify-center z-50 p-2 md:p-4"
     @click.self="close"
   >
-    <div class="bg-white rounded-lg shadow-xl max-w-3xl w-full max-h-[90vh] overflow-hidden flex flex-col">
+    <div class="bg-white rounded-lg shadow-xl max-w-3xl w-full max-h-[98vh] overflow-hidden flex flex-col">
       <div class="flex justify-between items-center p-2 md:p-4 border-b">
         <h2 class="text-lg md:text-xl font-semibold">{{ $t('taskDetail.title') }}</h2>
         <button
