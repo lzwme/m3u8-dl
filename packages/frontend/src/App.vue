@@ -16,13 +16,16 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted, provide } from 'vue';
+import { ref, onMounted, onUnmounted, provide, watch } from 'vue';
+import { useRoute, useRouter } from 'vue-router';
 import { useConfigStore } from '@/stores/config';
 import { useWebSocket, reconnectWithToken } from '@/composables/useWebSocket';
 import { useVersionCheck } from '@/composables/useVersionCheck';
 import PasswordDialog from '@/components/PasswordDialog.vue';
 import NewDownloadDialog from '@/components/NewDownloadDialog.vue';
 
+const route = useRoute();
+const router = useRouter();
 const configStore = useConfigStore();
 const { checkNewVersion } = useVersionCheck();
 let wsDisconnect: (() => void) | null = null;
@@ -44,7 +47,30 @@ provide('showGlobalNewDownload', showGlobalNewDownload);
 function handleGlobalDialogClose() {
   showGlobalDownloadDialog.value = false;
   globalDialogInitialData.value = undefined;
+  // 清除 URL 参数
+  if (route.query.action === 'new' || route.query.url) {
+    router.replace({ query: {} });
+  }
 }
+
+// 处理路由参数
+function handleRouteQuery() {
+  if (route.query.action === 'new' && route.query.url) {
+    const urlParam = route.query.url as string;
+    showGlobalNewDownload({
+      url: decodeURIComponent(urlParam),
+    });
+  }
+}
+
+// 监听路由变化
+watch(
+  () => route.query,
+  () => {
+    handleRouteQuery();
+  },
+  { immediate: true }
+);
 
 // 处理未授权，显示密码对话框
 function handleUnauthorized() {

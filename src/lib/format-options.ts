@@ -6,22 +6,45 @@ import { VideoParser } from '../video-parser';
 import { formatHeaders, logger } from './utils';
 
 const fileSupportExtList = [
+  // video
   '.mp4',
   '.mkv',
   '.avi',
   '.mov',
   '.wmv',
   '.ts',
-  '.exe',
-  '.zip',
-  '.rar',
-  '.pdf',
+  // audio
+  '.mp3',
+  '.wav',
+  '.ogg',
+  '.m4a',
+  '.aac',
+  '.flac',
+  '.ape',
+  // document
   '.doc',
   '.docx',
   '.xls',
   '.xlsx',
   '.ppt',
   '.pptx',
+  '.pdf',
+  '.mobi',
+  '.epub',
+  // others
+  '.exe',
+  '.msi',
+  '.zip',
+  '.rar',
+  '.7z',
+  '.tar.gz',
+  '.tar.bz2',
+  '.tar.xz',
+  '.iso',
+  '.dmg',
+  '.pkg',
+  '.deb',
+  '.rpm',
 ];
 
 export function formatOptions(url: string, opts: M3u8DLOptions) {
