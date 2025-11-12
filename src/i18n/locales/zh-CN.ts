@@ -31,7 +31,7 @@ export default {
       token: '指定web服务密码（请求头authorization）。默认为空',
       url: '影视搜索的接口地址(m3u8采集站标准接口)',
       apidir: '指定自定义视频搜索 api 所在的目录或具体路径',
-      lang: '指定语言。可选值：zh, en',
+      lang: '指定语言。可选值：zh-CN, en',
     },
   },
   api: {

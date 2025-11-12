@@ -231,6 +231,115 @@ services:
             </p>
           </div>
         </div>
+
+        <div>
+          <h3 class="text-lg font-medium text-green-700 mb-2">{{ $t('about.captureScript') }}</h3>
+          <div class="bg-gray-50 p-4 rounded-lg space-y-4">
+            <div>
+              <p class="text-gray-600 mb-2">{{ $t('about.captureScriptDescription') }}</p>
+            </div>
+            <div>
+              <p class="text-gray-600 mb-2 font-semibold">{{ $t('about.captureScriptInstall') }}</p>
+              <ol class="list-decimal list-inside text-gray-600 space-y-2 text-sm ml-2">
+                <li>
+                  {{ $t('about.captureScriptInstallStep1') }}
+                  <a
+                    href="https://violentmonkey.github.io/"
+                    target="_blank"
+                    rel="noopener"
+                    class="text-blue-500 hover:text-blue-600"
+                    >Violentmonkey</a
+                  >
+                  {{ $t('about.captureScriptInstallStep1Or') }}
+                  <a
+                    href="https://www.tampermonkey.net/"
+                    target="_blank"
+                    rel="noopener"
+                    class="text-blue-500 hover:text-blue-600"
+                    >Tampermonkey</a
+                  >
+                </li>
+                <li>
+                  {{ $t('about.captureScriptInstallStep2') }}
+                  <ul class="list-disc list-inside ml-4 mt-1 space-y-1">
+                    <li>{{ $t('about.captureScriptInstallStep2a') }}</li>
+                    <li>{{ $t('about.captureScriptInstallStep2b') }}</li>
+                    <li>
+                      {{ $t('about.captureScriptInstallStep2c') }}
+                      <ul class="list-disc list-inside ml-4 mt-1 space-y-1">
+                        <li>
+                          {{ $t('about.captureScriptInstallStep2cOption1') }}
+                          <a
+                            href="https://raw.githubusercontent.com/lzwme/m3u8-dl/refs/heads/main/client/m3u8-capture.user.js"
+                            target="_blank"
+                            rel="noopener"
+                            class="text-blue-500 hover:text-blue-600"
+                            >https://raw.githubusercontent.com/lzwme/m3u8-dl/refs/heads/main/client/m3u8-capture.user.js</a
+                          >
+                          <span class="text-gray-500 text-xs ml-1">({{ $t('about.captureScriptInstallStep2cOption1Note') }})</span>
+                        </li>
+                        <li>
+                          {{ $t('about.captureScriptInstallStep2cOption2') }}
+                          <a
+                            :href="`${localScriptUrl}/m3u8-capture.user.js`"
+                            target="_blank"
+                            rel="noopener"
+                            class="text-blue-500 hover:text-blue-600"
+                            >{{ localScriptUrl }}/m3u8-capture.user.js</a
+                          >
+                        </li>
+                      </ul>
+                    </li>
+                  </ul>
+                </li>
+                <li>
+                  {{ $t('about.captureScriptInstallStep3') }}
+                  <ul class="list-disc list-inside ml-4 mt-1 space-y-1">
+                    <li>{{ $t('about.captureScriptInstallStep3a') }}</li>
+                    <li>{{ $t('about.captureScriptInstallStep3b') }}</li>
+                    <li>{{ $t('about.captureScriptInstallStep3c') }}</li>
+                  </ul>
+                </li>
+              </ol>
+            </div>
+            <div>
+              <p class="text-gray-600 mb-2 font-semibold">{{ $t('about.captureScriptFeatures') }}</p>
+              <ul class="list-disc list-inside text-gray-600 space-y-1.5 text-sm ml-2">
+                <li>{{ $t('about.captureScriptFeature1') }}</li>
+                <li>{{ $t('about.captureScriptFeature2') }}</li>
+                <li>{{ $t('about.captureScriptFeature3') }}</li>
+                <li>
+                  {{ $t('about.captureScriptFeature4') }}
+                  <ul class="list-disc list-inside ml-4 mt-1 space-y-1">
+                    <li>{{ $t('about.captureScriptFeature4a') }}</li>
+                    <li>{{ $t('about.captureScriptFeature4b') }}</li>
+                  </ul>
+                </li>
+              </ul>
+            </div>
+            <div>
+              <p class="text-gray-600 mb-2 font-semibold">{{ $t('about.captureScriptUsage') }}</p>
+              <ol class="list-decimal list-inside text-gray-600 space-y-1.5 text-sm ml-2">
+                <li>{{ $t('about.captureScriptUsageStep1') }}</li>
+                <li>{{ $t('about.captureScriptUsageStep2') }}</li>
+                <li>{{ $t('about.captureScriptUsageStep3') }}</li>
+                <li>{{ $t('about.captureScriptUsageStep4') }}</li>
+                <li>{{ $t('about.captureScriptUsageStep5') }}</li>
+              </ol>
+            </div>
+            <div>
+              <p class="text-gray-600 mb-2 font-semibold">{{ $t('about.captureScriptExcludeRules') }}</p>
+              <p class="text-gray-600 mb-2 text-sm">{{ $t('about.captureScriptExcludeRulesHint') }}</p>
+              <pre class="bg-gray-800 text-gray-100 p-3 rounded-lg overflow-x-auto text-sm">localhost:6600
+127.0.0.1
+/example\.com/
+admin</pre>
+            </div>
+            <p class="text-gray-600 text-sm">
+              {{ $t('about.captureScriptTip') }}
+            </p>
+          </div>
+        </div>
       </div>
     </div>
     </div>
@@ -247,6 +356,7 @@ import { formatSpeed, formatSize } from '@/utils/format';
 const serverStore = useServerStore();
 const serverInfo = computed(() => serverStore.serverInfo);
 const { checkNewVersion } = useVersionCheck();
+const localScriptUrl = computed(() => window.location.origin);
 
 async function handleCheckVersion() {
   await checkNewVersion(true);

@@ -1,9 +1,11 @@
 // ==UserScript==
 // @name         [M3U8-DL]媒体链接抓取器
 // @namespace    http://tampermonkey.net/
-// @version      1.1.0
+// @version      1.0.0
 // @description  自动抓取网页中的多种媒体链接（m3u8、mp4、mkv、avi、mov、音频等），支持可配置的媒体类型，支持跳转到 m3u8-dl webui 下载
 // @author       lzw
+// @updateURL    https://raw.githubusercontent.com/lzwme/m3u8-dl/refs/heads/main/client/m3u8-capture.user.js
+// @downloadURL  https://raw.githubusercontent.com/lzwme/m3u8-dl/refs/heads/main/client/m3u8-capture.user.js
 // @match        *://*/*
 // @grant        GM_setValue
 // @grant        GM_getValue
@@ -56,7 +58,7 @@
 
     // 获取 webui 地址
     function getWebuiUrl() {
-        return GM_getValue(STORAGE_KEY_WEBUI_URL, 'http://localhost:6600');
+        return GM_getValue(STORAGE_KEY_WEBUI_URL, 'http://localhost:6600').replace(/\/$/, '');
     }
 
     // 获取排除网址规则列表
@@ -327,6 +329,10 @@
     let isPanelVisible = GM_getValue(STORAGE_KEY_PANEL_VISIBLE, true);
     let isDragging = false;
     let dragOffset = { x: 0, y: 0 };
+    let isToggleButtonDragging = false;
+    let toggleButtonDragOffset = { x: 0, y: 0 };
+    let toggleButtonClickStartPos = { x: 0, y: 0 };
+    let toggleButtonHasMoved = false;
 
     /** 创建圆形切换按钮（隐藏时显示） */
     function createToggleButton() {
@@ -335,10 +341,25 @@
         toggleButton = document.createElement('div');
         toggleButton.id = 'm3u8-capture-toggle-btn';
         toggleButton.innerHTML = '🎬';
-        toggleButton.className = `fixed bottom-10 right-5 w-[50px] h-[50px] bg-blue-500 rounded-full flex items-center justify-center cursor-pointer z-[999998] shadow-lg text-2xl transition-all duration-200 hover:scale-110 hover:shadow-xl select-none ${isPanelVisible ? 'hidden' : 'flex'}`;
+        toggleButton.className = `fixed bottom-10 right-5 w-[50px] h-[50px] bg-blue-500 rounded-full flex items-center justify-center cursor-move z-[999998] shadow-lg text-2xl transition-all duration-200 hover:scale-110 hover:shadow-xl select-none ${isPanelVisible ? 'hidden' : 'flex'}`;
 
-        toggleButton.addEventListener('click', () => {
-            showPanel();
+        // 拖动和点击处理
+        toggleButton.addEventListener('mousedown', (e) => {
+            isToggleButtonDragging = true;
+            toggleButtonHasMoved = false;
+            toggleButtonClickStartPos = { x: e.clientX, y: e.clientY };
+            const rect = toggleButton.getBoundingClientRect();
+            toggleButtonDragOffset.x = e.clientX - rect.left;
+            toggleButtonDragOffset.y = e.clientY - rect.top;
+            toggleButton.style.cursor = 'move';
+            e.preventDefault();
+        });
+
+        toggleButton.addEventListener('click', (e) => {
+            // 如果移动距离很小，认为是点击
+            if (!toggleButtonHasMoved) {
+                showPanel();
+            }
         });
 
         document.body.appendChild(toggleButton);
@@ -452,7 +473,9 @@
             panel.style.cursor = 'move';
         });
 
-        document.addEventListener('mousemove', (e) => {
+        // 全局鼠标移动事件（同时处理面板和按钮拖动）
+        const handleMouseMove = (e) => {
+            // 处理面板拖动
             if (isDragging && panelElement) {
                 e.preventDefault();
                 const x = e.clientX - dragOffset.x;
@@ -471,16 +494,53 @@
                 // 保存位置
                 GM_setValue(STORAGE_KEY_PANEL_POS, { x: finalX, y: finalY });
             }
-        });
 
-        document.addEventListener('mouseup', () => {
+            // 处理按钮拖动
+            if (isToggleButtonDragging && toggleButton) {
+                e.preventDefault();
+                const x = e.clientX - toggleButtonDragOffset.x;
+                const y = e.clientY - toggleButtonDragOffset.y;
+
+                // 限制在视口内
+                const maxX = window.innerWidth - toggleButton.offsetWidth;
+                const maxY = window.innerHeight - toggleButton.offsetHeight;
+                const finalX = Math.max(0, Math.min(x, maxX));
+                const finalY = Math.max(0, Math.min(y, maxY));
+
+                toggleButton.style.left = finalX + 'px';
+                toggleButton.style.top = finalY + 'px';
+                toggleButton.style.right = 'auto';
+                toggleButton.style.bottom = 'auto';
+
+                // 检查是否移动了足够距离（用于区分点击和拖动）
+                const moveDistance = Math.sqrt(
+                    Math.pow(e.clientX - toggleButtonClickStartPos.x, 2) +
+                    Math.pow(e.clientY - toggleButtonClickStartPos.y, 2)
+                );
+                if (moveDistance > 5) {
+                    toggleButtonHasMoved = true;
+                }
+            }
+        };
+
+        // 全局鼠标释放事件（同时处理面板和按钮拖动）
+        const handleMouseUp = () => {
             if (isDragging) {
                 isDragging = false;
                 if (panelElement) {
                     panelElement.style.cursor = 'default';
                 }
             }
-        });
+            if (isToggleButtonDragging) {
+                isToggleButtonDragging = false;
+                if (toggleButton) {
+                    toggleButton.style.cursor = 'move';
+                }
+            }
+        };
+
+        document.addEventListener('mousemove', handleMouseMove);
+        document.addEventListener('mouseup', handleMouseUp);
 
         // 按钮事件
         document.getElementById('m3u8-capture-toggle').addEventListener('click', () => {
@@ -718,7 +778,7 @@
                 e.stopPropagation();
                 const url = decodeURIComponent(btn.getAttribute('data-url'));
                 const title = decodeURIComponent(btn.getAttribute('data-title'));
-                const downloadUrl = `${getWebuiUrl()}/#/page/download?action=new&url=${encodeURIComponent(url + (title ? `|${title}` : ''))}`;
+                const downloadUrl = `${getWebuiUrl()}/page/download?action=new&url=${encodeURIComponent(url + (title ? `|${title}` : ''))}`;
                 safeOpenUrl(downloadUrl);
             });
         });

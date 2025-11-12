@@ -12,346 +12,348 @@
 [![GitHub forks][forks-badge]][forks-url]
 [![GitHub stars][stars-badge]][stars-url]
 
-一个免费开源功能强大的 m3u8 视频批量下载工具，支持多线程下载、边下边播、WebUI 管理、视频解析等多种功能。支持 CLI命令行、浏览器、PC客户端、Docker 部署以及 Node.js API 调用等多种使用方式。
+> **Language**: [English](README.md) | [中文简体](README.zh-CN.MD)
 
-## ✨ 功能特性
+A free, open-source, and powerful m3u8 video batch downloader with multi-threaded downloading, play-while-downloading, WebUI management, video parsing, and more. Supports multiple usage methods including CLI command line, browser, PC client, Docker deployment, and Node.js API calls.
 
-### 🚀 核心下载功能
+## ✨ Features
 
-- **多线程下载**：采用线程池模式，支持自定义线程数，大幅提升下载速度
-- **边下边播模式**：支持使用已下载的 ts 缓存文件在线播放，无需等待完整下载
-- **批量下载**：支持指定多个 m3u8 地址批量下载，支持文本文件批量导入
-- **缓存续传**：下载失败会保留缓存，重试时只下载失败的片段，节省带宽和时间
-- **AES 加密支持**：自动识别并解密常见的 AES-128 加密视频流
-- **格式转换**：自动将下载的 ts 片段合并转换为 mp4 格式（需安装 [ffmpeg](https://ffmpeg.org/download.html)）
-- **多格式支持**：支持下载 mp4、mkv 等格式的视频文件
-- **片段过滤**：支持忽略指定时间段的视频片段（如跳过片头片尾）
+### 🚀 Core Download Features
 
-### 🌐 WebUI 下载管理
+- **Multi-threaded Downloading**: Uses thread pool mode with customizable thread count, significantly improving download speed
+- **Play-While-Downloading Mode**: Supports online playback using downloaded ts cache files without waiting for complete download
+- **Batch Downloading**: Supports batch downloading of multiple m3u8 addresses, supports batch import from text files
+- **Resume from Cache**: Failed downloads retain cache, retries only download failed segments, saving bandwidth and time
+- **AES Encryption Support**: Automatically identifies and decrypts common AES-128 encrypted video streams
+- **Format Conversion**: Automatically merges and converts downloaded ts segments to mp4 format (requires [ffmpeg](https://ffmpeg.org/download.html))
+- **Multi-format Support**: Supports downloading video files in mp4, mkv, and other formats
+- **Segment Filtering**: Supports ignoring video segments in specified time ranges (e.g., skip intro and outro)
 
-- **现代化界面**：基于 Vue 3 + TypeScript 构建的现代化 Web 界面
-- **实时进度**：通过 WebSocket 实时显示下载进度和状态
-- **任务管理**：支持暂停、恢复、删除下载任务，支持批量操作
-- **下载中心**：集中管理所有下载任务，支持搜索和筛选
-- **配置管理**：可视化配置下载参数（线程数、保存目录等）
-- **访问控制**：支持设置访问密码（token）保护服务
+### 🌐 WebUI Download Management
+
+- **Modern Interface**: Modern web interface built with Vue 3 + TypeScript
+- **Real-time Progress**: Real-time display of download progress and status via WebSocket
+- **Task Management**: Supports pausing, resuming, and deleting download tasks, supports batch operations
+- **Download Center**: Centralized management of all download tasks, supports search and filtering
+- **Configuration Management**: Visual configuration of download parameters (thread count, save directory, etc.)
+- **Access Control**: Supports setting access password (token) to protect the service
 
 ![](examples/img/m3u8dl-webui-new.jpg)
 
-### 🎬 视频解析功能
+### 🎬 Video Parsing Features
 
-- **多平台支持**：支持抖音、微博、皮皮虾等平台的视频分享链接解析
-- **无水印下载**：自动提取无水印视频地址并下载
-- **智能识别**：自动识别视频平台并选择合适的解析器
+- **Multi-platform Support**: Supports parsing video sharing links from platforms like Douyin, Weibo, Pipixia, etc.
+- **Watermark-free Download**: Automatically extracts watermark-free video addresses and downloads
+- **Smart Recognition**: Automatically recognizes video platforms and selects appropriate parsers
 
-### 🔍 智能提取功能
+### 🔍 Smart m3u8 Address Extraction
 
-- **网页提取**：支持从视频播放页面自动提取 m3u8 地址
-- **深度搜索**：支持多层级页面搜索，自动发现视频链接
-- **批量提取**：一次提取多个视频链接，支持批量下载
+- **Web Page Extraction**: Supports automatic extraction of m3u8 addresses from video playback pages
+- **Deep Search**: Supports multi-level page search, automatically discovers video links
+- **Batch Extraction**: Extract multiple video links at once, supports batch downloading
 
 ![](./examples/img/m3u8dl-web-browser.jpg)
 
-### 🎯 浏览器脚本抓取器
+### 🎯 Browser Userscript Capture Tool
 
-- **自动抓取**：自动拦截和抓取网页中的 m3u8 和 mp4 视频链接
-- **实时监控**：监控网络请求（XMLHttpRequest、fetch、Performance API），自动发现视频链接
-- **智能识别**：自动识别视频类型（M3U8/MP4），并提取视频名称
-- **一键跳转**：支持一键跳转到 m3u8-dl WebUI 进行下载
-- **灵活配置**：支持配置排除网址规则，避免在特定页面抓取
-- **拖拽面板**：支持拖拽移动面板位置，自动保存位置
-- **链接管理**：支持复制链接、清空列表等操作
+- **Auto Capture**: Automatically intercepts and captures m3u8 and mp4 video links in web pages
+- **Real-time Monitoring**: Monitors network requests (XMLHttpRequest, fetch, Performance API), automatically discovers video links
+- **Smart Recognition**: Automatically recognizes video types (M3U8/MP4) and extracts video names
+- **One-click Jump**: Supports one-click jump to m3u8-dl WebUI for downloading
+- **Flexible Configuration**: Supports configuring exclusion URL rules to avoid capturing on specific pages
+- **Draggable Panel**: Supports dragging to move panel position, automatically saves position
+- **Link Management**: Supports copying links, clearing list, and other operations
 
-> 这是一个 Tampermonkey/Greasemonkey 用户脚本，可在浏览器中自动抓取视频链接，配合 m3u8-dl WebUI 使用，实现无缝下载体验。
+> This is a Tampermonkey/Greasemonkey userscript that can automatically capture video links in browsers, working with m3u8-dl WebUI to provide a seamless download experience.
 
-### 📺 视频搜索功能
+### 📺 Video Search Features
 
-- **采集站支持**：支持标准采集站 API，通过命令行交互搜索和下载
-- **缓存机制**：自动缓存搜索历史，支持继续未完成的下载
+- **Collection Site Support**: Supports standard collection site APIs, search and download through command-line interaction
+- **Cache Mechanism**: Automatically caches search history, supports continuing unfinished downloads
 
 ![](./examples/img/m3u8dl-search-demo.png)
 
-### ▶️ 视频播放
+### ▶️ Video Playback
 
-- **内置播放器**：WebUI、桌面客户端均内置轻量级视频播放器，可直接在线播放已下载的或下载中的视频，无需等待全部完成。
-- **边下边播**：支持 ts 缓存片段自动拼接，边下载边可播放，实现“即下即看”体验。
-- **多格式支持**：播放器支持 mp4、ts 等主流视频格式播放，并可拖动、倍速、全屏、画中画等操作。
-- **历史记录**：自动记录播放进度，可断点续播，方便长视频追剧。
+- **Built-in Player**: Both WebUI and desktop client have built-in lightweight video players, can directly play downloaded or downloading videos online without waiting for completion.
+- **Play-While-Downloading**: Supports automatic splicing of ts cache segments, can play while downloading, achieving "download and watch" experience.
+- **Multi-format Support**: Player supports playback of mainstream video formats like mp4, ts, with drag, speed control, fullscreen, picture-in-picture, and other operations.
+- **History**: Automatically records playback progress, supports resume playback, convenient for long video series watching.
 
-> 无需依赖第三方播放器，即可在浏览器或客户端内直接观看下载内容，提升使用便捷性。
+> No need to rely on third-party players, you can directly watch downloaded content in the browser or client, improving convenience.
 
 ![](./examples/img/m3u8dl-video-play.jpg)
 
-### 💻 多种使用方式
+### 💻 Multiple Usage Methods
 
-- **命令行工具**：提供完整的 CLI 命令，支持各种参数配置
-- **Node.js API**：提供编程接口，方便集成到其他项目
-- **Web 服务**：支持启动为 Web 服务，通过浏览器管理下载
-- **Docker 部署**：提供 Docker 镜像，一键部署到服务器
-- **Electron 桌面应用**：支持打包为桌面应用，包含内置浏览器功能
+- **Command Line Tool**: Provides complete CLI commands with various parameter configurations
+- **Node.js API**: Provides programming interface for easy integration into other projects
+- **Web Service**: Supports starting as a web service, manage downloads through browser
+- **Docker Deployment**: Provides Docker image for one-click deployment to server
+- **Electron Desktop App**: Supports packaging as desktop application with built-in browser functionality
 
-### 🌍 国际化支持
+### 🌍 Internationalization Support
 
-- 支持中文和英文多语言
-- 命令行和 WebUI 均支持语言切换
+- Supports Chinese and English multi-language
+- Both command line and WebUI support language switching
 
-## 📦 安装
+## 📦 Installation
 
-**方式一：使用 Node.js 全局安装**
+**Method 1: Global Installation with Node.js**
 
-作为 CLI 命令行工具使用。
+Use as a CLI command-line tool.
 
 ```bash
 npm i -g @lzwme/m3u8-dl
 m3u8dl -h
 ```
 
-或者使用 `npx` 直接运行：
+Or use `npx` to run directly:
 
 ```bash
 npx @lzwme/m3u8-dl -h
 ```
 
-**方式二：桌面应用下载**
+**Method 2: Desktop Application Download**
 
-安装为电脑客户端使用。使用难度低，适合大多数普通用户，并且有内置浏览器自动提取视频地址的增强功能。可访问如下地址之一下载最新版本：
+Install as a PC client. Easy to use, suitable for most regular users, with built-in browser functionality to automatically extract video addresses. Download the latest version from one of the following addresses:
 
 - [https://m3u8-player.lzw.me/download.html](https://m3u8-player.lzw.me/download.html)
 - [https://github.com/lzwme/m3u8-dl/releases](https://github.com/lzwme/m3u8-dl/releases)
 
-## 📖 使用指南
+## 📖 Usage Guide
 
-> **提示**：如需要下载并转换为 `mp4` 视频格式，您需全局安装 [ffmpeg](https://ffmpeg.org/download.html)。
-> 或者使用 `--ffmpeg-path` 参数指定 ffmpeg 的路径。
+> **Tip**: If you need to download and convert to `mp4` video format, you need to globally install [ffmpeg](https://ffmpeg.org/download.html).
+> Or use the `--ffmpeg-path` parameter to specify the path to ffmpeg.
 
-### 作为 CLI 命令行工具使用
+### Using as CLI Command Line Tool
 
-查看所有可用命令和选项：
+View all available commands and options:
 
 ```bash
 m3u8dl --help
 ```
 
-#### 基础下载
+#### Basic Download
 
 ```bash
-# 下载单个 m3u8 文件
+# Download a single m3u8 file
 m3u8dl https://example.com/video.m3u8
 
-# 指定文件名和保存目录
-m3u8dl https://example.com/video.m3u8 --filename "我的视频" --save-dir "./downloads"
+# Specify filename and save directory
+m3u8dl https://example.com/video.m3u8 --filename "My Video" --save-dir "./downloads"
 
-# 启用边下边播模式
+# Enable play-while-downloading mode
 m3u8dl https://example.com/video.m3u8 --play
 
-# 设置线程数（默认 4）
+# Set thread count (default 4)
 m3u8dl https://example.com/video.m3u8 --thread-num 8
 
-# 不转换为 mp4（仅下载 ts 片段）
+# Don't convert to mp4 (only download ts segments)
 m3u8dl https://example.com/video.m3u8 --no-convert
 
-# 忽略指定时间片段（如跳过前 30 秒和最后 60 秒）
+# Ignore specified time segments (e.g., skip first 30 seconds and last 60 seconds)
 m3u8dl https://example.com/video.m3u8 --ignore-segments "0-30,END-60"
 ```
 
-#### 批量下载
+#### Batch Download
 
-**方式一：命令行参数**
+**Method 1: Command Line Parameters**
 
 ```bash
-# 下载多个文件，使用 | 分隔文件名和 URL
-m3u8dl "第1集|https://example.com/ep1.m3u8" "第2集|https://example.com/ep2.m3u8" --filename "剧集名称"
+# Download multiple files, use | to separate filename and URL
+m3u8dl "Episode 1|https://example.com/ep1.m3u8" "Episode 2|https://example.com/ep2.m3u8" --filename "Series Name"
 ```
 
-**方式二：文本文件批量导入**
+**Method 2: Batch Import from Text File**
 
-创建 `剧集列表.txt` 文件，格式如下（使用 `$` 分隔文件名和 URL）：
+Create a `series-list.txt` file with the following format (use `$` to separate filename and URL):
 
 ```txt
-第1集$https://example.com/ep1.m3u8
-第2集$https://example.com/ep2.m3u8
-第3集$https://example.com/ep3.m3u8
+Episode 1$https://example.com/ep1.m3u8
+Episode 2$https://example.com/ep2.m3u8
+Episode 3$https://example.com/ep3.m3u8
 ```
 
-然后执行：
+Then execute:
 
 ```bash
-m3u8dl 剧集列表.txt --filename "剧集名称"
+m3u8dl series-list.txt --filename "Series Name"
 ```
 
-#### 视频解析下载
+#### Video Parsing Download
 
-支持抖音、微博等平台的分享链接：
+Supports sharing links from platforms like Douyin, Weibo, etc.:
 
 ```bash
-# 抖音视频分享链接
+# Douyin video sharing link
 m3u8dl "https://v.douyin.com/xxxxx/" --type parser
 
-# 微博视频分享链接
+# Weibo video sharing link
 m3u8dl "https://weibo.com/xxxxx" --type parser
 ```
 
-#### 从网页提取 m3u8 地址
+#### Extract m3u8 Address from Web Page
 
 ```bash
-# 从视频播放页面自动提取 m3u8 地址并下载
+# Automatically extract m3u8 address from video playback page and download
 m3u8dl "https://example.com/play/12345" --type web
 ```
 
-#### 视频搜索下载
+#### Video Search Download
 
 ```bash
-# 查看搜索命令帮助
+# View search command help
 m3u8dl search --help
 
-# 指定采集站 API 并搜索下载（会缓存 API 地址）
+# Specify collection site API and search download (will cache API address)
 m3u8dl search -u https://api.example.com/provide/vod/
 
-# 直接搜索关键词
-m3u8dl search "关键词" -u https://api.example.com/provide/vod/
+# Search keyword directly
+m3u8dl search "keyword" -u https://api.example.com/provide/vod/
 ```
 
-> **声明**：以上仅作示例，请自行搜索查找可用的采集站 API。本工具仅用作技术研究学习，不提供任何具体资源类信息。
+> **Disclaimer**: The above are examples only. Please search for available collection site APIs yourself. This tool is only for technical research and learning purposes and does not provide any specific resource information.
 
-#### 常用命令行选项
+#### Common Command Line Options
 
-| 选项 | 说明 |
-|------|------|
-| `-f, --filename <name>` | 指定文件名 |
-| `-n, --thread-num <number>` | 设置下载线程数（默认 4） |
-| `-p, --play` | 启用边下边播模式 |
-| `-C, --cache-dir <dirpath>` | 指定缓存目录 |
-| `-S, --save-dir <dirpath>` | 指定保存目录 |
-| `--no-convert` | 不转换为 mp4 |
-| `--no-del-cache` | 下载完成后不删除缓存 |
-| `--ffmpeg-path <path>` | 指定 ffmpeg 路径 |
-| `-H, --headers <headers>` | 设置请求头（JSON 格式） |
-| `-I, --ignore-segments <time>` | 忽略指定时间片段 |
-| `--debug` | 启用调试模式 |
-| `--lang <lang>` | 设置语言（zh/en） |
+| Option | Description |
+|--------|-------------|
+| `-f, --filename <name>` | Specify filename |
+| `-n, --thread-num <number>` | Set download thread count (default 4) |
+| `-p, --play` | Enable play-while-downloading mode |
+| `-C, --cache-dir <dirpath>` | Specify cache directory |
+| `-S, --save-dir <dirpath>` | Specify save directory |
+| `--no-convert` | Don't convert to mp4 |
+| `--no-del-cache` | Don't delete cache after download completes |
+| `--ffmpeg-path <path>` | Specify ffmpeg path |
+| `-H, --headers <headers>` | Set request headers (JSON format) |
+| `-I, --ignore-segments <time>` | Ignore specified time segments |
+| `--debug` | Enable debug mode |
+| `--lang <lang>` | Set language (zh-CN/en) |
 
-### WebUI 下载管理
+### WebUI Download Management
 
-启动 Web 服务，通过浏览器管理下载任务：
+Start web service to manage download tasks through browser:
 
 ```bash
-# 启动服务（默认端口 6600）
+# Start service (default port 6600)
 m3u8dl server
 
-# 指定端口和访问密码
+# Specify port and access password
 m3u8dl server -p 8080 -t "your-secret-token"
 ```
 
-启动后，在浏览器中访问 `http://localhost:6600` 即可使用 WebUI。
+After starting, visit `http://localhost:6600` in your browser to use WebUI.
 
-**WebUI 主要功能：**
+**WebUI Main Features:**
 
-- 📥 创建下载任务（支持 m3u8 链接、微博和皮皮虾视频分享链接、视频播放网页提取）
-- 📊 实时查看下载进度和速度
-- ⏸️ 暂停/恢复下载任务
-- 🗑️ 删除任务和已下载文件
-- ⚙️ 配置下载参数（线程数、保存目录等）
-- 🔍 搜索和筛选任务
-- 📁 查看已完成的下载
+- 📥 Create download tasks (supports m3u8 links, Weibo and Pipixia video sharing links, video playback page extraction)
+- 📊 View download progress and speed in real-time
+- ⏸️ Pause/Resume download tasks
+- 🗑️ Delete tasks and downloaded files
+- ⚙️ Configure download parameters (thread count, save directory, etc.)
+- 🔍 Search and filter tasks
+- 📁 View completed downloads
 
-**环境变量配置：**
+**Environment Variable Configuration:**
 
 ```bash
-# 设置端口
+# Set port
 export DS_PORT=6600
 
-# 设置访问密码
+# Set access password
 export DS_SECRET=your-secret-token
 
-# 设置保存目录
+# Set save directory
 export DS_SAVE_DIR=./downloads
 
-# 设置缓存目录
+# Set cache directory
 export DS_CACHE_DIR=./cache
 
-# 设置 ffmpeg 路径
+# Set ffmpeg path
 export DS_FFMPEG_PATH=/usr/local/bin/ffmpeg
 
-# 启用调试模式
+# Enable debug mode
 export DS_DEBUG=1
 
-# 限制文件访问（仅允许访问下载和缓存目录）
+# Limit file access (only allow access to download and cache directories)
 export DS_LIMTE_FILE_ACCESS=1
 ```
 
-### 以 Node.js API 形式集成调用
+### Integration as Node.js API
 
-在您的项目中调用相关 API。代码示例：
+Call related APIs in your project. Code examples:
 
 ```ts
 import { m3u8Download, m3u8BatchDownload, VideoParser, getM3u8Urls } from '@lzwme/m3u8-dl';
 
-// 示例 1：单文件下载
+// Example 1: Single file download
 const result = await m3u8Download('https://example.com/video.m3u8', {
-  filename: '我的视频',
+  filename: 'My Video',
   saveDir: './downloads',
   threadNum: 8,
   debug: true,
 });
 
 if (result.errmsg) {
-  console.error('下载失败：', result.errmsg);
+  console.error('Download failed:', result.errmsg);
 } else {
-  console.log('下载成功：', result.filepath);
+  console.log('Download successful:', result.filepath);
 }
 
-// 示例 2：批量下载
+// Example 2: Batch download
 const fileList = [
-  '第1集$https://example.com/ep1.m3u8',
-  '第2集$https://example.com/ep2.m3u8',
+  'Episode 1$https://example.com/ep1.m3u8',
+  'Episode 2$https://example.com/ep2.m3u8',
 ];
 await m3u8BatchDownload(fileList, {
-  filename: '剧集名称',
+  filename: 'Series Name',
   threadNum: 4,
 });
 
-// 示例 3：视频解析下载（抖音、微博等）
+// Example 3: Video parsing download (Douyin, Weibo, etc.)
 const parser = new VideoParser();
 const parseResult = await parser.parse('https://v.douyin.com/xxxxx/');
 if (parseResult.data) {
-  console.log('视频标题：', parseResult.data.title);
-  console.log('视频地址：', parseResult.data.url);
+  console.log('Video title:', parseResult.data.title);
+  console.log('Video URL:', parseResult.data.url);
 
-  // 下载视频
+  // Download video
   await parser.download('https://v.douyin.com/xxxxx/', {
     filename: parseResult.data.title,
   });
 }
 
-// 示例 4：从网页提取 m3u8 地址
+// Example 4: Extract m3u8 addresses from web page
 const urls = await getM3u8Urls({
   url: 'https://example.com/play/12345',
   headers: {
     'User-Agent': 'Mozilla/5.0...',
   },
-  deep: 2, // 搜索深度
+  deep: 2, // Search depth
 });
-console.log('提取到的地址：', Array.from(urls.keys()));
+console.log('Extracted addresses:', Array.from(urls.keys()));
 
-// 示例 5：指定 ffmpeg 路径
+// Example 5: Specify ffmpeg path
 import ffmpegStatic from 'ffmpeg-static';
 m3u8Download('https://example.com/video.m3u8', {
-  filename: '测试视频',
-  ffmpegPath: ffmpegStatic, // 使用 ffmpeg-static 包。适合未全局安装 ffmpeg 的场景
-  // 或指定已安装的绝对路径（若已在 PATH 环境变量中，则无需指定）
+  filename: 'Test Video',
+  ffmpegPath: ffmpegStatic, // Use ffmpeg-static package. Suitable for scenarios where ffmpeg is not globally installed
+  // Or specify the absolute path of installed ffmpeg (if already in PATH environment variable, no need to specify)
   // ffmpegPath: '/usr/local/bin/ffmpeg',
 });
 ```
 
-### Docker 部署
+### Docker Deployment
 
-#### 使用 Docker 命令
+#### Using Docker Command
 
 ```bash
-# 拉取镜像
+# Pull image
 docker pull renxia/m3u8dl-dl:latest
 
-# 运行容器
+# Run container
 docker run --rm -it \
   -v ./cache:/app/cache \
   -v ./downloads:/app/downloads \
@@ -361,9 +363,9 @@ docker run --rm -it \
   renxia/m3u8dl-dl:latest
 ```
 
-#### 使用 Docker Compose
+#### Using Docker Compose
 
-创建 `docker-compose.yml` 文件：
+Create `docker-compose.yml` file:
 
 ```yml
 services:
@@ -379,78 +381,77 @@ services:
       DS_PORT: '6600'
       DS_SAVE_DIR: '/app/downloads'
       DS_CACHE_DIR: '/app/cache'
-      DS_SECRET: '' # 设置访问密码
+      DS_SECRET: '' # Set access password
       DS_DEBUG: ''
-      DS_FFMPEG_PATH: ''  # 留空则使用系统 PATH 中的 ffmpeg
-      DS_LIMTE_FILE_ACCESS: '1' # 限制文件访问
+      DS_FFMPEG_PATH: ''  # Leave empty to use ffmpeg from system PATH
+      DS_LIMTE_FILE_ACCESS: '1' # Limit file access
     restart: unless-stopped
 ```
 
-启动服务：
+Start service:
 
 ```bash
 docker-compose up -d
 ```
 
-部署成功后，浏览器访问 `http://your-server-ip:6600` 即可使用。
+After successful deployment, visit `http://your-server-ip:6600` in your browser to use.
 
-> **提示**：Docker 镜像已包含 ffmpeg，无需额外安装。镜像同时包含了 [AriaNg](https://github.com/mayswind/AriaNg) 静态资源。
+> **Tip**: The Docker image already includes ffmpeg, no need for additional installation. The image also includes [AriaNg](https://github.com/mayswind/AriaNg) static resources.
 
-### Electron 桌面应用
+### Electron Desktop Application
 
-项目支持打包为 Electron 桌面应用，提供更丰富的功能：
+The project supports packaging as an Electron desktop application with richer features:
 
-- 🖥️ 原生桌面体验
-- 🌐 内置浏览器，支持从网页提取视频链接
-- 📱 系统托盘支持
-- 🔄 自动更新功能
+- 🖥️ Native desktop experience
+- 🌐 Built-in browser, supports extracting video links from web pages
+- 📱 System tray support
+- 🔄 Auto-update functionality
 
-下载已构建的应用：
+Download the built application:
 
 - https://m3u8-player.lzw.me/download.html
 - https://github.com/lzwme/m3u8-dl/releases
 
-### 浏览器脚本安装与使用
+### Browser Script Installation and Usage
 
-**安装步骤：**
+**Installation Steps:**
 
-1. 安装浏览器扩展（任选其一）：
-   - [Violentmonkey](https://violentmonkey.github.io/)（【推荐】开源替代方案）
-   - [Tampermonkey](https://www.tampermonkey.net/)（【官方】支持 Chrome、Firefox、Edge、Safari 等）
-   - [Greasemonkey](https://www.greasespot.net/)（仅支持 Firefox）
+1. Install browser extension (choose one):
+   - [Violentmonkey](https://violentmonkey.github.io/) (【Recommended】Open-source alternative)
+   - [Tampermonkey](https://www.tampermonkey.net/) (【Official】Supports Chrome, Firefox, Edge, Safari, etc.)
+   - [Greasemonkey](https://www.greasespot.net/) (Firefox only)
 
-2. 安装脚本：
-   - 打开 Tampermonkey 管理面板
-   - 点击"添加新脚本"
-   - 复制 `packages/m3u8-capture/m3u8-capture.user.js` 文件内容
-   - 粘贴到编辑器中并保存
-   - 或者浏览器直接访问链接：[https://raw.githubusercontent.com/lzwme/m3u8-dl/refs/heads/main/packages/m3u8-capture/m3u8-capture.user.js](https://raw.githubusercontent.com/lzwme/m3u8-dl/refs/heads/main/packages/m3u8-capture/m3u8-capture.user.js)
+2. Install script:
+   - Open Tampermonkey management panel
+   - Click "Add new script"
+   - Copy content from `client/m3u8-capture.user.js` file
+   - Paste into editor and save
+   - Or directly visit the link in browser: [https://raw.githubusercontent.com/lzwme/m3u8-dl/refs/heads/main/client/m3u8-capture.user.js](https://raw.githubusercontent.com/lzwme/m3u8-dl/refs/heads/main/client/m3u8-capture.user.js)
 
-3. 配置 WebUI 地址：
-   - 访问任意网页，点击页面右上角的 🎬 图标打开抓取面板
-   - 点击设置按钮 ⚙️
-   - 输入您的 m3u8-dl WebUI 地址（如 `http://localhost:6600`）
-   - 保存设置
+3. Configure WebUI address:
+   - Visit any web page, click the 🎬 icon in the top right corner to open the capture panel
+   - Click the settings button ⚙️
+   - Enter your m3u8-dl WebUI address (e.g., `http://localhost:6600`)
+   - Save settings
 
-**功能说明：**
+**Feature Description:**
 
-- **自动抓取**：脚本会自动监控网页中的网络请求，当检测到 m3u8 或 mp4 视频链接时，自动添加到列表中
-- **视频名称提取**：优先从页面的 `h1`、`h2` 或 `document.title` 提取视频名称
-- **跳转下载**：点击"跳转下载"按钮，会自动跳转到 m3u8-dl WebUI 并填充视频链接和名称（格式：`url|name`）
-- **排除规则**：在设置中可以配置排除网址规则列表，匹配的网址将不展示面板且不抓取视频链接
-  - 支持普通字符串匹配（包含匹配）
-  - 支持正则表达式（以 `/` 开头和结尾，如 `/example\.com/`）
-  - 多个规则换行分隔
+- **Auto Capture**: The script automatically monitors network requests in web pages, when m3u8 or mp4 video links are detected, automatically adds them to the list
+- **Video Name Extraction**: Prioritizes extracting video names from page `h1`, `h2`, or `document.title`
+- **Jump to Download**: Click the "Jump to Download" button to automatically jump to m3u8-dl WebUI and fill in video link and name (format: `url|name`)
+- **Exclusion Rules**: In settings, you can configure exclusion URL rule list, matching URLs will not show panel and will not capture video links
+  - Supports plain string matching (contains match)
+  - Supports regular expressions (starts and ends with `/`, e.g., `/example\.com/`)
 
-**使用示例：**
+**Usage Example:**
 
-1. 访问视频播放页面
-2. 脚本自动抓取视频链接，显示在右上角的面板中
-3. 点击"跳转下载"按钮
-4. 自动跳转到 m3u8-dl 的 WebUI，视频链接和名称已自动填充
-5. 在 WebUI 中点击"开始下载"即可
+1. Visit video playback page
+2. Script automatically captures video links, displayed in the panel in the bottom right corner
+3. Click "Jump to Download" button
+4. Automatically jumps to m3u8-dl WebUI, video link and name are automatically filled
+5. Click "Start Download" in WebUI
 
-**排除规则配置示例：**
+**Exclusion Rule Configuration Example:**
 
 ```
 localhost:6600
@@ -459,98 +460,99 @@ localhost:6600
 admin
 ```
 
-> **提示**：脚本会自动排除 WebUI 地址页面，避免在 WebUI 页面中抓取。您也可以手动添加更多排除规则。
+> **Tip**: The script automatically excludes WebUI address pages to avoid capturing in WebUI pages. You can also manually add more exclusion rules.
 
-## 🛠️ 技术栈
+## 🛠️ Tech Stack
 
-- **后端**：Node.js + TypeScript + Express + WebSocket
-- **前端**：Vue 3 + TypeScript + Vite + Pinia + TailwindCSS
-- **桌面应用**：Electron
-- **代码质量**：Biome (Linter & Formatter)
-- **构建工具**：TypeScript Compiler
+- **Backend**: Node.js + TypeScript + Express + WebSocket
+- **Frontend**: Vue 3 + TypeScript + Vite + Pinia + TailwindCSS
+- **Desktop App**: Electron
+- **Code Quality**: Biome (Linter & Formatter)
+- **Build Tool**: TypeScript Compiler
 
-## 💻 开发指南
+## 💻 Development Guide
 
-### 本地开发
+### Local Development
 
 ```bash
-# 克隆项目
+# Clone project
 git clone https://github.com/lzwme/m3u8-dl.git
 cd m3u8-dl
 
-# 安装依赖
+# Install dependencies
 pnpm install
 
-# 开发模式（监听文件变化自动编译）
+# Development mode (watch file changes and auto-compile)
 pnpm dev
 
-# 构建项目
+# Build project
 pnpm build
 
-# 代码检查
+# Code check
 pnpm lint
 
-# 代码格式化
+# Code format
 pnpm format
 
-# 修复代码问题
+# Fix code issues
 pnpm fix
 ```
 
-构建桌面应用：
+Build desktop application:
 
 ```bash
-# 进入应用目录
+# Enter application directory
 cd packages/m3u8dl-app
 
-# 安装依赖
+# Install dependencies
 pnpm install
 
-# 开发模式运行
+# Run in development mode
 pnpm dev
 
-# 构建应用
+# Build application
 pnpm build
 ```
 
-### 项目结构
+### Project Structure
 
 ```
 m3u8-dl/
-├── src/              # 源代码（TypeScript）
-│   ├── cli.ts        # 命令行入口
-│   ├── lib/          # 核心库
-│   ├── server/       # Web 服务
-│   ├── video-parser/ # 视频解析器
-│   └── types/        # 类型定义
+├── src/              # Source code (TypeScript)
+│   ├── cli.ts        # Command line entry
+│   ├── lib/          # Core library
+│   ├── server/       # Web service
+│   ├── video-parser/ # Video parser
+│   └── types/        # Type definitions
 ├── packages/
-│   ├── frontend/    # Vue 3 前端项目
-│   └── m3u8dl-app/   # Electron 桌面应用
-├── cjs/              # 编译后的 CommonJS 代码
-└── client/           # 前端构建输出
+│   ├── frontend/     # Vue 3 frontend project
+│   └── m3u8dl-app/   # Electron desktop application
+├── cjs/              # Compiled CommonJS code
+└── client/           # Frontend build output
+    └── m3u8-capture.user.js  # Browser video address capture userscript
 ```
 
-### 贡献代码
+### Contributing
 
-欢迎提交 Issue 和 Pull Request！
+Welcome to submit Issues and Pull Requests!
 
-1. [Fork](https://github.com/lzwme/m3u8-dl/fork) 本项目
-2. 创建特性分支 (`git checkout -b feature/AmazingFeature`)
-3. 提交更改 (`git commit -m 'Add some AmazingFeature'`)
-4. 推送到分支 (`git push origin feature/AmazingFeature`)
-5. 开启 Pull Request
+1. [Fork](https://github.com/lzwme/m3u8-dl/fork) this project
+2. Create feature branch (`git checkout -b feature/AmazingFeature`)
+3. Commit changes (`git commit -m 'Add some AmazingFeature'`)
+4. Push to branch (`git push origin feature/AmazingFeature`)
+5. Open Pull Request
 
-**欢迎贡献想法与代码！** 🎉
+**Welcome to contribute ideas and code!** 🎉
 
-## 📚 相关资源
+## 📚 Related Resources
 
-- [ffmpeg 下载](https://ffmpeg.org/download.html) - 视频处理工具
-- [m3u8 格式说明](https://en.wikipedia.org/wiki/M3U) - M3U8 播放列表格式
-- [项目更新日志](./CHANGELOG.md) - 查看版本更新历史
+- [ffmpeg Download](https://ffmpeg.org/download.html) - Video processing tool
+- [m3u8 Format Specification](https://en.wikipedia.org/wiki/M3U) - M3U8 playlist format
+- [Project Changelog](./CHANGELOG.md) - View version update history
 
-## 🙏 致谢
+## 🙏 Acknowledgments
 
-感谢以下项目的启发和参考：
+Thanks to the following projects for inspiration and reference:
 
 - [m3u8-multi-thread-downloader](https://github.com/sahadev/m3u8Downloader)
 - [m3u8Utils](https://github.com/liupishui/m3u8Utils)
@@ -559,7 +561,7 @@ m3u8-dl/
 
 `@lzwme/m3u8-dl` is released under the MIT license.
 
-该插件由[志文工作室](https://lzw.me)开发和维护。
+This plugin is developed and maintained by [Zhiwen Studio](https://lzw.me).
 
 [stars-badge]: https://img.shields.io/github/stars/lzwme/m3u8-dl.svg
 [stars-url]: https://github.com/lzwme/m3u8-dl/stargazers

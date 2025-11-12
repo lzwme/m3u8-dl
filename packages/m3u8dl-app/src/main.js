@@ -12,7 +12,7 @@ const config = {
 };
 
 const utils = {
-  async findFreePort(start = 3800, end = 99_999, port = 0) {
+  async findFreePort(start = 6600, end = 99_999, port = 0) {
     return new Promise(resolve => {
       if (!port || port < start) port = start;
       if (port > end) throw new Error(`Could not find free port in range: ${start}-${end}`);
@@ -130,7 +130,7 @@ const T = {
       });
 
       if (isDev) window.webContents.openDevTools();
-      window.loadURL(`http://localhost:${port}`);
+      window.loadURL(`http://localhost:${port}/?from=app`);
     }
 
 

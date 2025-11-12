@@ -1,19 +1,29 @@
 import { createI18n } from 'vue-i18n';
 import en from './locales/en';
-import zh from './locales/zh';
+import zhCN from './locales/zh-CN';
 
-const locales = { zh, en };
+const locales = { 'zh-CN': zhCN, en };
 
 function detectBrowserLanguage(): string {
   if (typeof window === 'undefined') return 'en';
 
   const savedLang = localStorage.getItem('language');
-  if (savedLang && savedLang in locales) return savedLang;
+  if (savedLang) {
+    // 支持向后兼容：将旧的 'zh' 映射到 'zh-CN'
+    if (savedLang === 'zh') {
+      localStorage.setItem('language', 'zh-CN');
+      return 'zh-CN';
+    }
+    if (savedLang in locales) return savedLang;
+  }
 
   // 检测浏览器语言
   const browserLang = navigator.language || (navigator as { userLanguage?: string }).userLanguage || 'en';
-  const langCode = browserLang.toLowerCase().split('-')[0];
-  if (langCode in locales) return langCode;
+  const langCode = browserLang.toLowerCase();
+  // 支持 zh-CN, zh-TW 等变体映射到 zh-CN
+  if (langCode.startsWith('zh')) return 'zh-CN';
+  const baseLangCode = langCode.split('-')[0];
+  if (baseLangCode in locales) return baseLangCode;
 
   return 'en';
 }

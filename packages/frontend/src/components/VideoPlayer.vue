@@ -137,7 +137,7 @@ const currentUrl = ref<string>('');
 // 计算 iframe 的 src
 const iframeSrc = computed(() => {
   if (!currentUrl.value) return '';
-  return `./play.html?url=${encodeURIComponent(currentUrl.value)}`;
+  return `/play.html?url=${encodeURIComponent(currentUrl.value)}`;
 });
 
 // 获取视频列表：相同保存目录且进度>20%

@@ -71,7 +71,7 @@ const T = {
         buildVersion: rootPkg.version,
         appId: 'cn.lzwme.m3u8dl',
         artifactName: '${productName}-${os}_${arch}-${version}.${ext}',
-        // electronVersion: '39.1.1',
+        // electronVersion: '39.1.2',
         copyright: `Copyright © ${new Date().getFullYear()} \${author}`,
         compression: 'normal',
         electronDownload: {

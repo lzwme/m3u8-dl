@@ -177,14 +177,14 @@
 import { computed, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useTasksStore } from '@/stores/tasks';
-import { useConfigStore } from '@/stores/config';
+// import { useConfigStore } from '@/stores/config';
 import { formatSize } from '@/utils/format';
 import type { DownloadTask } from '@/types/task';
 
-const { t } = useI18n();
+// const { t } = useI18n();
 
 const tasksStore = useTasksStore();
-const configStore = useConfigStore();
+// const configStore = useConfigStore();
 
 const sortField = ref<'startTime' | 'endTime' | 'name' | 'size' | 'saveDir'>('endTime');
 const sortOrder = ref<'asc' | 'desc'>('desc');
@@ -306,7 +306,7 @@ function formatDateTime(timestamp?: number): string {
   const date = new Date(timestamp);
   // Use locale from i18n
   const { locale } = useI18n();
-  const dateLocale = locale.value === 'zh' ? 'zh-CN' : 'en-US';
+  const dateLocale = locale.value === 'zh-CN' ? 'zh-CN' : 'en-US';
   return date.toLocaleString(dateLocale, {
     year: 'numeric',
     month: '2-digit',
@@ -318,7 +318,7 @@ function formatDateTime(timestamp?: number): string {
 }
 
 // 为了类型安全，使用 computed 来访问
-const config = computed(() => configStore.config);
+// const config = computed(() => configStore.config);
 
 const emit = defineEmits<{
   (e: 'show-detail', task: DownloadTask): void;

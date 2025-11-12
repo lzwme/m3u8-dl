@@ -2,8 +2,8 @@ import { resolve } from 'node:path';
 import { download, formatByteSize, formatTimeCost } from '@lzwme/fe-utils';
 import { blueBright, cyan, gray, greenBright, magentaBright, yellowBright } from 'console-log-colors';
 import type { M3u8DLOptions, M3u8DLProgressStats, M3u8DLResult } from '../types';
-import { getLang, t } from './i18n.js';
 import { formatOptions } from './format-options.js';
+import { getLang, t } from './i18n.js';
 import { formatHeaders, logger } from './utils.js';
 
 export async function fileDownload(u: string, opts: M3u8DLOptions): Promise<M3u8DLResult> {

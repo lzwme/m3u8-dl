@@ -212,6 +212,10 @@ onUnmounted(() => {
   width: 100%;
 }
 
+.nav-item {
+  text-align: left;
+}
+
 @media (max-width: 768px) {
   .main-content {
     margin-left: 0 !important;

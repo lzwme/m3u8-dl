@@ -4,9 +4,9 @@
 
 import type { AnyObject } from '@lzwme/fe-utils';
 
-type Locale = 'zh' | 'en';
+type Locale = 'zh-CN' | 'en';
 
-export const LANG_CODES = new Set(['zh', 'en']);
+export const LANG_CODES = new Set(['zh-CN', 'en']);
 let globalLang: Locale | null = null;
 
 /**
@@ -16,18 +16,28 @@ export function detectLanguage(): Locale {
   // Check environment variable first
   const envLang = process.env.M3U8DL_LANG || process.env.LANG;
   if (envLang) {
-    const langCode = envLang.toLowerCase().split('-')[0].split('_')[0];
-    if (LANG_CODES.has(langCode)) {
-      return langCode as Locale;
+    const langCode = envLang.toLowerCase();
+    // 支持 zh-CN, zh-TW, zh 等变体映射到 zh-CN
+    if (langCode.startsWith('zh')) {
+      return 'zh-CN';
+    }
+    const baseLangCode = langCode.split('-')[0].split('_')[0];
+    if (LANG_CODES.has(baseLangCode as Locale)) {
+      return baseLangCode as Locale;
     }
   }
 
   // Try to detect from OS locale
   try {
     const osLocale = Intl.DateTimeFormat().resolvedOptions().locale;
-    const langCode = osLocale.toLowerCase().split('-')[0];
-    if (LANG_CODES.has(langCode as Locale)) {
-      return langCode as Locale;
+    const langCode = osLocale.toLowerCase();
+    // 支持 zh-CN, zh-TW 等变体映射到 zh-CN
+    if (langCode.startsWith('zh')) {
+      return 'zh-CN';
+    }
+    const baseLangCode = langCode.split('-')[0];
+    if (LANG_CODES.has(baseLangCode as Locale)) {
+      return baseLangCode as Locale;
     }
   } catch {
     // Ignore errors
@@ -55,8 +65,15 @@ export function getLanguage(): Locale | null {
  * Get language from various sources
  */
 export function getLang(lang?: string): Locale {
-  if (lang && LANG_CODES.has(lang)) {
-    return lang as Locale;
+  if (lang) {
+    const normalizedLang = lang.toLowerCase();
+    // 支持向后兼容：将 zh 映射到 zh-CN
+    if (normalizedLang === 'zh' || normalizedLang.startsWith('zh')) {
+      return 'zh-CN';
+    }
+    if (LANG_CODES.has(normalizedLang as Locale)) {
+      return normalizedLang as Locale;
+    }
   }
   if (globalLang) {
     return globalLang;
@@ -69,7 +86,9 @@ export function getLang(lang?: string): Locale {
  */
 export function t(key: string, lang?: string, params?: AnyObject): string {
   const targetLang = getLang(lang);
-  const translations = require(`../i18n/locales/${targetLang}.js`);
+  // 将 zh-CN 映射到文件名 zh-CN.ts
+  const langFile = targetLang === 'zh-CN' ? 'zh-CN' : targetLang;
+  const translations = require(`../i18n/locales/${langFile}.js`);
 
   // Navigate through nested keys (e.g., 'cli.command.download.description')
   const keys = key.split('.');

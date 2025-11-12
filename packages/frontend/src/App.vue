@@ -107,9 +107,7 @@ onMounted(async () => {
   connect();
 
   // 应用初始化后检测新版本。延迟一下，避免与 WebSocket 连接冲突
-  setTimeout(async () => {
-    await checkNewVersion(true);
-  }, 5000);
+  setTimeout(() => checkNewVersion(false), 5000);
 });
 
 onUnmounted(() => {

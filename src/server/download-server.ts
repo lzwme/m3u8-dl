@@ -201,7 +201,9 @@ export class DLServer {
       // 处理 SPA 路由：根路径和 /page/* 路径都返回 index.html
       const isIndexPage = ['/', '/index.html'].includes(req.path) || req.path.startsWith('/page/');
       const isPlayPage = req.path.startsWith('/play.html');
-      if (isIndexPage || isPlayPage) {
+      const isApi = req.path.startsWith('/api/');
+
+      if (!isApi && (isIndexPage || isPlayPage)) {
         const version = this.serverInfo.version;
         let htmlContent = readFileSync(resolve(rootDir, `client/${isPlayPage ? 'play' : 'index'}.html`), 'utf-8').replaceAll(
           '{{version}}',

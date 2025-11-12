@@ -144,8 +144,8 @@ export interface M3u8DLOptions {
   type?: 'm3u8' | 'file' | 'parser';
   /** ffmpeg 可执行文件路径。如果未指定，则尝试使用系统 PATH 中的 'ffmpeg' */
   ffmpegPath?: string;
-  /** 语言。可选值：zh, en */
-  lang?: 'zh' | 'en';
+  /** 语言。可选值：zh-CN, en */
+  lang?: 'zh-CN' | 'en';
 }
 
 export interface M3u8DLResult extends Partial<DownloadResult> {

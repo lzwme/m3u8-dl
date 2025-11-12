@@ -34,7 +34,7 @@ export default {
       token: 'Specify web service password (authorization header). Default is empty',
       url: 'Video search API address (m3u8 collection site standard API)',
       apidir: 'Specify the directory or specific path where custom video search API is located',
-      lang: 'Specify language. Options: zh, en',
+      lang: 'Specify language. Options: zh-CN, en',
     },
   },
   api: {
