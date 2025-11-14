@@ -13,7 +13,7 @@ setMediaLinksMap(mediaLinks);
 /** 添加媒体链接 */
 export function addMediaLink(url: string, title = ''): void {
   url = extractMediaUrlFromParams(url) || url;
-  if (!url) return;
+  if (!url || shouldExcludePageUrl(url)) return;
 
   // 如果在 iframe 模式，发送给 top 窗口
   if (isInIframeMode) {

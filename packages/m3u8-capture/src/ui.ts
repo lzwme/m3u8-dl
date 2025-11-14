@@ -479,7 +479,7 @@ function createUI(): HTMLElement | null {
   return panelElement;
 }
 
-export function showSettings(): void {
+export function showSettings(swalRoot = shadowRoot): void {
   const swal = window.Swal;
   if (!swal) return;
 
@@ -513,16 +513,17 @@ export function showSettings(): void {
       confirmButtonColor: '#3b82f6',
       width: '600px',
       preConfirm: () => {
-        const urlInput = document.getElementById('swal-webui-url') as HTMLInputElement;
-        const excludeInput = document.getElementById('swal-exclude-urls') as HTMLTextAreaElement;
-        const mediaExtInput = document.getElementById('swal-media-ext-list') as HTMLTextAreaElement;
+        if (!swalRoot) return false;
+        const urlInput = swalRoot.getElementById('swal-webui-url') as HTMLInputElement;
+        const excludeInput = swalRoot.getElementById('swal-exclude-urls') as HTMLTextAreaElement;
+        const mediaExtInput = swalRoot.getElementById('swal-media-ext-list') as HTMLTextAreaElement;
         const url = urlInput ? urlInput.value.trim() : '';
         const excludeUrls = excludeInput ? excludeInput.value.trim() : '';
         const mediaExtText = mediaExtInput ? mediaExtInput.value.trim() : '';
 
         const swal = window.Swal;
         if (!url) {
-          swal?.showValidationMessage('WebUI 地址不能为空');
+          swal.showValidationMessage('WebUI 地址不能为空');
           return false;
         }
 
@@ -533,7 +534,7 @@ export function showSettings(): void {
           .filter(ext => ext);
 
         if (mediaExtList.length === 0) {
-          swal?.showValidationMessage('媒体扩展名列表不能为空');
+          swal.showValidationMessage('媒体扩展名列表不能为空');
           return false;
         }
 
