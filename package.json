@@ -1,6 +1,6 @@
 {
   "name": "@lzwme/m3u8-dl",
-  "version": "1.6.0-0",
+  "version": "1.6.0",
   "description": "A free, open-source, and powerful m3u8 video batch downloader with multi-threaded downloading, play-while-downloading, WebUI management, video parsing, and more.",
   "main": "cjs/index.js",
   "types": "cjs/index.d.ts",

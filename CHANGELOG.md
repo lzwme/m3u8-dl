@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [1.6.0](https://github.com/lzwme/m3u8-dl/compare/v1.6.0-0...v1.6.0) (2025-11-14)
+
+
+### Features
+
+* add browser script for automatic video link capture and enhance README with installation instructions ([a6d20ae](https://github.com/lzwme/m3u8-dl/commit/a6d20ae2d6ded9bae3b69c0a21974a1c45a0f922))
+* enhance development experience and add version check functionality ([d8a39fa](https://github.com/lzwme/m3u8-dl/commit/d8a39fa07cec115b8c5657d5a3b5ba68d7f8553b))
+* enhance TypeScript configuration with strict mode and consistent casing; refactor m3u8 capture script for improved media link handling and UI updates ([e7d807f](https://github.com/lzwme/m3u8-dl/commit/e7d807fb9b8f5f051794d9ed2e80558b9d69dbe9))
+* update package dependencies, enhance README, and improve language support for i18n ([ba7fc33](https://github.com/lzwme/m3u8-dl/commit/ba7fc33251d949c4828cb228dfcf1642181de433))
+
 ## [1.6.0-0](https://github.com/lzwme/m3u8-dl/compare/v1.5.0...v1.6.0-0) (2025-11-10)
 
 
