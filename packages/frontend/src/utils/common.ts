@@ -3,7 +3,7 @@ import { envConfig } from './env';
 export function initStats(id = '') {
   if (envConfig.isDev) return;
 
-  const win = window as unknown as { _hmt: any[] };
+  const win = window as unknown as { _hmt: unknown[] };
   if (Array.isArray(win._hmt) && win._hmt.length > 0) return;
   win._hmt = [];
   const hm = document.createElement("script");

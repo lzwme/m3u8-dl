@@ -3,18 +3,7 @@
   "vcs": { "enabled": false, "clientKind": "git", "useIgnoreFile": false },
   "files": {
     "ignoreUnknown": false,
-    "includes": [
-      "src/**/*.ts",
-      "client/*.user.js",
-      "!client/{local,assets,ariang}",
-      "!**/node_modules",
-      "!**/dist",
-      "!**/cjs",
-      "!**/esm",
-      "!**/docs",
-      "!**/mock",
-      "!**/*.d.ts"
-    ]
+    "includes": ["src/**/*.ts", "!client", "!**/node_modules", "!**/dist", "!**/cjs", "!**/esm", "!**/docs", "!**/mock", "!**/*.d.ts"]
   },
   "formatter": {
     "enabled": true,
@@ -55,6 +44,7 @@
         "useEnumInitializers": "error",
         "useSelfClosingElements": "error",
         "useSingleVarDeclarator": "error",
+        "noNonNullAssertion": "off",
         "noUnusedTemplateLiteral": "error",
         "useNumberNamespace": "error",
         "noInferrableTypes": "error",
@@ -62,6 +52,7 @@
       },
       "suspicious": {
         "noConfusingVoidType": "off",
+        "noAssignInExpressions": "off",
         "useIterableCallbackReturn": "off"
       }
     }

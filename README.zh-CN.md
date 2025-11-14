@@ -526,10 +526,11 @@ m3u8-dl/
 │   └── types/        # 类型定义
 ├── packages/
 │   ├── frontend/     # Vue 3 前端项目
-│   └── m3u8dl-app/   # Electron 桌面应用
+│   ├── m3u8dl-app/   # Electron 桌面应用
+│   └── m3u8-capture/ # 浏览器油猴脚本（TypeScript + Vite）
 ├── cjs/              # 编译后的 CommonJS 代码
 └── client/           # 前端构建输出
-    └── m3u8-capture.user.js  # 浏览器视频地址抓取器油猴脚本
+    └── m3u8-capture.user.js  # 浏览器视频地址抓取器油猴脚本（由 packages/m3u8-capture 构建）
 ```
 
 ### 贡献代码

@@ -526,10 +526,11 @@ m3u8-dl/
 │   └── types/        # Type definitions
 ├── packages/
 │   ├── frontend/     # Vue 3 frontend project
-│   └── m3u8dl-app/   # Electron desktop application
+│   ├── m3u8dl-app/   # Electron desktop application
+│   └── m3u8-capture/ # Browser userscript (TypeScript + Vite)
 ├── cjs/              # Compiled CommonJS code
 └── client/           # Frontend build output
-    └── m3u8-capture.user.js  # Browser video address capture userscript
+    └── m3u8-capture.user.js  # Browser video address capture userscript (built from packages/m3u8-capture)
 ```
 
 ### Contributing

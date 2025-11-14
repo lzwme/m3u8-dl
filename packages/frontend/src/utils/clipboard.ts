@@ -1,7 +1,7 @@
 /** 复制到剪贴板 */
 export function copyToClipboard(text: string) {
   return new Promise((resolve, reject) => {
-    if (navigator.clipboard && navigator.clipboard.writeText) {
+    if (navigator.clipboard?.writeText) {
       navigator.clipboard
         .writeText(text)
         .then(() => resolve(true))

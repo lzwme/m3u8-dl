@@ -1,0 +1,21 @@
+{
+  "name": "@lzwme/m3u8-capture",
+  "version": "1.0.0",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "dev": "vite build --watch",
+    "build": "vite build",
+    "lint": "biome lint",
+    "lint:fix": "biome lint --fix",
+    "format": "biome format",
+    "format:fix": "biome format --fix",
+    "fix": "biome check --fix"
+  },
+  "devDependencies": {
+    "@types/node": "^24.10.0",
+    "@types/tampermonkey": "^5.0.5",
+    "typescript": "^5.9.3",
+    "vite": "^7.2.2"
+  }
+}
