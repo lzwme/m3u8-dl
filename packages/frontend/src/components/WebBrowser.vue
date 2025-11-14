@@ -1,5 +1,5 @@
 <template>
-  <div v-if="isElectron" class="web-browser-container border border-gray-300 rounded-lg p-4 mb-4 bg-white">
+  <div v-if="isElectron" class="web-browser-container border border-gray-300 rounded-lg p-4 bg-white">
     <div class="flex items-center justify-between mb-3">
       <h3 class="text-lg font-semibold text-gray-800">
         <i class="fas fa-globe mr-2"></i>{{ $t('webBrowser.title') }}
@@ -109,10 +109,17 @@
                 {{ $t('webBrowser.source') }}: {{ item.pageUrl }}
               </div>
             </div>
-            <button @click.stop="selectM3u8(item)"
-              class="ml-2 px-3 py-1 bg-blue-500 text-white rounded hover:bg-blue-600 text-sm whitespace-nowrap">
-              {{ $t('webBrowser.download') }}
-            </button>
+            <div class="flex flex-col gap-2 ml-2">
+              <button @click.stop="selectM3u8(item)"
+                class="px-3 py-1 bg-blue-500 text-white rounded hover:bg-blue-600 text-sm whitespace-nowrap">
+                {{ $t('webBrowser.download') }}
+              </button>
+              <button @click.stop="deleteItem(index)"
+                class="px-3 py-1 bg-red-500 text-white rounded hover:bg-red-600 text-sm whitespace-nowrap"
+                :title="$t('common.delete')">
+                <i class="fas fa-trash"></i>
+              </button>
+            </div>
           </div>
         </div>
       </div>
@@ -128,6 +135,8 @@
 import { ref, onMounted, onUnmounted, computed } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { toast } from '@/utils/toast';
+import { extractMediaUrlFromParams, getFileType, normalizeUrl } from '@/utils/media';
+import { envConfig } from '@/utils/env';
 
 const { t } = useI18n();
 
@@ -139,7 +148,7 @@ const emit = defineEmits<{
   (e: 'batch-download', data: Array<{ url: string; title: string }>): void;
 }>();
 
-const isElectron = computed(() => typeof window !== 'undefined' && !!window.electron);
+const isElectron = computed(() => envConfig.isElectron);
 const url = ref('');
 const loading = ref(false);
 const error = ref('');
@@ -190,12 +199,30 @@ function clearList() {
   selectedIndices.value.clear();
 }
 
+function deleteItem(index: number) {
+  if (index < 0 || index >= m3u8List.value.length) return;
+
+  // 删除列表项
+  m3u8List.value.splice(index, 1);
+
+  // 更新选中索引：删除后，所有大于被删除索引的项，索引都要减1
+  const newSelectedIndices = new Set<number>();
+  selectedIndices.value.forEach(selectedIndex => {
+    if (selectedIndex < index) {
+      // 在被删除项之前的索引保持不变
+      newSelectedIndices.add(selectedIndex);
+    } else if (selectedIndex > index) {
+      // 在被删除项之后的索引减1
+      newSelectedIndices.add(selectedIndex - 1);
+    }
+    // 等于被删除索引的项不添加（已被删除）
+  });
+  selectedIndices.value = newSelectedIndices;
+}
+
 function selectM3u8(item: { url: string; title: string }) {
   // 统一使用 batch-download 事件，即使是单个视频也作为数组传递
-  emit('batch-download', [{
-    url: item.url,
-    title: item.title || t('webBrowser.unnamedVideo'),
-  }]);
+  emit('batch-download', [item]);
 }
 
 function isSelected(index: number): boolean {
@@ -239,7 +266,7 @@ function batchDownload() {
     .map(index => m3u8List.value[index])
     .map(item => ({
       url: item.url,
-      title: item.title || t('webBrowser.unnamedVideo'),
+      title: item.title, // || t('webBrowser.unnamedVideo'),
     }));
 
   emit('batch-download', selectedItems);
@@ -247,43 +274,24 @@ function batchDownload() {
   selectedIndices.value.clear();
 }
 
-// 获取文件类型
-function getFileType(url: string): string {
-  if (/\.m3u8(\?|$|#)/i.test(url)) {
-    return 'm3u8';
-  } else if (/\.mp4(\?|$|#)/i.test(url)) {
-    return 'mp4';
-  }
-  return 'video';
-}
-
-// 规范化 URL 用于去重比较（去除查询参数中的时间戳等动态参数）
-function normalizeUrl(url: string): string {
-  try {
-    const urlObj = new URL(url);
-    // 保留基础路径，去除查询参数（因为很多查询参数是动态的，如时间戳、token等）
-    return `${urlObj.protocol}//${urlObj.host}${urlObj.pathname}`;
-  } catch {
-    // 如果 URL 解析失败，返回原 URL
-    return url;
-  }
-}
-
 function handleM3u8Found(data: { url: string; title: string; pageUrl?: string }) {
+  data.url = extractMediaUrlFromParams(data.url) || data.url;
+
   // 规范化 URL 进行比较，实现去重
   const normalizedUrl = normalizeUrl(data.url);
-  const exists = m3u8List.value.some(item => {
-    const itemNormalized = normalizeUrl(item.url);
-    return itemNormalized === normalizedUrl;
-  });
+  const item = m3u8List.value.find(item => normalizeUrl(item.url) === normalizedUrl);
 
-  if (exists) return;
+  if (item) {
+    if (!item.title) item.title = data.title || pageTitle.value || '';
+    else return;
+  }
 
   const newItem = {
     url: data.url,
-    title: data.title || pageTitle.value || t('webBrowser.unnamedVideo'),
+    title: data.title || pageTitle.value || '',
     pageUrl: data.pageUrl || currentUrl.value,
   };
+
   // 检查是否需要替换已存在的链接
   // 对于已存在的 .m3u8 链接，如果去掉文件名后的前缀包含在新链接中，则替换
   let replaced = false;
@@ -296,7 +304,8 @@ function handleM3u8Found(data: { url: string; title: string; pageUrl?: string })
         const prefix = item.url.substring(0, lastSlashIndex + 1); // 包含最后的 /
         if (data.url.includes(prefix)) {
           // 新链接包含旧链接的前缀，说明新链接更具体，替换它
-          m3u8List.value[i] = newItem;
+          m3u8List.value[i].url = newItem.url;
+          if (!m3u8List.value[i].title) m3u8List.value[i].title = newItem.title;
           replaced = true;
           break;
         }
@@ -315,9 +324,7 @@ function handlePageTitle(title: string) {
   pageTitle.value = title;
   // 更新已存在的 m3u8 项的标题（如果标题为空）
   m3u8List.value.forEach(item => {
-    if (!item.title || item.title === t('webBrowser.unnamedVideo')) {
-      item.title = title || t('webBrowser.unnamedVideo');
-    }
+    if (!item.title) item.title = title;
   });
 }
 

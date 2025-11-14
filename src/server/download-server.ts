@@ -220,7 +220,7 @@ export class DLServer {
               const relativePath = match.split('libs/')[1];
               const localPath = resolve(rootDir, `client/local/cdn/${relativePath}`);
               if (existsSync(localPath)) {
-                htmlContent = htmlContent.replaceAll(match, `local/cdn/${relativePath}`);
+                htmlContent = htmlContent.replaceAll(match, `/local/cdn/${relativePath}`);
               }
             }
 

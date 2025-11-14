@@ -28,7 +28,10 @@
         </div>
 
         <div class="mt-4">
-          <label class="block text-sm font-bold text-gray-700 mb-1">{{ $t('newDownload.videoLinks') }}</label>
+          <label class="block text-sm font-bold text-gray-700 mb-1">
+            {{ $t('newDownload.videoLinks') }}
+            <span v-if="uniqueLineCount > 2" class="text-gray-300 font-normal">({{ uniqueLineCount }})</span>
+          </label>
           <textarea v-model="downloadUrls" class="w-full p-2 border rounded-lg focus:ring-blue-500" rows="3"
             :placeholder="$t('newDownload.videoLinksPlaceholder')"></textarea>
         </div>
@@ -73,7 +76,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch } from 'vue';
+import { ref, watch, computed } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { getM3u8Urls, startDownload } from '@/utils/request';
 import { toast } from '@/utils/toast';
@@ -107,6 +110,16 @@ const headers = ref('');
 const subUrlRegex = ref('');
 const extracting = ref(false);
 const submitting = ref(false);
+
+// 计算去重后的非空行数
+const uniqueLineCount = computed(() => {
+  const lines = downloadUrls.value
+    .split('\n')
+    .map(line => line.trim())
+    .filter(line => line.length > 0);
+  const uniqueLines = new Set(lines);
+  return uniqueLines.size;
+});
 
 watch(
   () => props.visible,

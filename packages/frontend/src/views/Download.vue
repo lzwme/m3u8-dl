@@ -10,10 +10,6 @@
         @show-detail="showTaskDetail"
         @local-play="handleLocalPlay"
       />
-      <NewDownloadDialog
-        :visible="showDialog"
-        @close="showDialog = false"
-      />
       <TaskDetailModal :visible="showDetailModal" :task="selectedTask" @close="showDetailModal = false" />
       <DeleteConfirmDialog
         :visible="showDeleteDialog"
@@ -43,11 +39,10 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, inject } from 'vue';
 import { useI18n } from 'vue-i18n';
 import Layout from '@/components/Layout.vue';
 import TaskList from '@/components/TaskList.vue';
-import NewDownloadDialog from '@/components/NewDownloadDialog.vue';
 import TaskDetailModal from '@/components/TaskDetailModal.vue';
 import DeleteConfirmDialog from '@/components/DeleteConfirmDialog.vue';
 import ConfirmDialog from '@/components/ConfirmDialog.vue';
@@ -64,7 +59,8 @@ const { t } = useI18n();
 const tasksStore = useTasksStore();
 const configStore = useConfigStore();
 
-const showDialog = ref(false);
+// 注入全局显示下载对话框的方法
+const showGlobalNewDownload = inject<(data?: { url?: string; title?: string }) => void>('showGlobalNewDownload');
 const showDetailModal = ref(false);
 const showDeleteDialog = ref(false);
 const showPlayConfirmDialog = ref(false);
@@ -109,7 +105,10 @@ onMounted(async () => {
 });
 
 function showNewDownloadDialog() {
-  showDialog.value = true;
+  // 使用全局的下载对话框
+  if (showGlobalNewDownload) {
+    showGlobalNewDownload();
+  }
 }
 
 

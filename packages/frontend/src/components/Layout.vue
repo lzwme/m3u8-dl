@@ -72,6 +72,7 @@ import { ref, computed, onMounted, onUnmounted, watch, inject } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
 import { useServerStore } from '@/stores/server';
 import LanguageSwitcher from './LanguageSwitcher.vue';
+import { envConfig } from '@/utils/env';
 
 const router = useRouter();
 const route = useRoute();
@@ -79,7 +80,7 @@ const serverStore = useServerStore();
 
 const sidebarCollapsed = ref(window.innerWidth <= 768);
 const activeSection = ref('download');
-const isElectron = computed(() => typeof window !== 'undefined' && !!window.electron);
+const isElectron = computed(() => envConfig.isElectron);
 
 const emit = defineEmits<{
   (e: 'new-download'): void;

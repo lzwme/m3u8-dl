@@ -5,14 +5,14 @@
     "ignoreUnknown": false,
     "includes": [
       "src/**/*.ts",
+      "client/*.user.js",
+      "!client/{local,assets,ariang}",
       "!**/node_modules",
       "!**/dist",
       "!**/cjs",
       "!**/esm",
       "!**/docs",
       "!**/mock",
-      "!**/client",
-      "!**/*.js",
       "!**/*.d.ts"
     ]
   },

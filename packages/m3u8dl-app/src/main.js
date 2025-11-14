@@ -121,7 +121,7 @@ const T = {
           const ffmpegStatic = require('ffmpeg-static');
           if (fs.existsSync(ffmpegStatic)) process.env.DS_FFMPEG_PATH = ffmpegStatic;
         }
-      } catch (_error) {}
+      } catch (_error) { }
 
       const dlServer = new DLServer({
         port,
@@ -187,9 +187,9 @@ const T = {
       this.webBrowserWindow.webContents.session.setPermissionRequestHandler((details, callback) => {
         // 允许基本权限，拒绝可能导致问题的权限
         if (details.permission === 'notifications' || details.permission === 'geolocation') {
-          callback(false);
+          typeof callback === 'function' && callback(false);
         } else {
-          callback(true);
+          typeof callback === 'function' && callback(true);
         }
       });
 
@@ -208,10 +208,11 @@ const T = {
       // 监听网络请求，提取 m3u8 和 mp4 视频地址
       this.webBrowserWindow.webContents.session.webRequest.onBeforeRequest(
         { urls: ['*://*/*'] },
-        (details, callback) => {
+        async (details, callback) => {
           const url = details.url;
+
           // 检查是否是 m3u8 或 mp4 视频文件
-          if (/\.(m3u8|mp4)(\?|$|#)/i.test(url)) {
+          if (/\.(m3u8|mp4|mov|mkv|mp3|m4a|ogg)(\?|$|#)/i.test(url)) {
             // 使用规范化后的 URL 进行去重比较
             const normalizedUrl = normalizeUrl(url);
             let isNew = true;
@@ -225,13 +226,47 @@ const T = {
             }
 
             if (isNew) {
-              const title = currentPageTitle || '未命名视频';
-              mediaUrls.set(url, title);
-              mainWindow.webContents.send('web-browser:m3u8-found', {
-                url,
-                title,
-                pageUrl: currentUrl,
-              });
+              // 获取发起请求的窗口信息
+              const requestWebContents = details.webContents;
+              let pageUrl = '';
+              let title = currentPageTitle || '';
+              const notifyM3u8Found = () => {
+                mediaUrls.set(url, title);
+                  mainWindow.webContents.send('web-browser:m3u8-found', {
+                    url,
+                    title,
+                    pageUrl: pageUrl || currentUrl,
+                  });
+              };
+
+              // 尝试从请求的 webContents 获取页面 URL 和标题
+              if (requestWebContents && !requestWebContents.isDestroyed()) {
+                try {
+                  // 优先使用当前页面的 URL，如果获取失败则使用 referrer
+                  try {
+                    pageUrl = requestWebContents.getURL();
+                  } catch {
+                    pageUrl = details.referrer || currentUrl;
+                  }
+
+                  // 异步获取页面标题
+                  // 优先从 h1.title、h2.title、h1、h2 提取
+                  const jsCode = ['h1.title', 'h2.title', 'h1', 'h2'].map(h => `document.querySelector("${h}")?.textContent`).join(' || ');
+                  requestWebContents.executeJavaScript(jsCode).then(t => {
+                    console.log('[WebBrowser] page title:', t, 'from URL:', pageUrl);
+                    title = t || '';
+                    notifyM3u8Found();
+                  }).catch(err => {
+                    console.error('[WebBrowser] get page title failed:', err);
+                    notifyM3u8Found();
+                  });
+                } catch (err) {
+                  console.error('[WebBrowser] get page info failed:', err);
+                  notifyM3u8Found();
+                }
+              } else {
+                notifyM3u8Found();
+              }
             }
           }
           // 必须返回 {} 以允许请求继续，否则请求会被阻塞
@@ -241,33 +276,33 @@ const T = {
 
       // 监听页面导航
       this.webBrowserWindow.webContents.on('will-navigate', (event, navigationUrl) => {
-        console.log('[WebBrowser] 准备导航到:', navigationUrl);
+        console.log('[WebBrowser] prepare to navigate to:', navigationUrl);
         currentUrl = navigationUrl;
         mainWindow.webContents.send('web-browser:navigation', { url: navigationUrl });
       });
 
       // 监听 DOM 内容加载完成
       this.webBrowserWindow.webContents.on('dom-ready', () => {
-        console.log('[WebBrowser] DOM 准备就绪');
+        console.log('[WebBrowser] DOM ready');
       });
 
       // 监听页面加载完成，获取页面标题和 URL
       this.webBrowserWindow.webContents.on('did-finish-load', async () => {
         try {
           const pageUrl = this.webBrowserWindow.webContents.getURL();
-          console.log('[WebBrowser] 页面加载完成:', pageUrl);
+          console.log('[WebBrowser] page loaded:', pageUrl);
 
           // 检查 DOM 是否为空
           const bodyHTML = await this.webBrowserWindow.webContents.executeJavaScript(`
             document.body ? document.body.innerHTML.length : 0
           `);
-          console.log('[WebBrowser] DOM body 内容长度:', bodyHTML);
+          console.log('[WebBrowser] DOM body content length:', bodyHTML);
 
           const title = await this.webBrowserWindow.webContents.executeJavaScript('document.title');
           currentPageTitle = title || '';
           currentUrl = pageUrl;
 
-          console.log('[WebBrowser] 页面标题:', currentPageTitle);
+          console.log('[WebBrowser] page title:', currentPageTitle);
 
           mainWindow.webContents.send('web-browser:page-title', currentPageTitle);
           mainWindow.webContents.send('web-browser:url-changed', currentUrl);
@@ -280,7 +315,7 @@ const T = {
 
           // 更新已发现的 m3u8 链接的标题（如果标题还是默认值）
           for (const [url, oldTitle] of mediaUrls) {
-            if (oldTitle === '未命名视频' && currentPageTitle) {
+            if (!oldTitle && currentPageTitle) {
               mediaUrls.set(url, currentPageTitle);
               mainWindow.webContents.send('web-browser:m3u8-found', {
                 url,
@@ -290,7 +325,7 @@ const T = {
             }
           }
         } catch (error) {
-          console.error('[WebBrowser] 获取页面信息失败:', error);
+          console.error('[WebBrowser] get page info failed:', error);
         }
       });
 
@@ -305,7 +340,7 @@ const T = {
 
       // 监听加载错误
       this.webBrowserWindow.webContents.on('did-fail-load', (event, errorCode, errorDescription, validatedURL, isMainFrame) => {
-        console.error('[WebBrowser] 加载失败:', errorCode, errorDescription, validatedURL, 'isMainFrame:', isMainFrame);
+        console.error('[WebBrowser] load failed:', errorCode, errorDescription, validatedURL, 'isMainFrame:', isMainFrame);
         // -3: ERR_NAME_NOT_RESOLVED
         if (isMainFrame && ![-3].includes(errorCode)) {
           mainWindow.webContents.send('web-browser:error', {
@@ -318,10 +353,10 @@ const T = {
 
       // 监听页面崩溃
       this.webBrowserWindow.webContents.on('render-process-gone', (event, details) => {
-        console.error('[WebBrowser] 渲染进程崩溃:', details);
+        console.error('[WebBrowser] render process crashed:', details);
         mainWindow.webContents.send('web-browser:error', {
           code: -1,
-          description: `渲染进程崩溃: ${details.reason || '未知原因'}`,
+          description: `render process crashed: ${details.reason || 'unknown reason'}`,
         });
       });
 
@@ -339,7 +374,7 @@ const T = {
 
     // 处理 IPC 消息
     ipcMain.on('web-browser:load', (event, url) => {
-      console.log('[WebBrowser] 加载 URL:', url);
+      console.log('[WebBrowser] load URL:', url);
       const window = createWebBrowserWindow();
       clearData();
       currentUrl = url;
@@ -348,10 +383,10 @@ const T = {
       window.webContents.setUserAgent('Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36');
 
       window.loadURL(url).catch((error) => {
-        console.error('[WebBrowser] 加载 URL 失败:', error);
+        console.error('[WebBrowser] load URL failed:', error);
         mainWindow.webContents.send('web-browser:error', {
           code: -1,
-          description: `加载失败: ${error.message || '未知错误'}`,
+          description: `load failed: ${error.message || 'unknown error'}`,
         });
       });
 

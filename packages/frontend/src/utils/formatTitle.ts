@@ -66,7 +66,7 @@ export function urlsTextFormat(urlsText: string) {
   const items = String(urlsText || '')
     .split('\n')
     .map(line => {
-      const parts = line.split(/[\s|$]+/).map(s => s.trim());
+      const parts = line.split(/[|$]+/).map(s => s.trim());
       let url = parts[0];
       let name = parts[1] || '';
       if (name.startsWith('http')) {
