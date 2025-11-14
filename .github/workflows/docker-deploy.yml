@@ -5,19 +5,95 @@ name: 'Publish Container Image'
 on:
   push:
     tags:
-      - 'v*.*.*'
+      - 'v[0-9]+.[0-9]+.[0-9]+'  # 更严格的版本标签匹配，如 v1.2.3
   # 支持手动触发
   workflow_dispatch:
 
 env:
-  # Use docker.io for Docker Hub if empty
-  REGISTRY: ${{ secrets.REGISTRY }}
-  # github.repository as <account>/<repo>
-  IMAGE_NAME: renxia/m3u8-dl # ${{ github.repository }}
-  IMAGE_NAME_REPO: ${{ github.repository }}
+  # 使用 github.repository 作为镜像名称，格式为 <account>/<repo>
+  IMAGE_NAME: renxia/m3u8-dl  # DockerHub 镜像名称
+  IMAGE_NAME_REPO: ${{ github.repository }}  # GitHub Container Registry 镜像名称
 
 jobs:
+  # 构建阶段：只执行一次，生成平台无关的构建产物
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    outputs:
+      build-artifact-name: ${{ steps.build.outputs.artifact-name }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10
+
+      - name: Get pnpm store directory
+        id: pnpm-cache
+        shell: bash
+        run: |
+          echo "STORE_PATH=$(pnpm store path)" >> $GITHUB_OUTPUT
+
+      - name: Setup pnpm cache
+        uses: actions/cache@v4
+        with:
+          path: ${{ steps.pnpm-cache.outputs.STORE_PATH }}
+          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-pnpm-store
+
+      - name: Install dependencies
+        run: |
+          # 检查 lockfile 是否存在，如果不存在则使用 --no-frozen-lockfile
+          if [ -f "pnpm-lock.yaml" ]; then
+            pnpm install --frozen-lockfile
+          else
+            echo "Warning: pnpm-lock.yaml not found, installing without frozen-lockfile"
+            pnpm install --no-frozen-lockfile
+          fi
+
+      - name: Build project
+        run: |
+          pnpm build
+          pnpm download-cdn
+
+      - name: Download AriaNg
+        run: |
+          wget https://github.com/mayswind/AriaNg/releases/download/1.3.10/AriaNg-1.3.10-AllInOne.zip -O ariang.zip
+          unzip ariang.zip -d ./client/ariang
+          rm ariang.zip
+
+      - name: Prepare build artifacts
+        id: build
+        run: |
+          # 创建构建产物目录
+          mkdir -p build-artifacts
+          # 复制构建产物
+          cp -r cjs build-artifacts/
+          cp -r client build-artifacts/
+          cp package.json build-artifacts/
+          # 生成 artifact 名称（包含 commit SHA 以便缓存）
+          ARTIFACT_NAME="build-artifacts-${{ github.sha }}"
+          echo "artifact-name=$ARTIFACT_NAME" >> $GITHUB_OUTPUT
+          echo "Artifact name: $ARTIFACT_NAME"
+
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ steps.build.outputs.artifact-name }}
+          path: build-artifacts
+          retention-days: 1
+
+  # 多架构镜像构建阶段：使用预构建的产物
   build-and-push-image:
+    needs: build
     runs-on: ubuntu-latest
 
     permissions:
@@ -29,12 +105,33 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Setup timezone
-        uses: szenius/set-timezone@v2.0
+      - name: Download build artifacts
+        uses: actions/download-artifact@v4
         with:
-          timezoneLinux: Asia/Shanghai
+          name: ${{ needs.build.outputs.build-artifact-name }}
+          path: build-artifacts
+
+      - name: Prepare build artifacts for Docker
+        run: |
+          # 将构建产物复制到项目根目录，供 Dockerfile 使用
+          if [ -d "build-artifacts" ]; then
+            cp -r build-artifacts/* .
+            echo "Prebuilt artifacts prepared"
+          else
+            echo "Warning: build-artifacts not found, will build from source"
+          fi
+
+      - name: Check DockerHub credentials
+        id: check-dockerhub
+        run: |
+          if [ -n "${{ secrets.DOCKER_USERNAME }}" ] && [ -n "${{ secrets.DOCKER_PASSWORD }}" ]; then
+            echo "has-credentials=true" >> $GITHUB_OUTPUT
+          else
+            echo "has-credentials=false" >> $GITHUB_OUTPUT
+          fi
 
       - name: Login to DockerHub
+        if: steps.check-dockerhub.outputs.has-credentials == 'true'
         uses: docker/login-action@v3
         with:
           registry: docker.io
@@ -55,19 +152,16 @@ jobs:
           images: |
             ${{ env.IMAGE_NAME }}
             ghcr.io/${{ env.IMAGE_NAME_REPO }}
-          # generate Docker tags based on the following events/attributes
-          #   nightly, main, pr-2, 1.2.3, 1.2, 1
+          # 生成 Docker 标签
+          # 对于 tag 推送：生成 semver 标签（如 v1.2.3, 1.2.3, 1.2, 1）和 latest
+          # 对于手动触发：生成 latest 标签
           flavor: |
             latest=true
           tags: |
-            type=schedule,pattern=nightly
-            type=edge
-            type=ref,event=pr
-            type=ref,event=branch,enable=${{ github.ref != format('refs/heads/{0}', 'main') }}
-            type=raw,value=latest,enable=${{ github.ref == format('refs/heads/{0}', 'main') }}
-            type=semver,pattern={{version}}
-            type=semver,pattern={{major}}.{{minor}}
-            type=semver,pattern={{major}}
+            type=raw,value=latest,enable=${{ github.event_name == 'workflow_dispatch' || (github.event_name == 'push' && startsWith(github.ref, 'refs/tags/')) }}
+            type=semver,pattern={{version}},enable=${{ github.event_name == 'push' && startsWith(github.ref, 'refs/tags/') }}
+            type=semver,pattern={{major}}.{{minor}},enable=${{ github.event_name == 'push' && startsWith(github.ref, 'refs/tags/') }}
+            type=semver,pattern={{major}},enable=${{ github.event_name == 'push' && startsWith(github.ref, 'refs/tags/') }}
 
       - name: 设置 QEMU 支持多架构
         uses: docker/setup-qemu-action@v3
@@ -82,24 +176,24 @@ jobs:
           build-args: |
             MAINTAINER=${{ github.repository_owner }}
             SOURCE_COMMIT=${{ github.sha }}
-          network: host
-          platforms: linux/amd64,linux/arm/v6,linux/arm/v7,linux/arm64 # ,linux/ppc64le,linux/386
+            USE_PREBUILT=true
+          platforms: linux/amd64,linux/arm/v6,linux/arm/v7,linux/arm64
           context: .
           file: ./docker/Dockerfile
-          push: true # ${{ github.event_name != 'pull_request' }}
+          push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
-          cache-from: type=registry,ref=renxia/meu8-dl:cache
-          cache-to: type=registry,ref=renxia/meu8-dl:cache,mode=max
+          cache-from: type=registry,ref=${{ env.IMAGE_NAME }}:cache
+          cache-to: type=registry,ref=${{ env.IMAGE_NAME }}:cache,mode=max
 
-      # - name: Generate artifact attestation
-      #   uses: actions/attest-build-provenance@v2
-      #   with:
-      #     # subject-name: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME}}
-      #     subject-name: ghcr.io/${{ env.IMAGE_NAME_REPO }}
-      #     subject-digest: ${{ steps.push.outputs.digest }}
-      #     push-to-registry: true
+      - name: Generate artifact attestation
+        uses: actions/attest-build-provenance@v2
+        with:
+          subject-name: ghcr.io/${{ env.IMAGE_NAME_REPO }}
+          subject-digest: ${{ steps.docker_build.outputs.digest }}
+          push-to-registry: true
 
       - name: Image digest
         run: |
-          echo ${{ steps.docker_build.outputs.digest }}
+          echo "Image digest: ${{ steps.docker_build.outputs.digest }}"
+          echo "Tags: ${{ steps.meta.outputs.tags }}"

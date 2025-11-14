@@ -1,20 +1,28 @@
 # 构建项目
 FROM node:22-alpine AS builder
 WORKDIR /app
-COPY ./ ./
 
-RUN apk update && apk add wget unzip
+ARG USE_PREBUILT=false
 
-RUN npm i -g pnpm
-RUN pnpm install
-RUN pnpm add -P express ws
-RUN pnpm build
-# 下载 CDN 静态资源到本地
-RUN pnpm download-cdn
-# 下载ariang
-RUN wget https://github.com/mayswind/AriaNg/releases/download/1.3.10/AriaNg-1.3.10-AllInOne.zip -O ariang.zip
-RUN unzip ariang.zip -d /app/client/ariang
-RUN rm ariang.zip
+# 复制项目文件（包括可能存在的预构建产物）
+COPY . .
+
+# 如果使用预构建产物且产物已存在，直接使用；否则执行构建
+RUN if [ "$USE_PREBUILT" = "true" ] && [ -d "/app/cjs" ] && [ -d "/app/client" ] && [ -f "/app/package.json" ]; then \
+      echo "Using prebuilt artifacts (cjs and client directories found)..."; \
+      echo "Skipping build steps"; \
+    else \
+      echo "Building from source..."; \
+      apk update && apk add wget unzip && \
+      npm i -g pnpm && \
+      pnpm install && \
+      # pnpm add -P express ws && \
+      pnpm build && \
+      pnpm download-cdn && \
+      wget https://github.com/mayswind/AriaNg/releases/download/1.3.10/AriaNg-1.3.10-AllInOne.zip -O ariang.zip && \
+      unzip ariang.zip -d /app/client/ariang && \
+      rm ariang.zip; \
+    fi
 
 # 生产环境镜像
 FROM node:22-alpine
@@ -50,7 +58,9 @@ COPY --from=builder /app/package.json /app/package.json
 COPY --from=builder /app/client /app/client
 COPY --from=builder /app/cjs /app/cjs
 
-RUN npm install --production
+# 安装生产依赖，并额外安装 express 和 ws（它们在 devDependencies 中但运行时需要）
+RUN npm install --production && \
+    npm install express ws
 
 # Install FFmpeg
 RUN apk update && apk add ffmpeg
