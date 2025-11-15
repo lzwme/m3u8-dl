@@ -4,7 +4,7 @@ import { dirname, resolve } from 'node:path';
 import { assign, getUrlParams, md5, mkdirp } from '@lzwme/fe-utils';
 import { cyan, gray, green, red } from 'console-log-colors';
 import type { Express, Request } from 'express';
-import type { Server } from 'ws';
+import type { WebSocketServer } from 'ws';
 import { fileDownload } from '../lib/file-download.js';
 import { formatOptions } from '../lib/format-options.js';
 import { getM3u8Urls } from '../lib/getM3u8Urls.js';
@@ -40,7 +40,7 @@ const rootDir = resolve(__dirname, '../..');
 
 export class DLServer {
   app: Express = null;
-  wss: Server = null;
+  wss: WebSocketServer | null = null;
   /** DS 参数 */
   options: DLServerOptions = {
     port: Number(process.env.DS_PORT) || 6600,
@@ -195,7 +195,7 @@ export class DLServer {
     const wss = new WebSocketServer({ server });
 
     this.app = app;
-    this.wss = wss;
+    this.wss = wss as never;
 
     app.use((req, res, next) => {
       // 处理 SPA 路由：根路径和 /page/* 路径都返回 index.html

@@ -63,7 +63,7 @@ const T = {
   async start() {
     this.prepare();
 
-    const platform = argv.mac && process.platform === 'darwin' ? Platform.MAC : argv.linux ? Platform.LINUX : Platform.WINDOWS;
+    const platform = (argv.mac || process.platform === 'darwin') ? Platform.MAC : (argv.win || process.platform === 'win32') ? Platform.WINDOWS : (argv.linux ? Platform.LINUX : Platform.WINDOWS);
     const r = await build({
       targets: platform.createTarget(),
       config: {
@@ -113,7 +113,7 @@ const T = {
             },
             {
               target: '7z',
-              arch: ['x64', 'ia32'],
+              arch: ['x64', 'ia32', 'arm64'],
             },
           ],
           // extraResources: ['../../cjs', '../../client'],
@@ -153,10 +153,10 @@ const T = {
               target: '7z',
               arch: ['x64', 'arm64'],
             },
-            // {
-            //   target: 'dmg',
-            //   arch: ['x64', 'arm64'],
-            // },
+            {
+              target: 'dmg',
+              arch: ['x64', 'arm64', 'universal'],
+            },
           ],
           icon: 'build/icon/logo.icns',
         },

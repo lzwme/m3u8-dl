@@ -36,7 +36,7 @@
     "dist": "npm run build",
     "release": "npm run dist && npm run version",
     "clean": "flh rm -f ./cjs ./esm ./docs ./client/assets",
-    "test": "npm run lint"
+    "test": "npm run lint:all"
   },
   "bin": {
     "m3u8dl": "bin/m3u8dl.js"
@@ -61,7 +61,7 @@
     "@lzwme/fed-lint-helper": "^2.6.6",
     "@types/express": "^5.0.5",
     "@types/m3u8-parser": "^7.2.5",
-    "@types/node": "^24.10.0",
+    "@types/node": "^24.10.1",
     "@types/ws": "^8.18.1",
     "@typescript-eslint/eslint-plugin": "^8.46.4",
     "@typescript-eslint/parser": "^8.46.4",
@@ -74,6 +74,7 @@
     "nodemon": "^3.1.11",
     "prettier": "^3.6.2",
     "standard-version": "^9.5.0",
+    "typedoc": "^0.28.14",
     "typescript": "^5.9.3",
     "typescript-eslint": "^8.46.4",
     "ws": "^8.18.3"

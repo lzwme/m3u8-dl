@@ -10,6 +10,9 @@ on:
       - preset
       - .vscode
       - test
+      - .github/**
+      - docker/**
+      - client/**
   pull_request:
     branches:
       - '**'

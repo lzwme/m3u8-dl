@@ -23,31 +23,20 @@ jobs:
     outputs:
       build-artifact-name: ${{ steps.build.outputs.artifact-name }}
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        name: Install pnpm
+        with:
+          version: 10
+          run_install: false
 
       - name: Install Node.js
         uses: actions/setup-node@v4
         with:
           node-version: 22
-
-      - name: Install pnpm
-        uses: pnpm/action-setup@v4
-        with:
-          version: 10
-
-      - name: Get pnpm store directory
-        id: pnpm-cache
-        shell: bash
-        run: |
-          echo "STORE_PATH=$(pnpm store path)" >> $GITHUB_OUTPUT
-
-      - name: Setup pnpm cache
-        uses: actions/cache@v4
-        with:
-          path: ${{ steps.pnpm-cache.outputs.STORE_PATH }}
-          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
-          restore-keys: |
-            ${{ runner.os }}-pnpm-store
+          # cache: 'pnpm'
 
       - name: Install dependencies
         run: |
@@ -61,12 +50,13 @@ jobs:
 
       - name: Build project
         run: |
+          pnpm add -P express ws
           pnpm build
           pnpm download-cdn
 
       - name: Download AriaNg
         run: |
-          wget https://github.com/mayswind/AriaNg/releases/download/1.3.10/AriaNg-1.3.10-AllInOne.zip -O ariang.zip
+          wget https://github.com/mayswind/AriaNg/releases/download/1.3.11/AriaNg-1.3.11-AllInOne.zip -O ariang.zip
           unzip ariang.zip -d ./client/ariang
           rm ariang.zip
 
@@ -115,8 +105,9 @@ jobs:
         run: |
           # 将构建产物复制到项目根目录，供 Dockerfile 使用
           if [ -d "build-artifacts" ]; then
-            cp -r build-artifacts/* .
+            cp -rf build-artifacts/* .
             echo "Prebuilt artifacts prepared"
+            ls -la client
           else
             echo "Warning: build-artifacts not found, will build from source"
           fi
@@ -177,7 +168,7 @@ jobs:
             MAINTAINER=${{ github.repository_owner }}
             SOURCE_COMMIT=${{ github.sha }}
             USE_PREBUILT=true
-          platforms: linux/amd64,linux/arm/v6,linux/arm/v7,linux/arm64
+          # platforms: linux/amd64,linux/arm/v6,linux/arm/v7,linux/arm64
           context: .
           file: ./docker/Dockerfile
           push: true
