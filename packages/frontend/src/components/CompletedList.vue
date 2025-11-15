@@ -98,6 +98,14 @@
             <td class="px-4 py-3 whitespace-nowrap text-sm">
               <div class="flex items-center space-x-2">
                 <button
+                  v-if="task.localVideo"
+                  @click="localPlay(task)"
+                  class="text-green-600 hover:text-green-800"
+                  :title="$t('completedList.play')"
+                >
+                  <i class="fas fa-play-circle"></i>
+                </button>
+                <button
                   @click="showTaskDetail(task)"
                   class="text-blue-600 hover:text-blue-800"
                   :title="$t('completedList.viewDetail')"
@@ -105,12 +113,12 @@
                   <i class="fas fa-info-circle"></i>
                 </button>
                 <button
-                  v-if="task.localVideo"
-                  @click="localPlay(task)"
-                  class="text-green-600 hover:text-green-800"
-                  :title="$t('completedList.play')"
+                  v-if="task.status === 'done' && !task.errmsg"
+                  @click="showRenameDialog(task)"
+                  class="text-purple-600 hover:text-purple-800"
+                  :title="$t('completedList.rename')"
                 >
-                  <i class="fas fa-play-circle"></i>
+                  <i class="fas fa-edit"></i>
                 </button>
                 <button
                   @click="deleteTask(task.url)"
@@ -124,10 +132,10 @@
             <td class="px-4 py-3">
               <div class="flex items-center">
                 <div class="flex-1 min-w-0">
-                  <p class="text-sm font-medium text-gray-900 truncate" :title="task.showName">
+                  <p class="text-sm font-medium text-gray-900 truncate max-w-[calc(40vw)]" :title="task.showName">
                     {{ task.showName }}
                   </p>
-                  <p class="text-xs text-gray-500 truncate" :title="task.url">
+                  <p class="text-xs text-gray-500 truncate max-w-[calc(35vw)]" :title="task.url">
                     {{ task.url }}
                   </p>
                 </div>
@@ -170,6 +178,15 @@
         </button>
       </div>
     </div>
+
+    <!-- 重命名对话框 -->
+    <RenameDialog
+      ref="renameDialogRef"
+      :visible="showRenameModal"
+      :task="renameTask"
+      @close="closeRenameDialog"
+      @success="handleRenameSuccess"
+    />
   </div>
 </template>
 
@@ -179,9 +196,8 @@ import { useI18n } from 'vue-i18n';
 import { useTasksStore } from '@/stores/tasks';
 // import { useConfigStore } from '@/stores/config';
 import { formatSize } from '@/utils/format';
+import RenameDialog from './RenameDialog.vue';
 import type { DownloadTask } from '@/types/task';
-
-// const { t } = useI18n();
 
 const tasksStore = useTasksStore();
 // const configStore = useConfigStore();
@@ -326,6 +342,25 @@ const emit = defineEmits<{
   (e: 'delete', urls: string[]): void;
 }>();
 
+const showRenameModal = ref(false);
+const renameTask = ref<DownloadTask | null>(null);
+const renameDialogRef = ref<InstanceType<typeof RenameDialog> | null>(null);
+
+function showRenameDialog(task: DownloadTask) {
+  renameTask.value = task;
+  showRenameModal.value = true;
+}
+
+function closeRenameDialog() {
+  showRenameModal.value = false;
+  renameTask.value = null;
+}
+
+function handleRenameSuccess() {
+  // 重命名成功，关闭对话框
+  closeRenameDialog();
+}
+
 function showTaskDetail(task: DownloadTask) {
   emit('show-detail', task);
 }
@@ -347,4 +382,9 @@ function handleBatchDelete() {
     selectedTasks.value = [];
   }
 }
+
+// 暴露方法供父组件调用
+defineExpose({
+  closeRenameDialog,
+});
 </script>

@@ -250,7 +250,8 @@ export default {
     dockerCompose: 'Run with docker-compose:',
     dockerDeployComplete: 'After deployment, visit {url} to use the WebUI interface.',
     captureScript: '🎬 Browser Script (m3u8-capture)',
-    captureScriptDescription: 'm3u8-capture is a browser userscript that automatically captures m3u8 and mp4 video links from web pages and quickly jumps to WebUI for download.',
+    captureScriptDescription:
+      'm3u8-capture is a browser userscript that automatically captures m3u8 and mp4 video links from web pages and quickly jumps to WebUI for download.',
     captureScriptInstall: 'Installation Steps:',
     captureScriptInstallStep1: 'Install browser extension: ',
     captureScriptInstallStep1Or: ' or ',
@@ -266,10 +267,13 @@ export default {
     captureScriptInstallStep3b: 'Click the settings button ⚙️',
     captureScriptInstallStep3c: 'Enter your m3u8-dl WebUI address (e.g., http://localhost:6600) and save',
     captureScriptFeatures: 'Feature Description:',
-    captureScriptFeature1: 'Auto Capture: The script automatically monitors network requests in web pages, when m3u8 or mp4 video links are detected, automatically adds them to the list',
+    captureScriptFeature1:
+      'Auto Capture: The script automatically monitors network requests in web pages, when m3u8 or mp4 video links are detected, automatically adds them to the list',
     captureScriptFeature2: 'Video Name Extraction: Prioritizes extracting video names from page h1, h2, or document.title',
-    captureScriptFeature3: 'Jump to Download: Click the "Jump to Download" button to automatically jump to m3u8-dl WebUI and fill in video link and name (format: url|name)',
-    captureScriptFeature4: 'Exclusion Rules: In settings, you can configure exclusion URL rule list, matching URLs will not show panel and will not capture video links',
+    captureScriptFeature3:
+      'Jump to Download: Click the "Jump to Download" button to automatically jump to m3u8-dl WebUI and fill in video link and name (format: url|name)',
+    captureScriptFeature4:
+      'Exclusion Rules: In settings, you can configure exclusion URL rule list, matching URLs will not show panel and will not capture video links',
     captureScriptFeature4a: 'Supports plain string matching (contains match)',
     captureScriptFeature4b: 'Supports regular expressions (starts and ends with /, e.g., /example\\.com/)',
     captureScriptUsage: 'Usage Example:',
@@ -280,7 +284,8 @@ export default {
     captureScriptUsageStep5: 'Click "Start Download" in WebUI',
     captureScriptExcludeRules: 'Exclusion Rule Configuration Example:',
     captureScriptExcludeRulesHint: 'Configure exclusion rules in script settings, one per line:',
-    captureScriptTip: 'Tip: The script automatically excludes WebUI address pages to avoid capturing in WebUI pages. You can also manually add more exclusion rules.',
+    captureScriptTip:
+      'Tip: The script automatically excludes WebUI address pages to avoid capturing in WebUI pages. You can also manually add more exclusion rules.',
     latestVersion: 'Already latest version, no update needed [{version}]',
     newVersionAvailable: 'New version found [{version}], please visit {url} to download the latest version',
     versionCheckFailed: 'Version check failed: {error}',
@@ -310,6 +315,8 @@ export default {
     enterValidUrl: 'Please enter a valid URL address',
     copySuccess: 'Copied to clipboard',
     copyFailed: 'Copy failed',
+    renameSuccess: 'Renamed successfully',
+    renameFailed: 'Rename failed',
   },
   emptyState: {
     noTasks: 'No download tasks',
@@ -352,6 +359,11 @@ export default {
     startTime: 'Start Time',
     endTime: 'End Time',
     viewDetail: 'View Detail',
+    rename: 'Rename',
+    renameTitle: 'Rename File',
+    newFilename: 'New Filename',
+    filenamePlaceholder: 'Enter new filename (without extension)',
+    invalidFilename: 'Filename contains invalid characters (cannot contain < > : " / \\ | ? *)',
     play: 'Play',
     delete: 'Delete',
     noCompletedTasks: 'No completed tasks',

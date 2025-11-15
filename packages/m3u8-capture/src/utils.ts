@@ -1,3 +1,4 @@
+import { DEFAULT_EXCLUDE_URLS } from './config';
 import { getExcludeUrls, getMediaExtList, getWebuiUrl } from './storage';
 import type { EventCoordinates } from './types';
 
@@ -26,15 +27,14 @@ export function shouldExcludePageUrl(url?: string): boolean {
   // 检查是否是 WEBUI_URL
   if (currentUrl.startsWith(getWebuiUrl())) return true;
 
+  const excludeRules: string[] = [...DEFAULT_EXCLUDE_URLS];
   // 检查是否匹配排除规则列表
   const excludeUrls = getExcludeUrls();
-  if (!excludeUrls || !excludeUrls.trim()) return false;
+  if (excludeUrls.trim()) {
+    excludeRules.push(...excludeUrls.split('\n').map(rule => rule.trim()).filter(rule => rule));
+  }
 
-  const rules = excludeUrls
-    .split('\n')
-    .map(rule => rule.trim())
-    .filter(rule => rule);
-  for (const rule of rules) {
+  for (const rule of excludeRules) {
     try {
       if (currentUrl.includes(rule)) return true;
 

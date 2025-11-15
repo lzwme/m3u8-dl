@@ -1,6 +1,6 @@
-import { existsSync, readFileSync, rmSync, statSync, unlinkSync, writeFileSync } from 'node:fs';
+import { existsSync, readFileSync, renameSync, rmSync, statSync, unlinkSync, writeFileSync } from 'node:fs';
 import { homedir } from 'node:os';
-import { dirname, resolve } from 'node:path';
+import { basename, dirname, resolve } from 'node:path';
 import { assign, getUrlParams, md5, mkdirp } from '@lzwme/fe-utils';
 import { cyan, gray, green, red } from 'console-log-colors';
 import type { Express, Request } from 'express';
@@ -596,6 +596,73 @@ export class DLServer {
       }
       const lang = this.getLangFromRequest(req);
       res.json({ message: t('api.success.deleted', lang, { count: list.length }), code: 0, count: list.length });
+    });
+
+    // API to rename download file
+    app.post('/api/rename', (req, res) => {
+      const { url, newFilename } = req.body;
+      const lang = this.getLangFromRequest(req);
+
+      if (!url || !newFilename) {
+        res.json({ code: 1001, message: t('api.error.invalidParams', lang) });
+        return;
+      }
+
+      const item = this.dlCache.get(url);
+      if (!item) {
+        res.json({ code: 1002, message: t('api.error.taskNotFound', lang) });
+        return;
+      }
+
+      // 只允许重命名已完成且状态正常的任务
+      if (item.status !== 'done' || item.errmsg) {
+        res.json({ code: 1003, message: t('api.error.onlyRenameCompleted', lang) });
+        return;
+      }
+
+      // 已完成且状态正常的任务，localVideo 必须存在
+      if (!item.localVideo || !existsSync(item.localVideo)) {
+        res.json({ code: 1005, message: t('api.error.fileNotFound', lang) });
+        return;
+      }
+
+      // 检查新文件名是否包含非法字符
+      const invalidChars = /[<>:"/\\|?*]/;
+      if (invalidChars.test(newFilename)) {
+        res.json({ code: 1004, message: t('api.error.invalidFilename', lang) });
+        return;
+      }
+
+      try {
+        const oldPath = item.localVideo;
+        const oldDir = dirname(oldPath);
+        const oldExt = oldPath.split('.').pop() || '';
+        const newFilenameBase = newFilename.replace(/\.[^.]+$/, '');
+        const newPath = resolve(oldDir, `${newFilenameBase}${oldExt ? `.${oldExt}` : ''}`);
+
+        // 检查新文件名是否已存在
+        if (existsSync(newPath)) {
+          res.json({ code: 1007, message: t('api.error.fileExists', lang) });
+          return;
+        }
+
+        // 重命名文件
+        renameSync(oldPath, newPath);
+        logger.debug('重命名文件：', gray(oldPath), '->', cyan(newPath));
+
+        // 更新任务信息
+        item.localVideo = newPath;
+        item.options.filename = item.filename = basename(newPath);
+
+        this.dlCache.set(url, item);
+        this.saveCache();
+        this.wsSend('progress', url);
+
+        res.json({ message: t('api.success.renamed', lang), code: 0 });
+      } catch (error) {
+        logger.error('重命名失败:', error);
+        res.json({ code: 1006, message: t('api.error.renameFailed', lang, { error: (error as Error).message }) });
+      }
     });
 
     app.get(/^\/localplay\/(.*)$/, (req, res) => {

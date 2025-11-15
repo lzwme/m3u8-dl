@@ -43,6 +43,13 @@ export default {
       accessDenied: '访问被拒绝',
       invalidUrl: '无效的 url 参数',
       notFound: '未找到',
+      invalidParams: '参数无效',
+      taskNotFound: '任务不存在',
+      onlyRenameCompleted: '只能重命名已完成且状态正常的任务',
+      invalidFilename: '文件名包含非法字符',
+      fileNotFound: '文件未找到',
+      fileExists: '文件已存在',
+      renameFailed: '重命名失败: {error}',
     },
     success: {
       configUpdated: '配置更新成功',
@@ -52,6 +59,7 @@ export default {
       resumed: '已恢复 {count} 个下载任务',
       noResumableTasks: '没有找到可恢复的下载任务',
       deleted: '已删除 {count} 个下载任务',
+      renamed: '重命名成功',
     },
   },
   download: {

@@ -1,18 +1,11 @@
 <template>
-  <div
-    v-if="visible"
-    class="fixed inset-0 bg-black z-100 flex flex-col"
-    @keydown.esc="handleClose"
-    tabindex="0"
-  >
+  <div v-if="visible" class="fixed inset-0 bg-black z-100 flex flex-col" @keydown.esc="handleClose" tabindex="0">
     <!-- 顶部控制栏 -->
     <div class="flex items-center justify-between bg-gray-900 text-white px-4 py-2 flex-shrink-0">
       <div class="flex items-center gap-4 flex-1 min-w-0">
-        <button
-          @click="handleClose"
+        <button @click="handleClose"
           class="text-gray-300 hover:text-white transition-colors p-2 rounded-lg hover:bg-gray-800"
-          :title="$t('common.close')"
-        >
+          :title="$t('common.close')">
           <i class="fas fa-times"></i>
         </button>
         <h2 class="text-sm md:text-base font-semibold truncate flex-1">
@@ -20,12 +13,9 @@
         </h2>
       </div>
       <div class="flex items-center gap-2">
-        <button
-          v-if="videoList.length > 1"
-          @click="togglePlaylist"
+        <button v-if="videoList.length > 1" @click="togglePlaylist"
           class="text-gray-300 hover:text-white transition-colors p-2 rounded-lg hover:bg-gray-800"
-          :title="showPlaylist ? '隐藏列表' : '显示列表'"
-        >
+          :title="showPlaylist ? '隐藏列表' : '显示列表'">
           <i class="fas" :class="showPlaylist ? 'fa-list-ul' : 'fa-list'"></i>
         </button>
       </div>
@@ -35,71 +25,64 @@
     <div class="flex-1 flex overflow-hidden relative">
       <!-- 视频播放区域 -->
       <div class="flex-1 relative">
-        <iframe
-          ref="playerIframe"
-          :src="iframeSrc"
-          class="w-full h-full border-0"
-          allowfullscreen
-        ></iframe>
+        <iframe ref="playerIframe" :src="iframeSrc" class="w-full h-full border-0" allowfullscreen></iframe>
       </div>
 
       <!-- 遮罩层 - 仅小屏幕显示 -->
       <Transition name="fade">
-        <div
-          v-if="showPlaylist && videoList.length > 1"
-          class="playlist-overlay md:hidden fixed inset-0 bg-black/50 backdrop-blur-sm z-40"
-          @click="togglePlaylist"
-        ></div>
+        <div v-if="showPlaylist && videoList.length > 1"
+          class="playlist-overlay md:hidden fixed inset-0 bg-black/50 backdrop-blur-sm z-40" @click="togglePlaylist">
+        </div>
       </Transition>
 
       <!-- 视频列表侧边栏 -->
       <Transition name="slide">
-        <div
-          v-if="showPlaylist && videoList.length > 1"
-          class="playlist-sidebar w-80 bg-gray-900 text-white overflow-y-auto flex-shrink-0 border-l border-gray-700"
-        >
+        <div v-if="showPlaylist && videoList.length > 1"
+          class="playlist-sidebar w-80 bg-gray-900 text-white overflow-y-auto flex-shrink-0 border-l border-gray-700">
           <div class="p-4">
             <!-- 标题栏 -->
             <div class="flex items-center justify-between mb-3">
               <h3 class="text-sm font-semibold text-gray-300">播放列表 ({{ videoList.length }})</h3>
               <!-- 关闭按钮 - 仅小屏幕显示 -->
-              <button
-                @click="togglePlaylist"
+              <button @click="togglePlaylist"
                 class="md:hidden text-gray-300 hover:text-white transition-colors p-2 rounded-lg hover:bg-gray-800"
-                :title="$t('common.close')"
-              >
+                :title="$t('common.close')">
                 <i class="fas fa-times"></i>
               </button>
             </div>
 
             <div class="space-y-2">
-              <div
-                v-for="task in videoList"
-                :key="task.url"
-                @click="switchVideo(task)"
-                :class="[
-                  'p-3 rounded-lg cursor-pointer transition-colors',
-                  currentTask?.url === task.url
-                    ? 'bg-blue-600 text-white'
-                    : 'bg-gray-800 hover:bg-gray-700 text-gray-200'
-                ]"
-              >
-                <div class="flex items-start justify-between gap-2">
-                  <div class="flex-1 min-w-0">
-                    <div class="font-medium text-sm truncate mb-1">
-                      {{ task.filename || task.showName || task.url }}
+              <div v-for="task in videoList" :key="task.url" :class="[
+                'p-3 rounded-lg transition-colors relative',
+                currentTask?.url === task.url
+                  ? 'bg-blue-600 text-white'
+                  : 'bg-gray-800 hover:bg-gray-700 text-gray-200'
+              ]">
+                <div class="flex items-start justify-between cursor-pointer gap-2" @click="switchVideo(task)">
+                  <div class="flex-1 min-w-0 flex flex-col gap-1">
+                    <div class="flex items-center">
+                      <div class="font-medium text-sm truncate flex-1">
+                        {{ task.filename || task.showName || task.url }}
+                      </div>
+                      <button v-if="task.status === 'done' && !task.errmsg" @click.stop="showRenameDialog(task)"
+                        class="flex text-purple-400 hover:text-purple-300 hover:bg-purple-500/20 rounded-lg transition-colors p-1 flex-shrink-0"
+                        :title="$t('completedList.rename')">
+                        <i class="fas fa-edit text-xs"></i>
+                      </button>
                     </div>
                     <div class="text-xs text-gray-400 flex items-center gap-2 flex-wrap">
-                      <span>进度: {{ task.progress || 0 }}%</span>
-                      <span v-if="task.status" class="px-1.5 py-0.5 rounded text-xs" :class="getStatusClass(task.status)">
+                      <span v-if="task.status" class="px-1.5 py-0.5 rounded text-xs"
+                        :class="getStatusClass(task.status)">
                         {{ getStatusText(task.status) }}
+                      </span>
+                      <span>{{ task.progress || 0 }}%</span>
+                      <span v-if="task.downloadedSize || task.size" class="text-gray-400">
+                        {{ formatSize(task.downloadedSize || task.size || 0) }}
                       </span>
                     </div>
                   </div>
-                  <i
-                    v-if="currentTask?.url === task.url"
-                    class="fas fa-play text-blue-300 flex-shrink-0 mt-1"
-                  ></i>
+                  <i v-if="currentTask?.url === task.url"
+                    class="fas fa-play text-blue-300 flex-shrink-0 absolute right-2 bottom-2"></i>
                 </div>
               </div>
             </div>
@@ -107,6 +90,9 @@
         </div>
       </Transition>
     </div>
+    <!-- 重命名对话框 -->
+    <RenameDialog :visible="showRenameModal" :task="renameTask" @close="closeRenameDialog"
+      @success="handleRenameSuccess" />
   </div>
 </template>
 
@@ -114,6 +100,8 @@
 import { ref, computed, watch, onMounted, onUnmounted } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useTasksStore } from '@/stores/tasks';
+import { formatSize } from '@/utils/format';
+import RenameDialog from './RenameDialog.vue';
 import type { DownloadTask } from '@/types/task';
 
 const { t } = useI18n();
@@ -133,6 +121,8 @@ const playerIframe = ref<HTMLIFrameElement | null>(null);
 const showPlaylist = ref(true);
 const currentTask = ref<DownloadTask | null>(null);
 const currentUrl = ref<string>('');
+const showRenameModal = ref(false);
+const renameTask = ref<DownloadTask | null>(null);
 
 // 计算 iframe 的 src
 const iframeSrc = computed(() => {
@@ -264,6 +254,24 @@ function handleClose() {
   emit('close');
 }
 
+// 重命名相关函数
+function showRenameDialog(task: DownloadTask) {
+  if (task.status === 'done' && !task.errmsg) {
+    renameTask.value = task;
+    showRenameModal.value = true;
+  }
+}
+
+function closeRenameDialog() {
+  showRenameModal.value = false;
+  renameTask.value = null;
+}
+
+function handleRenameSuccess() {
+  // 重命名成功，关闭对话框
+  closeRenameDialog();
+}
+
 // 状态文本和样式
 function getStatusText(status: string): string {
   const statusMap: Record<string, string> = {
@@ -331,6 +339,7 @@ onUnmounted(() => {
 
 /* 大屏幕时使用宽度动画 */
 @media (min-width: 768px) {
+
   .slide-enter-active.playlist-sidebar,
   .slide-leave-active.playlist-sidebar {
     overflow: hidden;
@@ -354,6 +363,7 @@ onUnmounted(() => {
 }
 
 @media (max-width: 767px) {
+
   /* 小屏幕时侧边栏使用 fixed 定位 */
   .playlist-sidebar {
     position: fixed;

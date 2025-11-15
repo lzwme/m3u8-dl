@@ -25,13 +25,13 @@ export default defineConfig({
   server: {
     port: 5173,
     proxy: {
-      ...['/api', '/localplay', '/local', '/ws', '/play.html', '/m3u8-capture.user.js'].reduce((acc, path) => ({
+      ...['/api', '/localplay', '/local', '/ws', '/m3u8-capture.user.js'].reduce((acc, path) => ({
         ...acc,
         [path]: {
           target: 'http://localhost:6600',
           changeOrigin: true,
           ws: path === '/ws',
-          rewrite: (path) => path, // 保持路径不变
+          rewrite: (p: string) => p, // 保持路径不变
         },
       }), {}),
     },

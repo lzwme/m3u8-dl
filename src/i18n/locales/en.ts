@@ -46,6 +46,13 @@ export default {
       accessDenied: 'Access denied',
       invalidUrl: 'Invalid url parameter',
       notFound: 'Not Found',
+      invalidParams: 'Invalid parameters',
+      taskNotFound: 'Task not found',
+      onlyRenameCompleted: 'Only completed tasks with normal status can be renamed',
+      invalidFilename: 'Filename contains invalid characters',
+      fileNotFound: 'File not found',
+      fileExists: 'File already exists',
+      renameFailed: 'Rename failed: {error}',
     },
     success: {
       configUpdated: 'Config updated successfully',
@@ -55,6 +62,7 @@ export default {
       resumed: 'Resumed {count} download task(s)',
       noResumableTasks: 'No resumable download tasks found',
       deleted: 'Deleted {count} download task(s)',
+      renamed: 'Renamed successfully',
     },
   },
   download: {

@@ -6,7 +6,11 @@
         @local-play="handleLocalPlay"
         @delete="handleDelete"
       />
-      <TaskDetailModal :visible="showDetailModal" :task="selectedTask" @close="showDetailModal = false" />
+      <TaskDetailModal
+        :visible="showDetailModal"
+        :task="selectedTask"
+        @close="showDetailModal = false"
+      />
       <DeleteConfirmDialog
         :visible="showDeleteDialog"
         :count="deleteUrls.length"
@@ -112,4 +116,5 @@ function doPlay(url: string, task?: DownloadTask | null) {
   playTask.value = task || null;
   showVideoPlayer.value = true;
 }
+
 </script>

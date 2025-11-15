@@ -129,15 +129,21 @@
             await T.loadJS(CDN_CONFIG.artplayer);
           }
 
+          Artplayer.PLAYBACK_RATE = [0.5, 0.75, 1, 1.25, 1.5, 2, 3, 4, 8];
+          Artplayer.SEEK_STEP = 10;
+
+          // 从 videoUrl 提取文件类型
+          const type = ['.mp4', '.mkv', '.avi', '.mov', '.wmv', '.flv', '.webm', '.m4v', '.m3u8', '.ogg', '.flv', '.webm'].find(d => videoUrl.includes(d)) || 'm3u8';
+
           const art = new Artplayer({
             container: document.getElementById('dplayer'),
             url: videoUrl, // 'https://playertest.longtailvideo.com/adaptive/elephants_dream_v4/index.m3u8',
-            // airplay: true,
+            // airplay: true, // 是否显示AirPlay功能。效果并不好
             aspectRatio: true, // 是否显示视频长宽比功能
             autoplay: true,
             autoOrientation: true,
             // autoMini: true, // 当播放器滚动到浏览器视口以外时，自动进入 迷你播放 模式
-            autoPlayback: true,
+            autoPlayback: true, // 是否使用自动 回放功能
             // autoSize: true, // 自动调整播放器尺寸
             fastForward: true,
             flip: true, // 是否显示视频翻转功能
@@ -150,7 +156,7 @@
             screenshot: true,
             setting: true,
             theme: '#39f',
-            type: videoUrl.includes('mp4') ? 'mp4' : 'm3u8',
+            type,
             customType: {
               m3u8: function playM3u8(video, url, art) {
                 if (Hls.isSupported()) {
@@ -209,6 +215,14 @@
             console.log('[artplayer]播放完毕', videoUrl);
             T.next_video();
           });
+          art.on('video:ratechange', () => {
+            // console.log('[artplayer]播放进度', art.playbackRate);
+            art.storage.set('playbackRate', art.playbackRate);
+          });
+          art.on('ready', () => {
+            art.playbackRate = +art.storage.get('playbackRate') || 1;
+          });
+
           // console.log('[artplayer]播放器初始化完成', art);
           T.data.artInstance = art;
           return art;

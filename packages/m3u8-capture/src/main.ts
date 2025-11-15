@@ -15,16 +15,17 @@ export function addMediaLink(url: string, title = ''): void {
   url = extractMediaUrlFromParams(url) || url;
   if (!url || shouldExcludePageUrl(url)) return;
 
+  const linkData: LinkData = {
+    url: url,
+    title: title || getMediaTitle(),
+    type: getFileType(url),
+    pageUrl: window.location.href,
+    timestamp: Date.now(),
+  };
+
   // 如果在 iframe 模式，发送给 top 窗口
   if (isInIframeMode) {
     try {
-      const linkData: LinkData = {
-        url: url,
-        title: title || getMediaTitle(),
-        type: getFileType(url),
-        pageUrl: window.location.href,
-        timestamp: Date.now(),
-      };
       window.top?.postMessage(
         {
           type: 'm3u8-capture-link',
@@ -39,20 +40,10 @@ export function addMediaLink(url: string, title = ''): void {
   }
 
   const normalizedUrl = normalizeUrl(url);
-
-  // 检查是否已存在
   const item = mediaLinks.get(normalizedUrl);
   if (item?.title) return;
 
-  mediaLinks.set(normalizedUrl, {
-    url: url,
-    title: title || getMediaTitle(),
-    type: getFileType(url),
-    pageUrl: window.location.href,
-    timestamp: Date.now(),
-  });
-
-  // 更新 UI（会根据 STORAGE_KEY_PANEL_VISIBLE 决定显示 panel 还是 toggleButton）
+  mediaLinks.set(normalizedUrl, linkData);
   updateUI();
 }
 

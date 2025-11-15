@@ -26,3 +26,11 @@ export const DEFAULT_MEDIA_EXT_LIST = [
   'ogg',
   'wma',
 ] as const;
+
+/** 默认排除网址规则列表 */
+export const DEFAULT_EXCLUDE_URLS = [
+  'localhost:6600',
+  '/example.com/',
+  'lzw.me',
+  'doubleclick.net',
+] as const;

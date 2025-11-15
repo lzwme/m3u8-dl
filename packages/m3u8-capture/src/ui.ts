@@ -89,7 +89,7 @@ export function createToggleButton(): void {
   toggleButton = document.createElement('div');
   toggleButton.id = 'm3u8-capture-toggle-btn';
   toggleButton.style.cssText =
-    'position: fixed; bottom: 40px; right: 20px; width: 50px; height: 50px; pointer-events: auto; z-index: 999998; will-change: transform;';
+    'position: fixed; bottom: 30vh; right: 20px; width: 50px; height: 50px; pointer-events: auto; z-index: 99998; will-change: transform;';
   toggleButton.className = `fixed bottom-10 right-5 w-[50px] h-[50px] bg-blue-500 rounded-full flex items-center justify-center cursor-move shadow-lg text-2xl transition-all duration-200 hover:scale-110 hover:shadow-xl select-none touch-none ${isPanelVisible ? 'hidden' : 'flex'}`;
 
   // 添加图标
@@ -693,6 +693,9 @@ export function updateUI(): void {
                   <button class="m3u8-capture-download-btn flex-1 bg-blue-500 text-white border-none px-3.5 py-2 rounded-md cursor-pointer text-xs font-medium transition-all duration-200 hover:bg-blue-600 hover:-translate-y-0.5" data-url="${encodeURIComponent(item.url)}" data-title="${encodeURIComponent(title)}">
                       跳转下载
                   </button>
+                  <button class="m3u8-capture-preview-btn bg-green-500 text-white border-none px-3.5 py-2 rounded-md cursor-pointer text-xs font-medium transition-all duration-200 hover:bg-green-600" data-url="${encodeURIComponent(item.url)}">
+                      预览
+                  </button>
                   <button class="m3u8-capture-copy-btn bg-gray-500 text-white border-none px-3.5 py-2 rounded-md cursor-pointer text-xs transition-all duration-200 hover:bg-gray-600" data-url="${item.url}">
                       复制
                   </button>
@@ -710,6 +713,16 @@ export function updateUI(): void {
       const title = decodeURIComponent((btn as HTMLElement).getAttribute('data-title') || '');
       const downloadUrl = `${getWebuiUrl()}/page/download?from=capture&action=new&url=${encodeURIComponent(url + (title ? `|${title}` : ''))}`;
       safeOpenUrl(downloadUrl);
+    });
+  });
+
+  // 绑定在线播放按钮事件
+  panelElement?.querySelectorAll('.m3u8-capture-preview-btn').forEach(btn => {
+    btn.addEventListener('click', (e: Event) => {
+      e.stopPropagation();
+      const url = decodeURIComponent((btn as HTMLElement).getAttribute('data-url') || '');
+      const previewUrl = `https://lzw.me/x/m3u8-player/?from=capture&url=${encodeURIComponent(url)}`;
+      safeOpenUrl(previewUrl);
     });
   });
 

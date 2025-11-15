@@ -52,7 +52,7 @@ export function getMediaTitle(doc: Document = document): string {
 
   // 优先级2: 从页面 title 提取
   if (!title) {
-    title = (doc.title || '').split(/[-|_]/)[0].trim();
+    title = (doc.title || '').split(/ [-|_] /)[0].trim();
   }
 
   // 优先级3: 如果是在 iframe 中，尝试从 top 窗口获取 title

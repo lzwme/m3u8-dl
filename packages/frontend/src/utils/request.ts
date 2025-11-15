@@ -121,6 +121,13 @@ export async function deleteDownload(urls: string[], deleteCache = true, deleteV
 }
 
 /**
+ * 重命名下载文件
+ */
+export async function renameDownload(url: string, newFilename: string): Promise<OperationResponse> {
+  return post<never>('/api/rename', { url, newFilename }) as Promise<OperationResponse>;
+}
+
+/**
  * 获取 M3U8 URLs
  * @param url 视频播放页地址
  * @param headers 自定义请求头
