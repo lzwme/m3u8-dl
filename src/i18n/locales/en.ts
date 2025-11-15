@@ -53,6 +53,7 @@ export default {
       fileNotFound: 'File not found',
       fileExists: 'File already exists',
       renameFailed: 'Rename failed: {error}',
+      duplicateDownload: '{count} URL(s) already exist, duplicate download',
     },
     success: {
       configUpdated: 'Config updated successfully',

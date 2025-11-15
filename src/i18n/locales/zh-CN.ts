@@ -50,6 +50,7 @@ export default {
       fileNotFound: '文件未找到',
       fileExists: '文件已存在',
       renameFailed: '重命名失败: {error}',
+      duplicateDownload: '有 {count} 个 URL 已存在，重复下载',
     },
     success: {
       configUpdated: '配置更新成功',

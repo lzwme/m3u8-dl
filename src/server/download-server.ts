@@ -92,7 +92,7 @@ export class DLServer {
     this.init();
   }
   private async init() {
-    this.readConfig();
+    this.loadConfig();
     if (this.cfg.dlOptions.debug) logger.updateOptions({ levelType: 'debug' });
     this.loadCache();
     await this.createApp();
@@ -123,11 +123,22 @@ export class DLServer {
     }
 
     this.dlCache.forEach(item => {
-      if (item.status === 'done' && (!item.localVideo || !existsSync(item.localVideo))) {
-        item.status = 'error';
-        item.errmsg = '已删除';
+      if (item.status === 'done') {
+        if (item.localVideo && existsSync(item.localVideo)) {
+          if (item.current) delete item.current;
+        } else {
+          item.status = 'error';
+          item.errmsg = '已删除';
+        }
+      } else if (item.status === 'error') {
+        // 文件移除又移动回来了，恢复为 done 状态
+        if (item.localVideo && existsSync(item.localVideo)) {
+          item.status = 'done';
+          delete item.errmsg;
+        }
       }
     });
+    this.checkDLFileLaest = now;
   }
   dlCacheClone() {
     const info: [string, CacheItem][] = [];
@@ -145,21 +156,18 @@ export class DLServer {
     clearTimeout(this.cacheSaveTimer);
     this.cacheSaveTimer = setTimeout(() => {
       const cacheFile = resolve(this.options.cacheDir, 'cache.json');
-      const info = this.dlCacheClone();
 
       mkdirp(dirname(cacheFile));
-      writeFileSync(cacheFile, JSON.stringify(info));
+      writeFileSync(cacheFile, JSON.stringify(this.dlCacheClone()));
     }, 1000);
   }
-  private readConfig(configPath?: string): M3u8DLOptions {
+  private loadConfig(configPath?: string) {
     try {
       if (!configPath) configPath = this.options.configPath;
       if (existsSync(configPath)) assign(this.cfg, JSON.parse(readFileSync(configPath, 'utf8')));
     } catch (error) {
       logger.error('读取配置失败:', error);
     }
-
-    return this.cfg.dlOptions;
   }
   saveConfig(config: M3u8DLOptions, configPath?: string) {
     if (!configPath) configPath = this.options.configPath;
@@ -296,6 +304,7 @@ export class DLServer {
     }
 
     const { options: dlOptions } = formatOptions(url, { ...this.cfg.dlOptions, ...options, cacheDir: this.options.cacheDir });
+    if (!dlOptions.saveDir) dlOptions.saveDir = this.cfg.dlOptions.saveDir;
     const cacheItem = this.dlCache.get(url) || { options, dlOptions, status: 'pending', url };
     logger.debug('startDownload', url, dlOptions, cacheItem.status);
 
@@ -324,7 +333,7 @@ export class DLServer {
         if (!item) return false; // 已删除
         const status = item.status || 'resume';
 
-        Object.assign(item, { ...stats, current, options: dlOptions, status, workPoll, url });
+        Object.assign(item, { ...stats, current, dlOptions, status, workPoll, url });
         this.dlCache.set(url, item);
         this.saveCache();
         this.wsSend('progress', url);
@@ -380,6 +389,12 @@ export class DLServer {
       return queryLang;
     }
 
+    // Try to get lang from body
+    const bodyLang = (req.body as { lang?: string })?.lang;
+    if (bodyLang && LANG_CODES.has(bodyLang)) {
+      return bodyLang;
+    }
+
     // Try to get lang from Accept-Language header
     const acceptLanguage = req.headers['accept-language'];
     if (acceptLanguage) {
@@ -387,12 +402,6 @@ export class DLServer {
       if (LANG_CODES.has(langCode)) {
         return langCode;
       }
-    }
-
-    // Try to get lang from body
-    const bodyLang = (req.body as { lang?: string })?.lang;
-    if (bodyLang && LANG_CODES.has(bodyLang)) {
-      return bodyLang;
     }
 
     // Fallback to default
@@ -490,18 +499,34 @@ export class DLServer {
 
     // API to start m3u8 download
     app.post('/api/download', (req, res) => {
-      const { url, options = {}, list = [] } = req.body;
+      const { list = [] } = req.body;
       const lang = this.getLangFromRequest(req);
 
       try {
-        if (list.length) {
-          for (const item of list) {
-            const { url, ...options } = item;
-            if (url) this.startDownload(url, options);
-          }
-        } else if (url) this.startDownload(url, options);
+        let duplicateCount = 0;
+        let startedCount = 0;
 
-        res.json({ message: t('api.success.downloadStarted', lang, { count: list.length || 1 }), code: 0 });
+        // 检查并统计重复的 URL，但仍允许下载
+        for (const item of list) {
+          const { url, ...options } = item;
+          if (url) {
+            if (this.dlCache.has(url)) {
+              duplicateCount++;
+            } else {
+              startedCount++;
+            }
+            this.startDownload(url, options);
+          }
+        }
+
+        let message = '';
+        if (duplicateCount > 0) {
+          message = `${t('api.success.downloadStarted', lang, { count: list.length })}，${t('api.error.duplicateDownload', lang, { count: duplicateCount })}`;
+        } else {
+          message = t('api.success.downloadStarted', lang, { count: list.length });
+        }
+
+        res.json({ message, code: 0, duplicateCount, startedCount });
         this.wsSend('tasks');
       } catch (error) {
         res.status(500).json({ error: `${t('api.error.downloadFailed', lang)}: ${(error as Error).message || ''}` });

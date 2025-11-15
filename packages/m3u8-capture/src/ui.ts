@@ -2,11 +2,13 @@
 
 import { STORAGE_KEY_WEBUI_URL } from './config';
 import {
+  getAutoStart,
   getExcludeUrls,
   getMediaExtList,
   getPanelPosition,
   getPanelVisible,
   getWebuiUrl,
+  setAutoStart,
   setExcludeUrls,
   setMediaExtList,
   setPanelPosition,
@@ -485,6 +487,7 @@ export function showSettings(swalRoot = shadowRoot): void {
 
   const excludeUrls = getExcludeUrls();
   const mediaExtList = getMediaExtList();
+  const autoStart = getAutoStart();
 
   swal
     .fire({
@@ -502,9 +505,15 @@ export function showSettings(swalRoot = shadowRoot): void {
                   <p class="text-xs text-gray-500 mb-4">支持的媒体文件扩展名，将用于识别和抓取媒体链接</p>
                   <label class="block text-sm font-medium text-gray-700 mb-1">排除网址规则（每行一个，支持正则表达式，以 / 开头和结尾）</label>
                   <textarea id="swal-exclude-urls" rows="6"
-                      class="w-full p-2.5 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      class="w-full p-2.5 border border-gray-300 rounded-md mb-4 focus:outline-none focus:ring-2 focus:ring-blue-500"
                       placeholder="例如：&#10;localhost:6600&#10;/example.com/&#10;127.0.0.1">${excludeUrls}</textarea>
-                  <p class="text-xs text-gray-500 mt-1">匹配的网址将不展示面板且不抓取媒体链接</p>
+                  <p class="text-xs text-gray-500 mb-4">匹配的网址将不展示面板且不抓取媒体链接</p>
+                  <div class="flex items-center mb-4">
+                      <input id="swal-auto-start" type="checkbox" ${autoStart ? 'checked' : ''}
+                          class="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500">
+                      <label for="swal-auto-start" class="ml-2 text-sm font-medium text-gray-700">自动开始下载</label>
+                  </div>
+                  <p class="text-xs text-gray-500">启用后，跳转到下载页面时将自动触发开始下载（延迟1秒）</p>
               </div>
           `,
       showCancelButton: true,
@@ -517,9 +526,11 @@ export function showSettings(swalRoot = shadowRoot): void {
         const urlInput = swalRoot.getElementById('swal-webui-url') as HTMLInputElement;
         const excludeInput = swalRoot.getElementById('swal-exclude-urls') as HTMLTextAreaElement;
         const mediaExtInput = swalRoot.getElementById('swal-media-ext-list') as HTMLTextAreaElement;
+        const autoStartInput = swalRoot.getElementById('swal-auto-start') as HTMLInputElement;
         const url = urlInput ? urlInput.value.trim() : '';
         const excludeUrls = excludeInput ? excludeInput.value.trim() : '';
         const mediaExtText = mediaExtInput ? mediaExtInput.value.trim() : '';
+        const autoStart = autoStartInput ? autoStartInput.checked : false;
 
         const swal = window.Swal;
         if (!url) {
@@ -538,14 +549,15 @@ export function showSettings(swalRoot = shadowRoot): void {
           return false;
         }
 
-        return { url, excludeUrls, mediaExtList };
+        return { url, excludeUrls, mediaExtList, autoStart };
       },
     })
     .then(result => {
       if (result.isConfirmed && result.value) {
-        const value = result.value as { url: string; excludeUrls: string; mediaExtList: string[] };
+        const value = result.value as { url: string; excludeUrls: string; mediaExtList: string[]; autoStart: boolean };
         GM_setValue(STORAGE_KEY_WEBUI_URL, value.url);
         setExcludeUrls(value.excludeUrls);
+        setAutoStart(value.autoStart);
         const savedExtList = setMediaExtList(value.mediaExtList);
 
         const swal = window.Swal;
@@ -711,7 +723,8 @@ export function updateUI(): void {
       e.stopPropagation();
       const url = decodeURIComponent((btn as HTMLElement).getAttribute('data-url') || '');
       const title = decodeURIComponent((btn as HTMLElement).getAttribute('data-title') || '');
-      const downloadUrl = `${getWebuiUrl()}/page/download?from=capture&action=new&url=${encodeURIComponent(url + (title ? `|${title}` : ''))}`;
+      const autoStart = getAutoStart() ? '&autoStart=1' : '';
+      const downloadUrl = `${getWebuiUrl()}/page/download?from=capture&action=new${autoStart}&url=${encodeURIComponent(url + (title ? `|${title}` : ''))}`;
       safeOpenUrl(downloadUrl);
     });
   });

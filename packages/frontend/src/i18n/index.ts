@@ -2,9 +2,9 @@ import { createI18n } from 'vue-i18n';
 import en from './locales/en';
 import zhCN from './locales/zh-CN';
 
-const locales = { 'zh-CN': zhCN, en };
+export const locales = { 'zh-CN': zhCN, en };
 
-function detectBrowserLanguage(): string {
+export function detectBrowserLanguage(): string {
   if (typeof window === 'undefined') return 'en';
 
   const savedLang = localStorage.getItem('language');
@@ -28,11 +28,9 @@ function detectBrowserLanguage(): string {
   return 'en';
 }
 
-const i18n = createI18n({
+export const i18n = createI18n({
   legacy: false,
   locale: detectBrowserLanguage(),
   fallbackLocale: 'en',
   messages: locales,
 });
-
-export default i18n;

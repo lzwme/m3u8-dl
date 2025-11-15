@@ -1,5 +1,6 @@
 import {
   DEFAULT_MEDIA_EXT_LIST,
+  STORAGE_KEY_AUTO_START,
   STORAGE_KEY_EXCLUDE_URLS,
   STORAGE_KEY_MEDIA_EXT_LIST,
   STORAGE_KEY_PANEL_POS,
@@ -61,4 +62,14 @@ export function getPanelVisible(): boolean {
 /** 设置面板可见性 */
 export function setPanelVisible(visible: boolean): void {
   GM_setValue(STORAGE_KEY_PANEL_VISIBLE, visible);
+}
+
+/** 获取是否自动下载 */
+export function getAutoStart(): boolean {
+  return GM_getValue(STORAGE_KEY_AUTO_START, false);
+}
+
+/** 设置是否自动下载 */
+export function setAutoStart(autoStart: boolean): void {
+  GM_setValue(STORAGE_KEY_AUTO_START, autoStart);
 }

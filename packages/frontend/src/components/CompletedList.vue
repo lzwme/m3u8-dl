@@ -83,7 +83,7 @@
         </thead>
         <tbody class="bg-white divide-y divide-gray-200">
           <tr
-            v-for="task in sortedTasks"
+            v-for="task in paginatedTasks"
             :key="task.url"
             class="hover:bg-gray-50 transition-colors"
           >
@@ -151,7 +151,7 @@
               {{ formatDateTime(task.endTime) }}
             </td>
           </tr>
-          <tr v-if="sortedTasks.length === 0">
+          <tr v-if="paginatedTasks.length === 0">
             <td colspan="6" class="px-4 py-8 text-center text-gray-500">
               <div class="flex flex-col items-center">
                 <i class="fas fa-inbox text-4xl mb-2 text-gray-300"></i>
@@ -179,6 +179,84 @@
       </div>
     </div>
 
+    <!-- 分页控件 -->
+    <div
+      v-if="sortedTasks.length > 0"
+      class="px-4 py-3 border-t bg-gray-50 flex items-center justify-between flex-wrap gap-2"
+    >
+      <div class="flex items-center space-x-2">
+        <label class="text-sm text-gray-600">{{ $t('completedList.pageSize') }}</label>
+        <select
+          v-model.number="pageSize"
+          @change="handlePageSizeChange"
+          class="px-2 py-1 text-sm border rounded-lg focus:ring-blue-500 focus:border-blue-500"
+        >
+          <option :value="10">10</option>
+          <option :value="20">20</option>
+          <option :value="50">50</option>
+          <option :value="100">100</option>
+        </select>
+        <span class="text-sm text-gray-600">{{ $t('completedList.itemsPerPage') }}</span>
+      </div>
+
+      <div class="flex items-center space-x-2">
+        <span class="text-sm text-gray-600">
+          {{ $t('completedList.pageInfo', { current: currentPage, total: totalPages }) }}
+        </span>
+        <div class="flex items-center space-x-1">
+          <button
+            @click="goToFirstPage"
+            :disabled="currentPage === 1"
+            class="px-2 py-1 text-sm bg-white border rounded hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed"
+            :title="$t('completedList.firstPage')"
+          >
+            <i class="fas fa-angle-double-left"></i>
+          </button>
+          <button
+            @click="goToPreviousPage"
+            :disabled="currentPage === 1"
+            class="px-2 py-1 text-sm bg-white border rounded hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed"
+            :title="$t('completedList.previousPage')"
+          >
+            <i class="fas fa-angle-left"></i>
+          </button>
+          <div class="flex items-center space-x-1">
+            <input
+              type="number"
+              v-model="goToPageInput"
+              @keyup.enter="handleGoToPageInput"
+              :min="1"
+              :max="totalPages"
+              class="w-16 px-2 py-1 text-sm border rounded-lg focus:ring-blue-500 focus:border-blue-500 text-center"
+              :placeholder="String(currentPage)"
+            />
+            <button
+              @click="handleGoToPageInput"
+              class="px-2 py-1 text-sm bg-blue-500 hover:bg-blue-600 text-white rounded"
+            >
+              {{ $t('completedList.goToPage') }}
+            </button>
+          </div>
+          <button
+            @click="goToNextPage"
+            :disabled="currentPage === totalPages"
+            class="px-2 py-1 text-sm bg-white border rounded hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed"
+            :title="$t('completedList.nextPage')"
+          >
+            <i class="fas fa-angle-right"></i>
+          </button>
+          <button
+            @click="goToLastPage"
+            :disabled="currentPage === totalPages"
+            class="px-2 py-1 text-sm bg-white border rounded hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed"
+            :title="$t('completedList.lastPage')"
+          >
+            <i class="fas fa-angle-double-right"></i>
+          </button>
+        </div>
+      </div>
+    </div>
+
     <!-- 重命名对话框 -->
     <RenameDialog
       ref="renameDialogRef"
@@ -191,7 +269,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref } from 'vue';
+import { computed, ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useTasksStore } from '@/stores/tasks';
 // import { useConfigStore } from '@/stores/config';
@@ -205,6 +283,9 @@ const tasksStore = useTasksStore();
 const sortField = ref<'startTime' | 'endTime' | 'name' | 'size' | 'saveDir'>('endTime');
 const sortOrder = ref<'asc' | 'desc'>('desc');
 const searchInput = ref('');
+const currentPage = ref(1);
+const pageSize = ref(20);
+const goToPageInput = ref('');
 
 // 获取已完成的任务（progress === 100 或 status === 'done'）
 const completedTasks = computed(() => {
@@ -233,7 +314,7 @@ const filteredTasks = computed(() => {
   });
 });
 
-// 排序后的任务列表
+// 排序后的任务列表（所有数据）
 const sortedTasks = computed(() => {
   const tasks = [...filteredTasks.value];
 
@@ -278,33 +359,62 @@ const sortedTasks = computed(() => {
   return tasks;
 });
 
+// 总页数
+const totalPages = computed(() => {
+  return Math.max(1, Math.ceil(sortedTasks.value.length / pageSize.value));
+});
+
+// 当前页显示的任务列表
+const paginatedTasks = computed(() => {
+  const start = (currentPage.value - 1) * pageSize.value;
+  const end = start + pageSize.value;
+  return sortedTasks.value.slice(start, end);
+});
+
 const selectedTasks = ref<string[]>([]);
 
 const isAllSelected = computed(
-  () => sortedTasks.value.length > 0 && selectedTasks.value.length === sortedTasks.value.length
+  () => paginatedTasks.value.length > 0 && selectedTasks.value.length === paginatedTasks.value.length &&
+    paginatedTasks.value.every(task => selectedTasks.value.includes(task.url))
 );
 
 const isIndeterminate = computed(
-  () => selectedTasks.value.length > 0 && selectedTasks.value.length < sortedTasks.value.length
+  () => {
+    const pageSelectedCount = paginatedTasks.value.filter(task => selectedTasks.value.includes(task.url)).length;
+    return pageSelectedCount > 0 && pageSelectedCount < paginatedTasks.value.length;
+  }
 );
 
 function handleSortChange() {
-  // 排序字段改变时，可以重置排序顺序或保持当前顺序
+  // 排序字段改变时，重置到第一页
+  currentPage.value = 1;
 }
 
 function toggleSortOrder() {
   sortOrder.value = sortOrder.value === 'asc' ? 'desc' : 'asc';
+  // 排序顺序改变时，重置到第一页
+  currentPage.value = 1;
 }
 
 function handleSearch() {
-  // 搜索已通过 computed 自动处理
+  // 搜索已通过 computed 自动处理，重置到第一页
+  currentPage.value = 1;
 }
 
 function toggleSelectAll() {
-  if (isAllSelected.value) {
-    selectedTasks.value = [];
+  const pageTaskUrls = paginatedTasks.value.map(task => task.url);
+  const allPageSelected = pageTaskUrls.every(url => selectedTasks.value.includes(url));
+
+  if (allPageSelected) {
+    // 取消选择当前页的所有任务
+    selectedTasks.value = selectedTasks.value.filter(url => !pageTaskUrls.includes(url));
   } else {
-    selectedTasks.value = sortedTasks.value.map(task => task.url);
+    // 选择当前页的所有任务（保留已选择的其他任务）
+    pageTaskUrls.forEach(url => {
+      if (!selectedTasks.value.includes(url)) {
+        selectedTasks.value.push(url);
+      }
+    });
   }
 }
 
@@ -382,6 +492,53 @@ function handleBatchDelete() {
     selectedTasks.value = [];
   }
 }
+
+// 分页相关方法
+function goToPage(page: number) {
+  const targetPage = Math.max(1, Math.min(page, totalPages.value));
+  currentPage.value = targetPage;
+  goToPageInput.value = '';
+}
+
+function goToFirstPage() {
+  currentPage.value = 1;
+}
+
+function goToLastPage() {
+  currentPage.value = totalPages.value;
+}
+
+function goToPreviousPage() {
+  if (currentPage.value > 1) {
+    currentPage.value--;
+  }
+}
+
+function goToNextPage() {
+  if (currentPage.value < totalPages.value) {
+    currentPage.value++;
+  }
+}
+
+function handlePageSizeChange() {
+  // 每页数量改变时，重新计算当前页
+  const maxPage = totalPages.value;
+  if (currentPage.value > maxPage) {
+    currentPage.value = maxPage;
+  }
+}
+
+function handleGoToPageInput() {
+  const page = parseInt(goToPageInput.value);
+  if (!isNaN(page) && page > 0) {
+    goToPage(page);
+  }
+}
+
+// 监听搜索和排序变化，重置到第一页
+watch([searchInput, sortField, sortOrder], () => {
+  currentPage.value = 1;
+});
 
 // 暴露方法供父组件调用
 defineExpose({

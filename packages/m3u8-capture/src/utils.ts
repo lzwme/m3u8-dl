@@ -31,7 +31,12 @@ export function shouldExcludePageUrl(url?: string): boolean {
   // 检查是否匹配排除规则列表
   const excludeUrls = getExcludeUrls();
   if (excludeUrls.trim()) {
-    excludeRules.push(...excludeUrls.split('\n').map(rule => rule.trim()).filter(rule => rule));
+    excludeRules.push(
+      ...excludeUrls
+        .split('\n')
+        .map(rule => rule.trim())
+        .filter(rule => rule)
+    );
   }
 
   for (const rule of excludeRules) {

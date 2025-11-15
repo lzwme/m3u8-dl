@@ -1,4 +1,6 @@
 // biome-ignore-all lint/suspicious/noExplicitAny: any is used for compatibility
+
+import { detectBrowserLanguage, i18n } from '@/i18n';
 import type { ApiResponse, M3u8UrlsResponse, OperationResponse, QueueStatus } from '@/types/api';
 import type { DownloadConfig } from '@/types/config';
 import type { DownloadTask } from '@/types/task';
@@ -11,6 +13,21 @@ export interface RequestOptions {
   body?: any;
 }
 
+/**
+ * 获取当前选择的语言
+ * @returns 当前语言代码，默认为 'en'
+ */
+function getCurrentLanguage(): string {
+  if (typeof window === 'undefined') return 'en';
+
+  try {
+    return i18n.global.locale.value;
+  } catch {
+    // i18n 实例可能未初始化，继续使用回退方案
+    return detectBrowserLanguage();
+  }
+}
+
 function getHeaders(token?: string): Record<string, string> {
   const headers: Record<string, string> = {
     'content-type': 'application/json',
@@ -21,12 +38,22 @@ function getHeaders(token?: string): Record<string, string> {
   return headers;
 }
 
+/**
+ * 为 URL 添加 lang 查询参数
+ * @param url 原始 URL
+ * @returns 添加了 lang 参数的 URL
+ */
+function addLangParam(url: string): string {
+  const separator = url.includes('?') ? '&' : '?';
+  return `${url}${separator}lang=${getCurrentLanguage()}`;
+}
+
 export async function request<T = any>(url: string, options: RequestOptions = {}): Promise<ApiResponse<T>> {
   const { method = 'GET', headers = {}, body } = options;
   const token = localStorage.getItem('token') || '';
 
   try {
-    const response = await fetch(`${BASE_URL}${url}`, {
+    const response = await fetch(addLangParam(`${BASE_URL}${url}`), {
       method,
       headers: { ...getHeaders(token), ...headers },
       body: typeof body === 'string' ? body : body ? JSON.stringify(body) : undefined,

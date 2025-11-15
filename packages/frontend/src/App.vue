@@ -11,12 +11,13 @@
       :visible="showGlobalDownloadDialog"
       :initial-data="globalDialogInitialData"
       @close="handleGlobalDialogClose"
+      ref="newDownloadDialogRef"
     />
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted, provide, watch } from 'vue';
+import { ref, onMounted, onUnmounted, provide, watch, nextTick } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { useConfigStore } from '@/stores/config';
 import { useWebSocket, reconnectWithToken } from '@/composables/useWebSocket';
@@ -35,6 +36,8 @@ const passwordDialogRef = ref<InstanceType<typeof PasswordDialog> | null>(null);
 // 全局下载对话框状态
 const showGlobalDownloadDialog = ref(false);
 const globalDialogInitialData = ref<{ url?: string; title?: string } | undefined>(undefined);
+const newDownloadDialogRef = ref<InstanceType<typeof NewDownloadDialog> | null>(null);
+const shouldAutoStart = ref(false);
 
 // 提供全局显示下载对话框的方法
 function showGlobalNewDownload(data?: { url?: string; title?: string }) {
@@ -47,16 +50,31 @@ provide('showGlobalNewDownload', showGlobalNewDownload);
 function handleGlobalDialogClose() {
   showGlobalDownloadDialog.value = false;
   globalDialogInitialData.value = undefined;
+  shouldAutoStart.value = false;
   // 清除 URL 参数
-  if (route.query.action === 'new' || route.query.url) {
+  if (route.query.action === 'new' || route.query.url || route.query.autoStart) {
     router.replace({ query: {} });
   }
 }
+
+// 监听对话框打开状态，如果设置了自动开始，则延迟1秒后触发
+watch(showGlobalDownloadDialog, async (visible) => {
+  if (visible && shouldAutoStart.value) {
+    await nextTick();
+    setTimeout(() => {
+      newDownloadDialogRef.value?.handleSubmit();
+      shouldAutoStart.value = false;
+    }, 1000);
+  }
+});
 
 // 处理路由参数
 function handleRouteQuery() {
   if (route.query.action === 'new' && route.query.url) {
     const urlParam = route.query.url as string;
+    const autoStart = route.query.autoStart === '1';
+
+    shouldAutoStart.value = autoStart;
     showGlobalNewDownload({
       url: decodeURIComponent(urlParam),
     });

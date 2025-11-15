@@ -246,4 +246,9 @@ async function handleSubmit() {
     submitting.value = false;
   }
 }
+
+// 暴露方法供外部调用（用于自动开始下载）
+defineExpose({
+  handleSubmit,
+});
 </script>
