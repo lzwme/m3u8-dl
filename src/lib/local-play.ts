@@ -18,7 +18,7 @@ export async function localPlay(m3u8Info: TsItemInfo[]) {
   const filename = basename(cacheFilepath);
   const info = await createLocalServer(dirname(cacheDir));
 
-  const playUrl = `https://lzw.me/x/m3u8-player?url=${encodeURIComponent(`${info.origin}/${cacheDirname}/${filename}`)}`;
+  const playUrl = `https://m3u8-player.lzw.me?from=sdk&url=${encodeURIComponent(`${info.origin}/${cacheDirname}/${filename}`)}`;
   const cmd = `${process.platform === 'win32' ? 'start' : 'open'} ${playUrl}`;
   execSync(cmd);
 

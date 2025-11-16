@@ -1,4 +1,5 @@
 import { existsSync, readdirSync, type Stats, statSync } from 'node:fs';
+import { access, constants } from 'node:fs/promises';
 import type { OutgoingHttpHeaders } from 'node:http';
 import { resolve } from 'node:path';
 import { color, execSync, NLogger, Request, retry, toLowcaseKeyObject } from '@lzwme/fe-utils';
@@ -69,4 +70,15 @@ export function formatHeaders(headers: string | OutgoingHttpHeaders) {
   if (!headers) return {};
   if (typeof headers === 'string') headers = Object.fromEntries(headers.split('\n').map(line => line.split(':').map(d => d.trim())));
   return toLowcaseKeyObject(headers as Record<string, string>);
+}
+
+/** 异步检查文件是否存在 */
+export async function checkFileExists(filepath: string) {
+  try {
+    if (!filepath) return false;
+    await access(filepath, constants.F_OK);
+    return true;
+  } catch {
+    return false;
+  }
 }

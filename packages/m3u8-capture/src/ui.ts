@@ -734,7 +734,7 @@ export function updateUI(): void {
     btn.addEventListener('click', (e: Event) => {
       e.stopPropagation();
       const url = decodeURIComponent((btn as HTMLElement).getAttribute('data-url') || '');
-      const previewUrl = `https://lzw.me/x/m3u8-player/?from=capture&url=${encodeURIComponent(url)}`;
+      const previewUrl = `https://m3u8-player.lzw.me?from=capture&url=${encodeURIComponent(url)}`;
       safeOpenUrl(previewUrl);
     });
   });

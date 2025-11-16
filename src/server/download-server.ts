@@ -1,7 +1,7 @@
-import { existsSync, readFileSync, renameSync, rmSync, statSync, unlinkSync, writeFileSync } from 'node:fs';
+import { existsSync, promises as fsPromises } from 'node:fs';
 import { homedir } from 'node:os';
 import { basename, dirname, resolve } from 'node:path';
-import { assign, getUrlParams, md5, mkdirp } from '@lzwme/fe-utils';
+import { assign, concurrency, getUrlParams, md5, mkdirp } from '@lzwme/fe-utils';
 import { cyan, gray, green, red } from 'console-log-colors';
 import type { Express, Request } from 'express';
 import type { WebSocketServer } from 'ws';
@@ -10,7 +10,7 @@ import { formatOptions } from '../lib/format-options.js';
 import { getM3u8Urls } from '../lib/getM3u8Urls.js';
 import { getLang, LANG_CODES, t } from '../lib/i18n.js';
 import { m3u8DLStop, m3u8Download } from '../lib/m3u8-download.js';
-import { logger } from '../lib/utils.js';
+import { checkFileExists, logger } from '../lib/utils.js';
 import type { M3u8DLOptions, M3u8DLProgressStats, M3u8DLResult, M3u8WorkerPool, TsItemInfo } from '../types/m3u8.js';
 import { VideoParser } from '../video-parser/index.js';
 
@@ -32,7 +32,13 @@ interface CacheItem extends Partial<M3u8DLProgressStats> {
   /** 格式化后实际下载使用的参数 */
   dlOptions?: M3u8DLOptions;
   status: 'pause' | 'resume' | 'done' | 'pending' | 'error';
+  /**
+   * 当前任务的 ts 信息
+   * @deprecated 下一版本将移除
+   */
   current?: TsItemInfo;
+  /** 当前任务的 ts 缓存目录 */
+  cacheDir?: string;
   workPoll?: M3u8WorkerPool;
 }
 
@@ -51,7 +57,7 @@ export class DLServer {
   };
   private serverInfo = {
     version: '',
-    ariang: existsSync(resolve(rootDir, 'client/ariang/index.html')),
+    ariang: false,
   };
   private cfg = {
     /** 支持 web 设置修改的参数 */
@@ -82,28 +88,29 @@ export class DLServer {
     opts.cacheDir = resolve(opts.cacheDir);
     if (!opts.configPath) opts.configPath = resolve(opts.cacheDir, 'config.json');
 
-    const pkgFile = resolve(rootDir, 'package.json');
-    if (existsSync(pkgFile)) {
-      const pkg = JSON.parse(readFileSync(pkgFile, 'utf8'));
-      this.serverInfo.version = pkg.version;
-    }
-
     if (opts.token) opts.token = md5(opts.token.trim()).slice(0, 8);
     this.init();
   }
   private async init() {
-    this.loadConfig();
+    const pkgFile = resolve(rootDir, 'package.json');
+    if (await checkFileExists(pkgFile)) {
+      const pkg = JSON.parse(await fsPromises.readFile(pkgFile, 'utf8'));
+      this.serverInfo.version = pkg.version;
+    }
+    this.serverInfo.ariang = await checkFileExists(resolve(rootDir, 'client/ariang/index.html'));
+
+    await this.loadConfig();
     if (this.cfg.dlOptions.debug) logger.updateOptions({ levelType: 'debug' });
-    this.loadCache();
+    await this.loadCache();
     await this.createApp();
     this.initRouters();
     logger.debug('Server initialized', 'cacheSize:', this.dlCache.size, this.options, this.cfg.dlOptions);
   }
-  private loadCache() {
+  private async loadCache() {
     const cacheFile = resolve(this.options.cacheDir, 'cache.json');
 
-    if (existsSync(cacheFile)) {
-      (JSON.parse(readFileSync(cacheFile, 'utf8')) as [string, CacheItem][]).forEach(([url, item]) => {
+    if (await checkFileExists(cacheFile)) {
+      (JSON.parse(await fsPromises.readFile(cacheFile, 'utf8')) as [string, CacheItem][]).forEach(([url, item]) => {
         if (item.status === 'resume') item.status = 'pause';
         this.dlCache.set(url, item);
       });
@@ -112,33 +119,40 @@ export class DLServer {
   }
   private checkDLFileLaest = 0;
   private checkDLFileTimer: NodeJS.Timeout = null;
-  private checkDLFileIsExists() {
+  private async checkDLFileIsExists() {
     const now = Date.now();
     const interval = 1000 * 60;
 
     clearTimeout(this.checkDLFileTimer);
-    if (now - this.checkDLFileLaest < interval) {
-      this.checkDLFileTimer = setTimeout(() => this.checkDLFileIsExists(), interval - (now - this.checkDLFileLaest));
+    const delay = this.checkDLFileLaest + interval - now;
+    if (delay > 0) {
+      this.checkDLFileTimer = setTimeout(() => {
+        this.checkDLFileIsExists();
+      }, delay + 100);
       return;
     }
 
-    this.dlCache.forEach(item => {
-      if (item.status === 'done') {
-        if (item.localVideo && existsSync(item.localVideo)) {
-          if (item.current) delete item.current;
-        } else {
-          item.status = 'error';
-          item.errmsg = '已删除';
-        }
-      } else if (item.status === 'error') {
-        // 文件移除又移动回来了，恢复为 done 状态
-        if (item.localVideo && existsSync(item.localVideo)) {
-          item.status = 'done';
-          delete item.errmsg;
-        }
-      }
-    });
+    const tasks = [...this.dlCache.values()].map(item => () => this.checkItemStatus(item));
+    await concurrency(tasks, 3);
     this.checkDLFileLaest = now;
+  }
+  private async checkItemStatus(item: CacheItem) {
+    if (item.status === 'done') {
+      if (item.current) {
+        if (!item.cacheDir && item.current.tsOut) item.cacheDir = dirname(item.current.tsOut);
+        delete item.current;
+      }
+
+      if (!(await checkFileExists(item.localVideo)) && !existsSync(item.localVideo)) {
+        item.status = 'error';
+        item.errmsg = '已删除';
+      }
+    } else if (item.status === 'error' && item.progress === 100) {
+      if (await checkFileExists(item.localVideo)) {
+        item.status = 'done';
+        delete item.errmsg;
+      }
+    }
   }
   dlCacheClone() {
     const info: [string, CacheItem][] = [];
@@ -158,28 +172,28 @@ export class DLServer {
       const cacheFile = resolve(this.options.cacheDir, 'cache.json');
 
       mkdirp(dirname(cacheFile));
-      writeFileSync(cacheFile, JSON.stringify(this.dlCacheClone()));
+      fsPromises.writeFile(cacheFile, JSON.stringify(this.dlCacheClone()));
     }, 1000);
   }
-  private loadConfig(configPath?: string) {
+  private async loadConfig(configPath?: string) {
     try {
       if (!configPath) configPath = this.options.configPath;
-      if (existsSync(configPath)) assign(this.cfg, JSON.parse(readFileSync(configPath, 'utf8')));
+      if (await checkFileExists(configPath)) assign(this.cfg, JSON.parse(await fsPromises.readFile(configPath, 'utf8')));
     } catch (error) {
-      logger.error('读取配置失败:', error);
+      logger.error('Load config failed:', error);
     }
   }
-  saveConfig(config: M3u8DLOptions, configPath?: string) {
+  async saveConfig(config: M3u8DLOptions, configPath?: string) {
     if (!configPath) configPath = this.options.configPath;
 
     // 验证 ffmpegPath 是否存在
     if (config.ffmpegPath?.trim()) {
       const ffmpegPath = config.ffmpegPath.trim();
-      if (!existsSync(ffmpegPath)) {
+      if (!(await checkFileExists(ffmpegPath))) {
         throw new Error(`ffmpeg 路径不存在: ${ffmpegPath}`);
       }
       // 检查是否为文件（不是目录）
-      const stats = statSync(ffmpegPath);
+      const stats = await fsPromises.stat(ffmpegPath);
       if (!stats.isFile()) {
         throw new Error(`ffmpeg 路径不是文件: ${ffmpegPath}`);
       }
@@ -193,7 +207,7 @@ export class DLServer {
     }
 
     mkdirp(dirname(configPath));
-    writeFileSync(configPath, JSON.stringify(this.cfg, null, 2));
+    return fsPromises.writeFile(configPath, JSON.stringify(this.cfg, null, 2));
   }
   private async createApp() {
     const { default: express } = await import('express');
@@ -201,24 +215,21 @@ export class DLServer {
     const app = express();
     const server = app.listen(this.options.port, () => logger.info(`Server running on port ${green(this.options.port)}`));
     const wss = new WebSocketServer({ server });
+    const hasLocalCdnDir = await checkFileExists(resolve(rootDir, 'client/local/cdn'));
 
     this.app = app;
     this.wss = wss as never;
 
-    app.use((req, res, next) => {
+    app.use(async (req, res, next) => {
       // 处理 SPA 路由：根路径和 /page/* 路径都返回 index.html
       const isIndexPage = ['/', '/index.html'].includes(req.path) || req.path.startsWith('/page/');
       const isPlayPage = req.path.startsWith('/play.html');
       const isApi = req.path.startsWith('/api/');
 
       if (!isApi && (isIndexPage || isPlayPage)) {
-        const version = this.serverInfo.version;
-        let htmlContent = readFileSync(resolve(rootDir, `client/${isPlayPage ? 'play' : 'index'}.html`), 'utf-8').replaceAll(
-          '{{version}}',
-          version
-        );
+        let htmlContent = await fsPromises.readFile(resolve(rootDir, `client/${isPlayPage ? 'play' : 'index'}.html`), 'utf-8');
 
-        if (existsSync(resolve(rootDir, 'client/local/cdn'))) {
+        if (hasLocalCdnDir) {
           // 提取所有 zstatic.net 的 js 和 css 资源地址，若子路径存在于 local/cdn 目录下则替换为本地路径
           const zstaticRegex = /https:\/\/s4\.zstatic\.net\/ajax\/libs\/[^\s"'`<>]+\.(js|css)/g;
           const zstaticMatches = htmlContent.match(zstaticRegex);
@@ -227,7 +238,7 @@ export class DLServer {
             for (const match of zstaticMatches) {
               const relativePath = match.split('libs/')[1];
               const localPath = resolve(rootDir, `client/local/cdn/${relativePath}`);
-              if (existsSync(localPath)) {
+              if (await checkFileExists(localPath)) {
                 htmlContent = htmlContent.replaceAll(match, `/local/cdn/${relativePath}`);
               }
             }
@@ -310,8 +321,10 @@ export class DLServer {
 
     if (cacheItem.status === 'resume') return;
 
-    if (cacheItem.localVideo && !existsSync(cacheItem.localVideo)) delete cacheItem.localVideo;
-    if (cacheItem.endTime) delete cacheItem.endTime;
+    if (cacheItem.localVideo && !(await checkFileExists(cacheItem.localVideo))) {
+      delete cacheItem.localVideo;
+      if (cacheItem.endTime) delete cacheItem.endTime;
+    }
 
     cacheItem.status = this.downloading >= this.cfg.webOptions.maxDownloads ? 'pending' : 'resume';
     // pending 优先级靠后
@@ -333,7 +346,8 @@ export class DLServer {
         if (!item) return false; // 已删除
         const status = item.status || 'resume';
 
-        Object.assign(item, { ...stats, current, dlOptions, status, workPoll, url });
+        if (!item.cacheDir && current?.tsOut) item.cacheDir = dirname(current.tsOut);
+        Object.assign(item, { ...stats, dlOptions, status, workPoll, url });
         this.dlCache.set(url, item);
         this.saveCache();
         this.wsSend('progress', url);
@@ -341,12 +355,12 @@ export class DLServer {
         return status !== 'pause';
       },
     };
-    const afterDownload = (r: M3u8DLResult, url: string) => {
+    const afterDownload = async (r: M3u8DLResult, url: string) => {
       const item = this.dlCache.get(url) || cacheItem;
 
-      if (r.filepath && existsSync(r.filepath)) {
+      if (r.filepath && (await checkFileExists(r.filepath))) {
         item.localVideo = r.filepath;
-        item.downloadedSize = statSync(r.filepath).size;
+        item.downloadedSize = (await fsPromises.stat(r.filepath)).size;
       } else if (!r.errmsg && opts.convert !== false) r.errmsg = '下载失败';
 
       item.endTime = Date.now();
@@ -582,9 +596,9 @@ export class DLServer {
     });
 
     // API to delete download
-    app.post('/api/delete', (req, res) => {
+    app.post('/api/delete', async (req, res) => {
       const { urls, deleteCache = false, deleteVideo = false } = req.body;
-      const urlsToDelete = urls;
+      const urlsToDelete = urls as string[];
       const list: string[] = [];
 
       for (const url of urlsToDelete) {
@@ -594,22 +608,22 @@ export class DLServer {
           this.dlCache.delete(url);
           list.push(item.url);
 
-          if (deleteCache && item.current?.tsOut) {
-            const cacheDir = dirname(item.current.tsOut);
-            if (existsSync(cacheDir)) {
-              rmSync(cacheDir, { recursive: true });
+          if (deleteCache) {
+            const cacheDir = item.cacheDir;
+            if (await checkFileExists(cacheDir)) {
+              await fsPromises.rm(cacheDir, { recursive: true });
               logger.debug('删除缓存目录：', cacheDir);
             }
           }
 
           if (deleteVideo) {
-            ['.ts', '.mp4'].forEach(ext => {
+            for (const ext of ['.ts', '.mp4']) {
               const filepath = resolve(item.options.saveDir, item.options.filename + ext);
-              if (existsSync(filepath)) {
-                unlinkSync(filepath);
+              if (await checkFileExists(filepath)) {
+                await fsPromises.unlink(filepath);
                 logger.debug('删除文件：', filepath);
               }
-            });
+            }
           }
         }
       }
@@ -624,12 +638,19 @@ export class DLServer {
     });
 
     // API to rename download file
-    app.post('/api/rename', (req, res) => {
+    app.post('/api/rename', async (req, res) => {
       const { url, newFilename } = req.body;
       const lang = this.getLangFromRequest(req);
 
       if (!url || !newFilename) {
         res.json({ code: 1001, message: t('api.error.invalidParams', lang) });
+        return;
+      }
+
+      // 检查新文件名是否包含非法字符
+      const invalidChars = /[<>:"/\\|?*]/;
+      if (invalidChars.test(newFilename)) {
+        res.json({ code: 1004, message: t('api.error.invalidFilename', lang) });
         return;
       }
 
@@ -639,22 +660,12 @@ export class DLServer {
         return;
       }
 
+      await this.checkItemStatus(item);
+
       // 只允许重命名已完成且状态正常的任务
       if (item.status !== 'done' || item.errmsg) {
+        logger.error('rename failed:', item.status, red(item.errmsg), gray(url));
         res.json({ code: 1003, message: t('api.error.onlyRenameCompleted', lang) });
-        return;
-      }
-
-      // 已完成且状态正常的任务，localVideo 必须存在
-      if (!item.localVideo || !existsSync(item.localVideo)) {
-        res.json({ code: 1005, message: t('api.error.fileNotFound', lang) });
-        return;
-      }
-
-      // 检查新文件名是否包含非法字符
-      const invalidChars = /[<>:"/\\|?*]/;
-      if (invalidChars.test(newFilename)) {
-        res.json({ code: 1004, message: t('api.error.invalidFilename', lang) });
         return;
       }
 
@@ -666,13 +677,13 @@ export class DLServer {
         const newPath = resolve(oldDir, `${newFilenameBase}${oldExt ? `.${oldExt}` : ''}`);
 
         // 检查新文件名是否已存在
-        if (existsSync(newPath)) {
+        if (await checkFileExists(newPath)) {
           res.json({ code: 1007, message: t('api.error.fileExists', lang) });
           return;
         }
 
         // 重命名文件
-        renameSync(oldPath, newPath);
+        await fsPromises.rename(oldPath, newPath);
         logger.debug('重命名文件：', gray(oldPath), '->', cyan(newPath));
 
         // 更新任务信息
@@ -690,22 +701,22 @@ export class DLServer {
       }
     });
 
-    app.get(/^\/localplay\/(.*)$/, (req, res) => {
+    app.get(/^\/localplay\/(.*)$/, async (req, res) => {
       let filepath = decodeURIComponent(req.params[0]);
 
       if (filepath) {
         let ext = filepath.split('.').pop();
         if (!ext) {
           ext = 'm3u8';
-          if (!existsSync(filepath)) filepath += '.m3u8';
+          if (!(await checkFileExists(filepath))) filepath += '.m3u8';
         }
 
         const allowedDirs = [this.options.cacheDir, this.cfg.dlOptions.saveDir];
 
-        if (!existsSync(filepath)) {
+        if (!(await checkFileExists(filepath))) {
           for (const dir of allowedDirs) {
             const tpath = resolve(dir, filepath);
-            if (existsSync(tpath)) {
+            if (await checkFileExists(tpath)) {
               filepath = tpath;
               break;
             }
@@ -722,8 +733,8 @@ export class DLServer {
           }
         }
 
-        if (existsSync(filepath)) {
-          const stats = statSync(filepath);
+        if (await checkFileExists(filepath)) {
+          const stats = await fsPromises.stat(filepath);
           const headers = new Headers({
             'Last-Modified': stats.mtime.toUTCString(),
             'Access-Control-Allow-Headers': '*',
@@ -737,7 +748,8 @@ export class DLServer {
           res.setHeaders(headers);
 
           if (ext === 'm3u8' || ('ts' === ext && stats.size < 1024 * 1024 * 3)) {
-            res.send(readFileSync(filepath));
+            const data = await fsPromises.readFile(filepath);
+            res.send(data);
             logger.debug('[Localplay]file sent:', gray(filepath), 'Size:', stats.size, 'bytes');
           } else {
             res.sendFile(filepath);

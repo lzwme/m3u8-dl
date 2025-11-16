@@ -157,6 +157,7 @@ import TaskItem from './TaskItem.vue';
 import EmptyState from './EmptyState.vue';
 import type { DownloadTask } from '@/types/task';
 import { toast } from '@/utils/toast';
+import { envConfig } from '@/utils/env';
 
 const { t } = useI18n();
 
@@ -239,7 +240,7 @@ function showTaskDetail(task: DownloadTask) {
 }
 
 function preview(url: string) {
-  window.open(`https://lzw.me/x/m3u8-player/?url=${encodeURIComponent(url)}`);
+  window.open(`https://m3u8-player.lzw.me?from=${envConfig.isElectron ? 'app' : 'webui'}&url=${encodeURIComponent(url)}`);
 }
 
 function localPlay(task: DownloadTask) {

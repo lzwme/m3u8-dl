@@ -27,7 +27,7 @@ export const envConfig = {
 
   /** WebSocket 地址 */
   wsUrl: `${window.location.protocol === 'https:' ? 'wss:' : 'ws:'}//${window.location.host}/ws`,
-};
+} as const;
 
 /*
 // 在 Vue 组件中使用示例：

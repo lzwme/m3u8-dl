@@ -1,5 +1,6 @@
 import { defineConfig, Plugin } from 'vite';
 import { resolve } from 'path';
+import packageJson from './package.json';
 
 /** UserScript 头部内容 */
 const USERSCRIPT_HEADER = `// ==UserScript==
@@ -8,7 +9,7 @@ const USERSCRIPT_HEADER = `// ==UserScript==
 // @homepage     https://m3u8-player.lzw.me/download.html
 // @supportURL   https://github.com/lzwme/m3u8-dl/issues
 // @icon         https://gh-proxy.org/raw.githubusercontent.com/lzwme/m3u8-dl/refs/heads/main/packages/frontend/public/logo.png
-// @version      1.0.0
+// @version      ${packageJson.version}
 // @description  自动抓取网页中的多种媒体链接（m3u8、mp4、mkv、avi、mov、音频等），支持可配置的媒体类型，支持跳转到 m3u8-dl webui 下载
 // @author       lzw
 // @updateURL    https://gh-proxy.org/raw.githubusercontent.com/lzwme/m3u8-dl/refs/heads/main/client/m3u8-capture.user.js

@@ -29,16 +29,17 @@
       </div>
 
       <!-- 遮罩层 - 仅小屏幕显示 -->
-      <Transition name="fade">
-        <div v-if="showPlaylist && videoList.length > 1"
-          class="playlist-overlay md:hidden fixed inset-0 bg-black/50 backdrop-blur-sm z-40" @click="togglePlaylist">
-        </div>
-      </Transition>
+      <div v-if="videoList.length > 1"
+        :class="{ 'playlist-overlay-visible': showPlaylist }"
+        class="playlist-overlay md:hidden fixed inset-0 bg-black/50 backdrop-blur-sm z-40"
+        @click="togglePlaylist">
+      </div>
 
       <!-- 视频列表侧边栏 -->
-      <Transition name="slide">
-        <div v-if="showPlaylist && videoList.length > 1"
-          class="playlist-sidebar w-80 bg-gray-900 text-white overflow-y-auto flex-shrink-0 border-l border-gray-700">
+      <div v-if="videoList.length > 1"
+        :class="{ 'playlist-sidebar-visible': showPlaylist }"
+        ref="playlistSidebar"
+        class="playlist-sidebar w-80 bg-gray-900 text-white overflow-y-auto flex-shrink-0 border-l border-gray-700">
           <div class="p-4">
             <!-- 标题栏 -->
             <div class="flex items-center justify-between mb-3">
@@ -52,7 +53,9 @@
             </div>
 
             <div class="space-y-2">
-              <div v-for="task in videoList" :key="task.url" :class="[
+              <div v-for="task in videoList" :key="task.url"
+                :data-task-url="task.url"
+                :class="[
                 'p-3 rounded-lg transition-colors relative',
                 currentTask?.url === task.url
                   ? 'bg-blue-600 text-white'
@@ -64,6 +67,12 @@
                       <div class="font-medium text-sm truncate flex-1">
                         {{ task.filename || task.showName || task.url }}
                       </div>
+                      <button @click.stop="toggleTaskFavorite(task.url)"
+                        class="flex transition-colors p-1 flex-shrink-0 rounded-lg hover:bg-yellow-500/20"
+                        :class="isTaskFavorite(task.url) ? 'text-yellow-400 hover:text-yellow-300' : 'text-gray-400 hover:text-yellow-400'"
+                        :title="isTaskFavorite(task.url) ? $t('completedList.removeFavorite') : $t('completedList.addFavorite')">
+                        <i class="text-xs" :class="isTaskFavorite(task.url) ? 'fas fa-star' : 'far fa-star'"></i>
+                      </button>
                       <button v-if="task.status === 'done' && !task.errmsg" @click.stop="showRenameDialog(task)"
                         class="flex text-purple-400 hover:text-purple-300 hover:bg-purple-500/20 rounded-lg transition-colors p-1 flex-shrink-0"
                         :title="$t('completedList.rename')">
@@ -88,7 +97,6 @@
             </div>
           </div>
         </div>
-      </Transition>
     </div>
     <!-- 重命名对话框 -->
     <RenameDialog :visible="showRenameModal" :task="renameTask" @close="closeRenameDialog"
@@ -97,15 +105,17 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch, onMounted, onUnmounted } from 'vue';
+import { ref, computed, watch, onMounted, onUnmounted, nextTick } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useTasksStore } from '@/stores/tasks';
 import { formatSize } from '@/utils/format';
+import { useFavoritesStore } from '@/stores/favorites';
 import RenameDialog from './RenameDialog.vue';
 import type { DownloadTask } from '@/types/task';
 
 const { t } = useI18n();
 const tasksStore = useTasksStore();
+const favoritesStore = useFavoritesStore();
 
 const props = defineProps<{
   visible: boolean;
@@ -118,6 +128,7 @@ const emit = defineEmits<{
 }>();
 
 const playerIframe = ref<HTMLIFrameElement | null>(null);
+const playlistSidebar = ref<HTMLElement | null>(null);
 const showPlaylist = ref(true);
 const currentTask = ref<DownloadTask | null>(null);
 const currentUrl = ref<string>('');
@@ -186,10 +197,39 @@ watch(
           return taskUrl === url;
         }) || null;
       }
+
+      // 初始化后滚动到当前项
+      scrollToCurrentItem(350);
     }
   },
   { immediate: true }
 );
+
+// 监听播放列表显示状态，显示时滚动到当前项
+watch(showPlaylist, (newVal) => {
+  // 等待 Transition 动画完成后再滚动（约 300ms）
+  if (newVal) scrollToCurrentItem(350);
+});
+
+// 滚动到当前播放项
+async function scrollToCurrentItem(delay = 0) {
+  if (delay > 0) await new Promise(resolve => setTimeout(resolve, delay));
+  if (!currentTask.value || !playlistSidebar.value || videoList.value.length < 5) return;
+
+  nextTick(() => {
+    const currentItem = playlistSidebar.value?.querySelector(
+      `[data-task-url="${currentTask.value?.url}"]`
+    ) as HTMLElement;
+
+    if (currentItem) {
+      currentItem.scrollIntoView({
+        behavior: 'smooth',
+        block: 'center',
+        inline: 'nearest',
+      });
+    }
+  });
+}
 
 // 切换视频
 function switchVideo(task: DownloadTask) {
@@ -202,7 +242,7 @@ function switchVideo(task: DownloadTask) {
   }
 
   const url = `${location.origin}/localplay/${localPath}`;
-  currentUrl.value = url;
+  // if (!currentUrl.value) currentUrl.value = url;
   currentTask.value = task;
 
   // 通过 postMessage 通知 iframe 切换视频
@@ -214,7 +254,11 @@ function switchVideo(task: DownloadTask) {
       },
       '*'
     );
+  } else {
+    currentUrl.value = url;
   }
+
+  scrollToCurrentItem();
 }
 
 // 监听来自 iframe 的消息（用于处理播放完毕等事件）
@@ -272,6 +316,15 @@ function handleRenameSuccess() {
   closeRenameDialog();
 }
 
+// 收藏相关函数
+function isTaskFavorite(url: string): boolean {
+  return favoritesStore.isFavorite(url);
+}
+
+function toggleTaskFavorite(url: string) {
+  favoritesStore.toggleFavorite(url);
+}
+
 // 状态文本和样式
 function getStatusText(status: string): string {
   const statusMap: Record<string, string> = {
@@ -315,56 +368,53 @@ onUnmounted(() => {
   bottom: 0;
 }
 
-/* 遮罩层淡入淡出动画 */
-.fade-enter-active,
-.fade-leave-active {
-  transition: opacity 0.3s ease;
-}
-
-.fade-enter-from,
-.fade-leave-to {
+/* 遮罩层动画 */
+.playlist-overlay {
   opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transition: opacity 0.25s cubic-bezier(0.4, 0, 0.2, 1),
+              visibility 0.25s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-/* 侧边栏滑入滑出动画 */
-.slide-enter-active,
-.slide-leave-active {
-  transition: transform 0.3s ease, opacity 0.3s ease, width 0.3s ease, margin-right 0.3s ease;
+.playlist-overlay.playlist-overlay-visible {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
 }
 
-.slide-enter-from,
-.slide-leave-to {
-  opacity: 0;
+/* 侧边栏基础样式和动画 */
+.playlist-sidebar {
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+              opacity 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+              width 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+              margin-right 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+              border-left-color 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  will-change: transform, opacity, width;
 }
 
-/* 大屏幕时使用宽度动画 */
+/* 大屏幕时的侧边栏动画 */
 @media (min-width: 768px) {
-
-  .slide-enter-active.playlist-sidebar,
-  .slide-leave-active.playlist-sidebar {
+  .playlist-sidebar {
+    opacity: 0;
+    width: 0;
+    min-width: 0;
+    margin-right: 0;
+    border-left-color: transparent;
     overflow: hidden;
   }
 
-  .slide-enter-from.playlist-sidebar {
-    width: 0 !important;
-    min-width: 0 !important;
+  .playlist-sidebar.playlist-sidebar-visible {
+    opacity: 1;
+    width: 20rem; /* w-80 */
+    min-width: 20rem;
     margin-right: 0;
-    opacity: 0;
-    border-left: none;
-  }
-
-  .slide-leave-to.playlist-sidebar {
-    width: 0 !important;
-    min-width: 0 !important;
-    margin-right: 0;
-    opacity: 0;
-    border-left: none;
+    border-left-color: rgb(55 65 81); /* border-gray-700 */
   }
 }
 
+/* 小屏幕时的侧边栏动画 */
 @media (max-width: 767px) {
-
-  /* 小屏幕时侧边栏使用 fixed 定位 */
   .playlist-sidebar {
     position: fixed;
     top: 0;
@@ -375,18 +425,20 @@ onUnmounted(() => {
     width: 85vw;
     max-width: 320px;
     box-shadow: -4px 0 24px rgba(0, 0, 0, 0.5);
+    opacity: 0;
+    transform: translateX(100%);
+    visibility: hidden;
+    pointer-events: none;
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+                opacity 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+                visibility 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .playlist-sidebar.playlist-sidebar-visible {
+    opacity: 1;
     transform: translateX(0);
-  }
-
-  /* 小屏幕时添加滑入动画 */
-  .slide-enter-from {
-    transform: translateX(100%);
-    opacity: 0;
-  }
-
-  .slide-leave-to {
-    transform: translateX(100%);
-    opacity: 0;
+    visibility: visible;
+    pointer-events: auto;
   }
 }
 </style>

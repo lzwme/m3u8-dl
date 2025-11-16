@@ -28,18 +28,15 @@
               style="min-width: 80px; max-width: 80px;">{{ $t('taskDetail.progress') }}:</label>
             <span class="ml-1 md:ml-2 text-gray-800 text-sm md:text-base">{{ task.progress || 0 }}%</span>
           </div>
+          <div class="flex items-center" v-if="task.threadNum">
+            <label class="font-bold text-right inline-block text-sm md:text-base"
+              style="min-width: 80px; max-width: 80px;">{{ $t('taskDetail.threadNum') }}:</label>
+            <span class="ml-1 md:ml-2 text-gray-800 text-sm md:text-base">{{ task.threadNum }}</span>
+          </div>
           <div class="flex items-center">
             <label class="font-bold text-right inline-block text-sm md:text-base"
               style="min-width: 80px; max-width: 80px;">{{ $t('taskDetail.avgSpeed') }}:</label>
             <span class="ml-1 md:ml-2 text-gray-800 text-sm md:text-base">{{ task.avgSpeedDesc || '-' }}/s</span>
-          </div>
-          <div class="flex items-center">
-            <label class="font-bold text-right inline-block text-sm md:text-base"
-              style="min-width: 80px; max-width: 80px;">{{ $t('taskDetail.size') }}:</label>
-            <span class="ml-1 md:ml-2 text-gray-800 text-sm md:text-base">
-              {{ formatSize(task.downloadedSize || 0) }}
-              <span v-if="task.size"> / {{ formatSize(task.size) }}</span>
-            </span>
           </div>
           <div class="flex items-center" v-if="task.tsCount">
             <label class="font-bold text-right inline-block text-sm md:text-base"
@@ -50,10 +47,13 @@
               {{ task.tsCount }}
             </span>
           </div>
-          <div class="flex items-center" v-if="task.threadNum">
+          <div class="flex items-center">
             <label class="font-bold text-right inline-block text-sm md:text-base"
-              style="min-width: 80px; max-width: 80px;">{{ $t('taskDetail.threadNum') }}:</label>
-            <span class="ml-1 md:ml-2 text-gray-800 text-sm md:text-base">{{ task.threadNum }}</span>
+              style="min-width: 80px; max-width: 80px;">{{ $t('taskDetail.size') }}:</label>
+            <span class="ml-1 md:ml-2 text-gray-800 text-sm md:text-base">
+              {{ formatSize(task.downloadedSize || 0) }}
+              <!-- <span v-if="task.size"> / {{ formatSize(task.size) }}</span> -->
+            </span>
           </div>
           <div class="flex items-center" v-if="(task as any).duration">
             <label class="font-bold text-right inline-block text-sm md:text-base"

@@ -10,14 +10,14 @@
     </div>
 
     <!-- 排序控制 -->
-    <div class="px-4 pb-2 border-b">
-      <div class="flex items-center space-x-4">
-        <div class="flex items-center space-x-2">
-          <label class="text-sm text-gray-600">{{ $t('completedList.sortBy') }}</label>
+    <div class="px-2 sm:px-4 pb-2 border-b">
+      <div class="flex flex-wrap items-center gap-2 sm:gap-4">
+        <div class="flex items-center space-x-2 flex-shrink-0">
+          <label class="text-sm text-gray-600 hidden sm:inline">{{ $t('completedList.sortBy') }}</label>
           <select
             v-model="sortField"
             @change="handleSortChange"
-            class="px-3 py-1 text-sm border rounded-lg focus:ring-blue-500 focus:border-blue-500"
+            class="px-2 sm:px-3 py-1 text-sm border rounded-lg focus:ring-blue-500 focus:border-blue-500"
           >
             <option value="startTime">{{ $t('completedList.sortStartTime') }}</option>
             <option value="endTime">{{ $t('completedList.sortEndTime') }}</option>
@@ -26,28 +26,55 @@
             <option value="saveDir">{{ $t('completedList.sortSaveDir') }}</option>
           </select>
         </div>
-        <div class="flex items-center space-x-2">
+        <div class="flex items-center space-x-2 flex-shrink-0">
           <button
             @click="toggleSortOrder"
-            class="px-3 py-1 text-sm bg-gray-100 hover:bg-gray-200 rounded-lg flex items-center"
+            class="px-2 sm:px-3 py-1 text-sm bg-gray-100 hover:bg-gray-200 rounded-lg flex items-center"
             :title="sortOrder === 'asc' ? $t('completedList.ascending') : $t('completedList.descending')"
           >
             <i class="fas" :class="sortOrder === 'asc' ? 'fa-sort-up' : 'fa-sort-down'"></i>
-            <span class="ml-1">{{ sortOrder === 'asc' ? $t('completedList.ascending') : $t('completedList.descending') }}</span>
+            <span class="ml-1 hidden sm:inline">{{ sortOrder === 'asc' ? $t('completedList.ascending') : $t('completedList.descending') }}</span>
           </button>
         </div>
-        <div class="flex-1"></div>
-        <div class="flex items-center space-x-2">
+        <div class="flex-1 hidden sm:block"></div>
+        <div class="flex items-center space-x-2 flex-shrink-0">
+          <button
+            @click="toggleFavoriteFilter"
+            class="px-2 sm:px-3 py-1 text-sm rounded-lg flex items-center transition-colors"
+            :class="showFavoritesOnly ? 'bg-yellow-100 text-yellow-700 hover:bg-yellow-200' : 'bg-gray-100 hover:bg-gray-200'"
+            :title="$t('completedList.showFavorites')"
+          >
+            <i :class="showFavoritesOnly ? 'fas fa-star' : 'far fa-star'"></i>
+            <span class="ml-1 hidden sm:inline">{{ $t('completedList.favorites') }}</span>
+          </button>
+        </div>
+        <div class="flex items-center space-x-2 flex-1 min-w-0 sm:flex-initial sm:min-w-[200px]">
           <input
             type="text"
             v-model="searchInput"
-            class="px-3 py-1 text-sm border rounded-lg focus:ring-blue-500 focus:border-blue-500"
+            class="flex-1 px-2 sm:px-3 py-1 text-sm border rounded-lg focus:ring-blue-500 focus:border-blue-500 min-w-0"
             :placeholder="$t('completedList.searchPlaceholder')"
             @input="handleSearch"
           />
-          <i class="fas fa-search text-gray-400"></i>
+          <i class="fas fa-search text-gray-400 flex-shrink-0"></i>
         </div>
       </div>
+    </div>
+
+    <!-- 批量操作栏 -->
+    <div
+      v-if="selectedTasks.length > 0"
+      class="px-4 py-3 bg-blue-50 border-t flex items-center justify-between"
+    >
+      <div class="flex items-center space-x-2">
+        <button
+          @click="handleBatchDelete"
+          class="px-3 py-1 text-sm bg-red-500 hover:bg-red-600 text-white rounded"
+        >
+          <i class="fas fa-trash mr-1"></i>{{ $t('completedList.deleteSelected') }}
+        </button>
+      </div>
+      <span class="text-sm text-gray-700">{{ $t('completedList.selected', { count: selectedTasks.length }) }}</span>
     </div>
 
     <!-- 表格头部 -->
@@ -106,6 +133,14 @@
                   <i class="fas fa-play-circle"></i>
                 </button>
                 <button
+                  @click="toggleTaskFavorite(task.url)"
+                  class="transition-colors"
+                  :class="isTaskFavorite(task.url) ? 'text-yellow-500 hover:text-yellow-600' : 'text-gray-400 hover:text-yellow-500'"
+                  :title="isTaskFavorite(task.url) ? $t('completedList.removeFavorite') : $t('completedList.addFavorite')"
+                >
+                  <i :class="isTaskFavorite(task.url) ? 'fas fa-star' : 'far fa-star'"></i>
+                </button>
+                <button
                   @click="showTaskDetail(task)"
                   class="text-blue-600 hover:text-blue-800"
                   :title="$t('completedList.viewDetail')"
@@ -132,7 +167,7 @@
             <td class="px-4 py-3">
               <div class="flex items-center">
                 <div class="flex-1 min-w-0">
-                  <p class="text-sm font-medium text-gray-900 truncate max-w-[calc(40vw)]" :title="task.showName">
+                  <p class="text-sm font-medium text-gray-900 truncate max-w-[calc(35vw)]" :title="task.showName">
                     {{ task.showName }}
                   </p>
                   <p class="text-xs text-gray-500 truncate max-w-[calc(35vw)]" :title="task.url">
@@ -161,22 +196,6 @@
           </tr>
         </tbody>
       </table>
-    </div>
-
-    <!-- 批量操作栏 -->
-    <div
-      v-if="selectedTasks.length > 0"
-      class="px-4 py-3 bg-blue-50 border-t flex items-center justify-between"
-    >
-      <span class="text-sm text-gray-700">{{ $t('completedList.selected', { count: selectedTasks.length }) }}</span>
-      <div class="flex items-center space-x-2">
-        <button
-          @click="handleBatchDelete"
-          class="px-3 py-1 text-sm bg-red-500 hover:bg-red-600 text-white rounded"
-        >
-          <i class="fas fa-trash mr-1"></i>{{ $t('completedList.deleteSelected') }}
-        </button>
-      </div>
     </div>
 
     <!-- 分页控件 -->
@@ -274,15 +293,18 @@ import { useI18n } from 'vue-i18n';
 import { useTasksStore } from '@/stores/tasks';
 // import { useConfigStore } from '@/stores/config';
 import { formatSize } from '@/utils/format';
+import { useFavoritesStore } from '@/stores/favorites';
 import RenameDialog from './RenameDialog.vue';
 import type { DownloadTask } from '@/types/task';
 
 const tasksStore = useTasksStore();
+const favoritesStore = useFavoritesStore();
 // const configStore = useConfigStore();
 
 const sortField = ref<'startTime' | 'endTime' | 'name' | 'size' | 'saveDir'>('endTime');
 const sortOrder = ref<'asc' | 'desc'>('desc');
 const searchInput = ref('');
+const showFavoritesOnly = ref(false);
 const currentPage = ref(1);
 const pageSize = ref(20);
 const goToPageInput = ref('');
@@ -300,18 +322,27 @@ const completedTasks = computed(() => {
   return completed;
 });
 
-// 搜索过滤
+// 搜索和收藏过滤
 const filteredTasks = computed(() => {
-  if (!searchInput.value.trim()) {
-    return completedTasks.value;
+  let tasks = completedTasks.value;
+
+  // 收藏过滤
+  if (showFavoritesOnly.value) {
+    tasks = tasks.filter(task => favoritesStore.isFavorite(task.url));
   }
-  const query = searchInput.value.toLowerCase();
-  return completedTasks.value.filter(task => {
-    const name = (task.showName || task.filename || task.url || '').toLowerCase();
-    const url = (task.url || '').toLowerCase();
-    // 支持按任务名称或URL地址搜索
-    return name.includes(query) || url.includes(query);
-  });
+
+  // 搜索过滤
+  if (searchInput.value.trim()) {
+    const query = searchInput.value.toLowerCase();
+    tasks = tasks.filter(task => {
+      const name = (task.showName || task.filename || task.url || '').toLowerCase();
+      const url = (task.url || '').toLowerCase();
+      // 支持按任务名称或URL地址搜索
+      return name.includes(query) || url.includes(query);
+    });
+  }
+
+  return tasks;
 });
 
 // 排序后的任务列表（所有数据）
@@ -399,6 +430,19 @@ function toggleSortOrder() {
 function handleSearch() {
   // 搜索已通过 computed 自动处理，重置到第一页
   currentPage.value = 1;
+}
+
+function toggleFavoriteFilter() {
+  showFavoritesOnly.value = !showFavoritesOnly.value;
+  currentPage.value = 1;
+}
+
+function isTaskFavorite(url: string): boolean {
+  return favoritesStore.isFavorite(url);
+}
+
+function toggleTaskFavorite(url: string) {
+  favoritesStore.toggleFavorite(url);
 }
 
 function toggleSelectAll() {
@@ -535,8 +579,8 @@ function handleGoToPageInput() {
   }
 }
 
-// 监听搜索和排序变化，重置到第一页
-watch([searchInput, sortField, sortOrder], () => {
+// 监听搜索、排序和收藏过滤变化，重置到第一页
+watch([searchInput, sortField, sortOrder, showFavoritesOnly], () => {
   currentPage.value = 1;
 });
 
