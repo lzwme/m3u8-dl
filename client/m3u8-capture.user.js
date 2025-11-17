@@ -68,7 +68,7 @@
                       placeholder="例如：m3u8, mp4, mkv, avi, mov, wmv, flv, webm, m4v, ts, m3u, m4a, aac, flac, ape, mp3, wav, ogg, wma">${o.join(", ")}</textarea>
                   <p class="text-xs text-gray-500 mb-4">支持的媒体文件扩展名，将用于识别和抓取媒体链接</p>
                   <label class="block text-sm font-medium text-gray-700 mb-1">排除网址规则（每行一个，支持正则表达式，以 / 开头和结尾）</label>
-                  <textarea id="swal-exclude-urls" rows="6"
+                  <textarea id="swal-exclude-urls" rows="3"
                       class="w-full p-2.5 border border-gray-300 rounded-md mb-4 focus:outline-none focus:ring-2 focus:ring-blue-500"
                       placeholder="例如：&#10;localhost:6600&#10;/example.com/&#10;127.0.0.1">${n}</textarea>
                   <p class="text-xs text-gray-500 mb-4">匹配的网址将不展示面板且不抓取媒体链接</p>

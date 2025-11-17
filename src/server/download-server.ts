@@ -321,9 +321,13 @@ export class DLServer {
 
     if (cacheItem.status === 'resume') return;
 
-    if (cacheItem.localVideo && !(await checkFileExists(cacheItem.localVideo))) {
-      delete cacheItem.localVideo;
-      if (cacheItem.endTime) delete cacheItem.endTime;
+    if (cacheItem.localVideo) {
+      if (await checkFileExists(cacheItem.localVideo)) {
+        if (cacheItem.status === 'done') return;
+      } else {
+        delete cacheItem.localVideo;
+        if (cacheItem.endTime) delete cacheItem.endTime;
+      }
     }
 
     cacheItem.status = this.downloading >= this.cfg.webOptions.maxDownloads ? 'pending' : 'resume';

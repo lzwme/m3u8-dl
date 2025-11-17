@@ -15,21 +15,15 @@ export function optimizeTitle(title: string): string {
   }
 
   // 2. 匹配【】中间的部分（中文方括号）
-  const matchBracket = optimized.match(/【([^】]+)】/);
-  if (matchBracket) {
-    optimized = matchBracket[1];
-  }
+  // const matchBracket = optimized.match(/【([^】]+)】/);
+  // if (matchBracket) {
+  //   optimized = matchBracket[1];
+  // }
 
   // 3. 以 - 分隔，取前缀（通常前面是影视名称）
   if (optimized.includes(' - ')) {
     const parts = optimized.split(' - ');
     optimized = parts[0].trim();
-  } else if (optimized.includes('-')) {
-    // 处理单个 - 的情况，但要避免是日期格式（如 2024-01-01）
-    const parts = optimized.split('-');
-    if (parts.length === 2 && !/^\d{4}-\d{2}-\d{2}/.test(optimized)) {
-      optimized = parts[0].trim();
-    }
   }
 
   // 4. 移除常见的后缀内容
