@@ -1,0 +1,295 @@
+@import 'tailwindcss';
+
+/* 定义主题颜色变量 - Tailwind CSS 4.x 使用 @theme 指令 */
+@theme {
+  --color-primary-50: #eff6ff;
+  --color-primary-100: #dbeafe;
+  --color-primary-200: #bfdbfe;
+  --color-primary-300: #93c5fd;
+  --color-primary-400: #60a5fa;
+  --color-primary-500: #3b82f6;
+  --color-primary-600: #2563eb;
+  --color-primary-700: #1d4ed8;
+  --color-primary-800: #1e40af;
+  --color-primary-900: #1e3a8a;
+  --color-secondary: #10B981;
+  --color-accent: #8B5CF6;
+  --color-neutral: #1F2937;
+}
+
+/* Tailwind CSS 的 preflight 已经包含了基础重置，不需要额外的全局重置 */
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+    sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  color: #1f2937; /* 设置默认文本颜色为深灰色 */
+}
+
+#app {
+  min-height: 100vh;
+}
+
+/* 滚动条样式 */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, #3b82f6, #1d4ed8);
+  border-radius: 4px;
+  transition: all 0.3s ease;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(180deg, #1d4ed8, #1e40af);
+}
+
+/* 页面过渡动画 */
+.page-enter-active,
+.page-leave-active {
+  transition: all 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.page-enter-from {
+  opacity: 0;
+  transform: translateY(30px);
+}
+
+.page-leave-to {
+  opacity: 0;
+  transform: translateY(-30px);
+}
+
+/* 滚动动画初始状态 */
+.animation-initial {
+  transition: all 0.7s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.fade-up.animation-initial {
+  transform: translateY(40px);
+  opacity: 0;
+}
+
+.fade-down.animation-initial {
+  transform: translateY(-40px);
+  opacity: 0;
+}
+
+.fade-left.animation-initial {
+  transform: translateX(-40px);
+  opacity: 0;
+}
+
+.fade-right.animation-initial {
+  transform: translateX(40px);
+  opacity: 0;
+}
+
+.scale-up.animation-initial {
+  transform: scale(0.8);
+  opacity: 0;
+}
+
+.scale-down.animation-initial {
+  transform: scale(1.2);
+  opacity: 0;
+}
+
+.rotate-in.animation-initial {
+  transform: rotate(-5deg) scale(0.9);
+  opacity: 0;
+}
+
+/* 动画进入状态 */
+.animate-in.fade-up,
+.animate-in.fade-down,
+.animate-in.fade-left,
+.animate-in.fade-right,
+.animate-in.scale-up,
+.animate-in.scale-down,
+.animate-in.rotate-in {
+  transform: translate(0) scale(1) rotate(0);
+  opacity: 1;
+}
+
+/* 悬停效果增强 */
+.hover-lift {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.hover-lift:hover {
+  transform: translateY(-8px);
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+}
+
+.hover-glow:hover {
+  box-shadow: 0 0 20px rgba(59, 130, 246, 0.3);
+}
+
+.hover-3d {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  transform-style: preserve-3d;
+}
+
+.hover-3d:hover {
+  transform: perspective(1000px) rotateX(10deg) rotateY(-10deg) translateZ(20px);
+}
+
+/* 背景渐变动画 */
+.gradient-animated {
+  background: linear-gradient(-45deg, #3b82f6, #1d4ed8, #8b5cf6, #2563eb, #9C27B0, #f59e0b);
+  background-size: 600% 600%;
+  animation: gradientShift 20s ease infinite;
+}
+
+@keyframes gradientShift {
+  0% {
+    background-position: 0% 50%;
+    background-color: #3b82f6; /* primary 蓝色作为起始色 */
+  }
+  15% {
+    background-position: 25% 25%;
+  }
+  30% {
+    background-position: 50% 50%;
+  }
+  45% {
+    background-position: 75% 25%;
+  }
+  60% {
+    background-position: 100% 50%;
+  }
+  75% {
+    background-position: 75% 75%;
+  }
+  90% {
+    background-position: 50% 100%;
+  }
+  100% {
+    background-position: 0% 50%;
+    background-color: #3b82f6; /* 回到 primary 蓝色 */
+  }
+}
+
+/* 脉冲动画 */
+.pulse-glow {
+  animation: pulseGlow 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+@keyframes pulseGlow {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.4); }
+  50% { box-shadow: 0 0 0 20px rgba(59, 130, 246, 0); }
+}
+
+/* 浮动动画 */
+.floating {
+  animation: floating 3s ease-in-out infinite;
+}
+
+@keyframes floating {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-10px); }
+}
+
+/* 呼吸动画 */
+.breathing {
+  animation: breathing 3s ease-in-out infinite;
+}
+
+@keyframes breathing {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.05); }
+}
+
+/* 光晕效果 */
+.glow-effect {
+  position: relative;
+  overflow: hidden;
+}
+
+.glow-effect::before {
+  content: '';
+  position: absolute;
+  top: -2px;
+  left: -2px;
+  right: -2px;
+  bottom: -2px;
+  background: linear-gradient(45deg, #3b82f6, #8b5cf6, #10b981);
+  border-radius: inherit;
+  opacity: 0;
+  z-index: -1;
+  transition: opacity 0.3s ease;
+  animation: glowRotate 3s linear infinite;
+}
+
+.glow-effect:hover::before {
+  opacity: 1;
+}
+
+@keyframes glowRotate {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* 加载动画 */
+.loading-spinner {
+  border: 3px solid #f3f3f3;
+  border-top: 3px solid #3b82f6;
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* 波纹效果 */
+.ripple-effect {
+  position: relative;
+  overflow: hidden;
+}
+
+.ripple-effect::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 0;
+  height: 0;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.5);
+  transform: translate(-50%, -50%);
+  transition: width 0.6s, height 0.6s;
+}
+
+.ripple-effect:active::after {
+  width: 300px;
+  height: 300px;
+}
+
+/* 响应式隐藏动画类 */
+@media (prefers-reduced-motion: reduce) {
+  .gradient-animated,
+  .pulse-glow,
+  .floating,
+  .breathing,
+  .glow-effect::before {
+    animation: none;
+  }
+
+  .hover-3d:hover {
+    transform: none;
+  }
+}

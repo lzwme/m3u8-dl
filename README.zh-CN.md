@@ -12,7 +12,7 @@
 [![GitHub forks][forks-badge]][forks-url]
 [![GitHub stars][stars-badge]][stars-url]
 
-> **语言**: [English](README.md) | [中文简体](README.zh-CN.MD)
+> **语言**: [English](README.md) | [中文简体](README.zh-CN.md)
 
 一个免费开源功能强大的 m3u8 视频批量下载工具，支持多线程下载、边下边播、WebUI 管理、视频解析等多种功能。支持 CLI命令行、浏览器、PC客户端、Docker 部署以及 Node.js API 调用等多种使用方式。
 
@@ -59,12 +59,12 @@
 - **自动抓取**：自动拦截和抓取网页中的 m3u8 和 mp4 视频链接
 - **实时监控**：监控网络请求（XMLHttpRequest、fetch、Performance API），自动发现视频链接
 - **智能识别**：自动识别视频类型（M3U8/MP4），并提取视频名称
-- **一键跳转**：支持一键跳转到 m3u8-dl WebUI 进行下载
+- **一键跳转**：支持一键跳转到 M3U8-DL WebUI 进行下载
 - **灵活配置**：支持配置排除网址规则，避免在特定页面抓取
 - **拖拽面板**：支持拖拽移动面板位置，自动保存位置
 - **链接管理**：支持复制链接、清空列表等操作
 
-> 这是一个 Tampermonkey/Greasemonkey 用户脚本，可在浏览器中自动抓取视频链接，配合 m3u8-dl WebUI 使用，实现无缝下载体验。
+> 这是一个 Violentmonkey/Tampermonkey/Greasemonkey 用户脚本，可在浏览器中自动抓取视频链接，配合 M3U8-DL WebUI 使用，实现无缝下载体验。
 
 ### 📺 视频搜索功能
 
@@ -418,11 +418,11 @@ docker-compose up -d
 
 1. 安装浏览器扩展（任选其一）：
    - [Violentmonkey](https://violentmonkey.github.io/)（【推荐】开源替代方案）
-   - [Tampermonkey](https://www.tampermonkey.net/)（【官方】支持 Chrome、Firefox、Edge、Safari 等）
+   - [Tampermonkey](https://www.tampermonkey.net/)（支持 Chrome、Firefox、Edge、Safari 等）
    - [Greasemonkey](https://www.greasespot.net/)（仅支持 Firefox）
 
 2. 安装脚本：
-   - 打开 Tampermonkey 管理面板
+   - 打开用户脚本管理器（Violentmonkey/Tampermonkey）管理面板
    - 点击"添加新脚本"
    - 复制 `client/m3u8-capture.user.js` 文件内容
    - 粘贴到编辑器中并保存
@@ -431,14 +431,14 @@ docker-compose up -d
 3. 配置 WebUI 地址：
    - 访问任意网页，点击页面右上角的 🎬 图标打开抓取面板
    - 点击设置按钮 ⚙️
-   - 输入您的 m3u8-dl WebUI 地址（如 `http://localhost:6600`）
+   - 输入您的 M3U8-DL WebUI 地址（如 `http://localhost:6600`）
    - 保存设置
 
 **功能说明：**
 
 - **自动抓取**：脚本会自动监控网页中的网络请求，当检测到 m3u8 或 mp4 视频链接时，自动添加到列表中
 - **视频名称提取**：优先从页面的 `h1`、`h2` 或 `document.title` 提取视频名称
-- **跳转下载**：点击"跳转下载"按钮，会自动跳转到 m3u8-dl WebUI 并填充视频链接和名称（格式：`url|name`）
+- **跳转下载**：点击"跳转下载"按钮，会自动跳转到 M3U8-DL WebUI 并填充视频链接和名称（格式：`url|name`）
 - **排除规则**：在设置中可以配置排除网址规则列表，匹配的网址将不展示面板且不抓取视频链接
   - 支持普通字符串匹配（包含匹配）
   - 支持正则表达式（以 `/` 开头和结尾，如 `/example\.com/`）
@@ -448,7 +448,7 @@ docker-compose up -d
 1. 访问视频播放页面
 2. 脚本自动抓取视频链接，显示在右下角的面板中
 3. 点击"跳转下载"按钮
-4. 自动跳转到 m3u8-dl 的 WebUI，视频链接和名称已自动填充
+4. 自动跳转到 M3U8-DL 的 WebUI，视频链接和名称已自动填充
 5. 在 WebUI 中点击"开始下载"即可
 
 **排除规则配置示例：**

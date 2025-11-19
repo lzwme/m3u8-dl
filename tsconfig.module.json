@@ -7,6 +7,14 @@
     "moduleResolution": "NodeNext",
     "module": "NodeNext"
   },
+  "typedocOptions": {
+    "out": "docs/api",
+    "exclude": ["node_modules/**", "__test__", "src/**/*.spec.ts"],
+    "navigationLinks": {
+      "Home": "https://m3u8-downloader.lzw.me/portal/",
+      "M3U8在线播放器": "https://m3u8-player.lzw.me/"
+    }
+  },
   "include": ["src/**/*.ts"],
   "exclude": ["node_modules/**", "__test__", "src/**/*.spec.ts"]
 }

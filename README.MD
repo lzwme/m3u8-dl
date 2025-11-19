@@ -12,7 +12,7 @@
 [![GitHub forks][forks-badge]][forks-url]
 [![GitHub stars][stars-badge]][stars-url]
 
-> **Language**: [English](README.md) | [中文简体](README.zh-CN.MD)
+> **Language**: [English](README.md) | [中文简体](README.zh-CN.md)
 
 A free, open-source, and powerful m3u8 video batch downloader with multi-threaded downloading, play-while-downloading, WebUI management, video parsing, and more. Supports multiple usage methods including CLI command line, browser, PC client, Docker deployment, and Node.js API calls.
 
@@ -59,12 +59,12 @@ A free, open-source, and powerful m3u8 video batch downloader with multi-threade
 - **Auto Capture**: Automatically intercepts and captures m3u8 and mp4 video links in web pages
 - **Real-time Monitoring**: Monitors network requests (XMLHttpRequest, fetch, Performance API), automatically discovers video links
 - **Smart Recognition**: Automatically recognizes video types (M3U8/MP4) and extracts video names
-- **One-click Jump**: Supports one-click jump to m3u8-dl WebUI for downloading
+- **One-click Jump**: Supports one-click jump to M3U8-DL WebUI for downloading
 - **Flexible Configuration**: Supports configuring exclusion URL rules to avoid capturing on specific pages
 - **Draggable Panel**: Supports dragging to move panel position, automatically saves position
 - **Link Management**: Supports copying links, clearing list, and other operations
 
-> This is a Tampermonkey/Greasemonkey userscript that can automatically capture video links in browsers, working with m3u8-dl WebUI to provide a seamless download experience.
+> This is a Violentmonkey/Tampermonkey/Greasemonkey userscript that can automatically capture video links in browsers, working with M3U8-DL WebUI to provide a seamless download experience.
 
 ### 📺 Video Search Features
 
@@ -418,11 +418,11 @@ Download the built application:
 
 1. Install browser extension (choose one):
    - [Violentmonkey](https://violentmonkey.github.io/) (【Recommended】Open-source alternative)
-   - [Tampermonkey](https://www.tampermonkey.net/) (【Official】Supports Chrome, Firefox, Edge, Safari, etc.)
+   - [Tampermonkey](https://www.tampermonkey.net/) (Supports Chrome, Firefox, Edge, Safari, etc.)
    - [Greasemonkey](https://www.greasespot.net/) (Firefox only)
 
 2. Install script:
-   - Open Tampermonkey management panel
+   - Open userscript manager (Violentmonkey/Tampermonkey) management panel
    - Click "Add new script"
    - Copy content from `client/m3u8-capture.user.js` file
    - Paste into editor and save
@@ -431,14 +431,14 @@ Download the built application:
 3. Configure WebUI address:
    - Visit any web page, click the 🎬 icon in the top right corner to open the capture panel
    - Click the settings button ⚙️
-   - Enter your m3u8-dl WebUI address (e.g., `http://localhost:6600`)
+   - Enter your M3U8-DL WebUI address (e.g., `http://localhost:6600`)
    - Save settings
 
 **Feature Description:**
 
 - **Auto Capture**: The script automatically monitors network requests in web pages, when m3u8 or mp4 video links are detected, automatically adds them to the list
 - **Video Name Extraction**: Prioritizes extracting video names from page `h1`, `h2`, or `document.title`
-- **Jump to Download**: Click the "Jump to Download" button to automatically jump to m3u8-dl WebUI and fill in video link and name (format: `url|name`)
+- **Jump to Download**: Click the "Jump to Download" button to automatically jump to M3U8-DL WebUI and fill in video link and name (format: `url|name`)
 - **Exclusion Rules**: In settings, you can configure exclusion URL rule list, matching URLs will not show panel and will not capture video links
   - Supports plain string matching (contains match)
   - Supports regular expressions (starts and ends with `/`, e.g., `/example\.com/`)
@@ -448,7 +448,7 @@ Download the built application:
 1. Visit video playback page
 2. Script automatically captures video links, displayed in the panel in the bottom right corner
 3. Click "Jump to Download" button
-4. Automatically jumps to m3u8-dl WebUI, video link and name are automatically filled
+4. Automatically jumps to M3U8-DL WebUI, video link and name are automatically filled
 5. Click "Start Download" in WebUI
 
 **Exclusion Rule Configuration Example:**
