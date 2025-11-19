@@ -2,6 +2,24 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [1.7.0](https://github.com/lzwme/m3u8-dl/compare/v1.6.0...v1.7.0) (2025-11-19)
+
+
+### Features
+
+* add favorites functionality to CompletedList and VideoPlayer components ([99cb2ba](https://github.com/lzwme/m3u8-dl/commit/99cb2ba11d15b9076ab788d46389411cf3c08503))
+* add m3u8-dl portal with Vue 3, TypeScript, and Tailwind CSS; implement multi-language support, system detection for downloads, and SEO enhancements ([4201831](https://github.com/lzwme/m3u8-dl/commit/42018316bd5f5343b3fed88f8188d528859a9483))
+* implement auto-start download feature in m3u8 capture; enhance UI for settings and pagination in CompletedList component; update i18n for new UI elements ([86d1800](https://github.com/lzwme/m3u8-dl/commit/86d1800da80af4faf26d9472cecbf33de21682da))
+* implement file renaming functionality in CompletedList and VideoPlayer components; add RenameDialog for user interaction and update i18n support for rename actions ([b07eaee](https://github.com/lzwme/m3u8-dl/commit/b07eaeecba713e1f6b53c0c1d19f8626ebf13ac0))
+* **m3u8-capture:** implement title replacement rules and auto-close WebUI feature; enhance settings UI for better user experience ([505b8d2](https://github.com/lzwme/m3u8-dl/commit/505b8d2c775355dd68efba91f847a20bc054670c))
+
+
+### Bug Fixes
+
+* **m3u8-capture:** update media link handling to exclude specific URLs and enhance settings UI with improved element access ([3f06d2c](https://github.com/lzwme/m3u8-dl/commit/3f06d2c71be064baef4696de93db37177499af2e))
+* update for docker-deploy.yml ([f3a8845](https://github.com/lzwme/m3u8-dl/commit/f3a8845da21e01f28f9dcc0efe45e4f23ee72166))
+* update platforms in docker-deploy.yml ([8759ca6](https://github.com/lzwme/m3u8-dl/commit/8759ca6e762760553f69fc8598a6463db76b27c2))
+
 ## [1.6.0](https://github.com/lzwme/m3u8-dl/compare/v1.6.0-0...v1.6.0) (2025-11-14)
 
 
