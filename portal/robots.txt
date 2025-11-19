@@ -1,0 +1,9 @@
+User-agent: *
+Allow: /portal/
+
+# Sitemap
+Sitemap: https://m3u8-downloader.lzw.me/portal/sitemap.xml
+
+# Disallow admin or private areas if any
+# Disallow: /admin/
+# Disallow: /private/
