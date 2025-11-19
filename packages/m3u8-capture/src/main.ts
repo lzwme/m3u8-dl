@@ -2,7 +2,7 @@ import { initHooks, observeNetworkRequests, scanPageForMedias } from './hooks';
 import { extractMediaUrlFromParams, getFileType, getMediaTitle } from './media';
 import type { LinkData, MediaLink } from './types';
 import { hidePanel, isInIframeMode, setMediaLinksMap, updateUI } from './ui';
-import { normalizeUrl, shouldExcludePageUrl } from './utils';
+import { applyTitleReplaceRules, normalizeUrl, shouldExcludePageUrl } from './utils';
 
 /** 存储抓取的媒体链接 */
 const mediaLinks = new Map<string, MediaLink>();
@@ -15,9 +15,10 @@ export function addMediaLink(url: string, title = ''): void {
   url = extractMediaUrlFromParams(url) || url;
   if (!url || shouldExcludePageUrl(url)) return;
 
+  const originalTitle = title || getMediaTitle();
   const linkData: LinkData = {
     url: url,
-    title: title || getMediaTitle(),
+    title: applyTitleReplaceRules(originalTitle),
     type: getFileType(url),
     pageUrl: window.location.href,
     timestamp: Date.now(),

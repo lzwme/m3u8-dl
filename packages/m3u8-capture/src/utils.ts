@@ -1,5 +1,5 @@
 import { DEFAULT_EXCLUDE_URLS } from './config';
-import { getExcludeUrls, getMediaExtList, getWebuiUrl } from './storage';
+import { getExcludeUrls, getMediaExtList, getTitleReplaceRules, getWebuiUrl } from './storage';
 import type { EventCoordinates } from './types';
 
 /** 使用 GM_addElement 创建 style 或 script 元素，避免 CSP 拦截 */
@@ -113,4 +113,48 @@ export function getEventCoordinates(e: MouseEvent | TouchEvent): EventCoordinate
     return { x: e.changedTouches[0].clientX, y: e.changedTouches[0].clientY };
   }
   return { x: (e as MouseEvent).clientX, y: (e as MouseEvent).clientY };
+}
+
+/** 应用标题替换规则 */
+export function applyTitleReplaceRules(title: string): string {
+  if (!title) return title;
+
+  const rules = getTitleReplaceRules();
+  if (!rules.trim()) return title;
+
+  try {
+    // 分割规则，支持逗号分割
+    const ruleList = rules
+      .split(/,|\n/)
+      .map(rule => rule.trim())
+      .filter(rule => rule);
+
+    let result = title;
+    for (const rule of ruleList) {
+      if (!rule) continue;
+
+      try {
+        // 检查是否是正则表达式（以 / 开头和结尾）
+        if (rule.startsWith('/') && rule.endsWith('/') && rule.length > 2) {
+          const lastSlashIndex = rule.lastIndexOf('/');
+          const pattern = rule.slice(1, lastSlashIndex);
+          const flags = rule.slice(lastSlashIndex + 1);
+          const regex = new RegExp(pattern, flags);
+          result = result.replace(regex, '');
+        } else {
+          // 普通文本替换
+          result = result.replaceAll(rule, '');
+        }
+      } catch (e) {
+        console.warn('[M3U8 Capture] 标题替换规则格式错误:', rule, e);
+      }
+    }
+
+    // 清理多余空格
+    result = result.replace(/\s+/g, ' ').trim();
+    return result;
+  } catch (e) {
+    console.warn('[M3U8 Capture] 应用标题替换规则失败:', e);
+    return title;
+  }
 }

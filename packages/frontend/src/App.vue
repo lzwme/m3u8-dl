@@ -24,6 +24,7 @@ import { useWebSocket, reconnectWithToken } from '@/composables/useWebSocket';
 import { useVersionCheck } from '@/composables/useVersionCheck';
 import PasswordDialog from '@/components/PasswordDialog.vue';
 import NewDownloadDialog from '@/components/NewDownloadDialog.vue';
+import { toast } from './utils/toast';
 
 const route = useRoute();
 const router = useRouter();
@@ -38,6 +39,7 @@ const showGlobalDownloadDialog = ref(false);
 const globalDialogInitialData = ref<{ url?: string; title?: string } | undefined>(undefined);
 const newDownloadDialogRef = ref<InstanceType<typeof NewDownloadDialog> | null>(null);
 const shouldAutoStart = ref(false);
+const shouldAutoClose = ref(false);
 
 // 提供全局显示下载对话框的方法
 function showGlobalNewDownload(data?: { url?: string; title?: string }) {
@@ -51,8 +53,9 @@ function handleGlobalDialogClose() {
   showGlobalDownloadDialog.value = false;
   globalDialogInitialData.value = undefined;
   shouldAutoStart.value = false;
+  shouldAutoClose.value = false;
   // 清除 URL 参数
-  if (route.query.action === 'new' || route.query.url || route.query.autoStart) {
+  if (route.query.action === 'new' || route.query.url || route.query.autoStart || route.query.autoClose) {
     router.replace({ query: {} });
   }
 }
@@ -62,9 +65,23 @@ watch(showGlobalDownloadDialog, async (visible) => {
   if (visible && shouldAutoStart.value) {
     await nextTick();
     setTimeout(() => {
-      newDownloadDialogRef.value?.handleSubmit();
+      const autoClose = shouldAutoClose.value;
+      newDownloadDialogRef.value?.handleSubmit().then(() => {
+        // 如果设置了自动关闭，则延迟关闭页面
+        if (autoClose) {
+          setTimeout(() => {
+            try {
+                window.close();
+              } catch (e) {
+              console.log('[App] 无法自动关闭页面，请手动关闭');
+              toast('下载已开始，无法自动关闭页面，请手动关闭');
+              // window.location.href = 'about:blank';
+            }
+          }, 1000);
+        }
+      });
       shouldAutoStart.value = false;
-    }, 1000);
+    }, 500);
   }
 });
 
@@ -72,12 +89,10 @@ watch(showGlobalDownloadDialog, async (visible) => {
 function handleRouteQuery() {
   if (route.query.action === 'new' && route.query.url) {
     const urlParam = route.query.url as string;
-    const autoStart = route.query.autoStart === '1';
+    shouldAutoStart.value = route.query.autoStart === '1';
+    shouldAutoClose.value = route.query.autoClose === '1';
 
-    shouldAutoStart.value = autoStart;
-    showGlobalNewDownload({
-      url: decodeURIComponent(urlParam),
-    });
+    showGlobalNewDownload({ url: decodeURIComponent(urlParam), title: route.query.title as string || '' });
   }
 }
 

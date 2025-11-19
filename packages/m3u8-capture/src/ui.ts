@@ -2,17 +2,21 @@
 
 import { STORAGE_KEY_WEBUI_URL } from './config';
 import {
+  getAutoCloseWebui,
   getAutoStart,
   getExcludeUrls,
   getMediaExtList,
   getPanelPosition,
   getPanelVisible,
+  getTitleReplaceRules,
   getWebuiUrl,
+  setAutoCloseWebui,
   setAutoStart,
   setExcludeUrls,
   setMediaExtList,
   setPanelPosition,
   setPanelVisible,
+  setTitleReplaceRules,
 } from './storage';
 import { initSwalCSS, loadSwal } from './swal';
 import type { DragOffset, EventCoordinates, MediaLink } from './types';
@@ -488,6 +492,8 @@ export function showSettings(swalRoot = shadowRoot): void {
   const excludeUrls = getExcludeUrls();
   const mediaExtList = getMediaExtList();
   const autoStart = getAutoStart();
+  const titleReplaceRules = getTitleReplaceRules();
+  const autoCloseWebui = getAutoCloseWebui();
 
   swal
     .fire({
@@ -499,21 +505,32 @@ export function showSettings(swalRoot = shadowRoot): void {
                       class="w-full p-2.5 border border-gray-300 rounded-md mb-4 focus:outline-none focus:ring-2 focus:ring-blue-500"
                       placeholder="http://localhost:6600">
                   <label class="block text-sm font-medium text-gray-700 mb-1">媒体扩展名（每行一个，用逗号或换行分隔）</label>
-                  <textarea id="swal-media-ext-list" rows="3"
+                  <textarea id="swal-media-ext-list" rows="2"
                       class="w-full p-2.5 border border-gray-300 rounded-md mb-4 focus:outline-none focus:ring-2 focus:ring-blue-500"
                       placeholder="例如：m3u8, mp4, mkv, avi, mov, wmv, flv, webm, m4v, ts, m3u, m4a, aac, flac, ape, mp3, wav, ogg, wma">${mediaExtList.join(', ')}</textarea>
                   <p class="text-xs text-gray-500 mb-4">支持的媒体文件扩展名，将用于识别和抓取媒体链接</p>
                   <label class="block text-sm font-medium text-gray-700 mb-1">排除网址规则（每行一个，支持正则表达式，以 / 开头和结尾）</label>
-                  <textarea id="swal-exclude-urls" rows="3"
+                  <textarea id="swal-exclude-urls" rows="2"
                       class="w-full p-2.5 border border-gray-300 rounded-md mb-4 focus:outline-none focus:ring-2 focus:ring-blue-500"
                       placeholder="例如：&#10;localhost:6600&#10;/example.com/&#10;127.0.0.1">${excludeUrls}</textarea>
                   <p class="text-xs text-gray-500 mb-4">匹配的网址将不展示面板且不抓取媒体链接</p>
+                  <label class="block text-sm font-medium text-gray-700 mb-1">标题内容替换规则（支持正则，多个规则以逗号分割）</label>
+                  <textarea id="swal-title-replace-rules" rows="2"
+                      class="w-full p-2.5 border border-gray-300 rounded-md mb-4 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      placeholder="例如：/\\[.*?\\]//g, /第.*?话//g">${titleReplaceRules}</textarea>
+                  <p class="text-xs text-gray-500 mb-4">在获取标题后，将根据这些规则进行替换。支持正则表达式，格式：/pattern/flags 或 plain-text</p>
                   <div class="flex items-center mb-4">
                       <input id="swal-auto-start" type="checkbox" ${autoStart ? 'checked' : ''}
                           class="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500">
                       <label for="swal-auto-start" class="ml-2 text-sm font-medium text-gray-700">自动开始下载</label>
                   </div>
-                  <p class="text-xs text-gray-500">启用后，跳转到下载页面时将自动触发开始下载（延迟1秒）</p>
+                  <p class="text-xs text-gray-500 mb-4">启用后，跳转到下载页面时将自动触发开始下载（延迟1秒）</p>
+                  <div class="flex items-center mb-4">
+                      <input id="swal-auto-close-webui" type="checkbox" ${autoCloseWebui ? 'checked' : ''}
+                          class="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500">
+                      <label for="swal-auto-close-webui" class="ml-2 text-sm font-medium text-gray-700">开始下载后自动关闭WebUI页面</label>
+                  </div>
+                  <p class="text-xs text-gray-500">仅当"自动开始下载"开启时有效，开始下载后将自动关闭打开的WebUI页面</p>
               </div>
           `,
       showCancelButton: true,
@@ -526,11 +543,15 @@ export function showSettings(swalRoot = shadowRoot): void {
         const urlInput = swalRoot.getElementById('swal-webui-url') as HTMLInputElement;
         const excludeInput = swalRoot.getElementById('swal-exclude-urls') as HTMLTextAreaElement;
         const mediaExtInput = swalRoot.getElementById('swal-media-ext-list') as HTMLTextAreaElement;
+        const titleReplaceInput = swalRoot.getElementById('swal-title-replace-rules') as HTMLTextAreaElement;
         const autoStartInput = swalRoot.getElementById('swal-auto-start') as HTMLInputElement;
+        const autoCloseWebuiInput = swalRoot.getElementById('swal-auto-close-webui') as HTMLInputElement;
         const url = urlInput ? urlInput.value.trim() : '';
         const excludeUrls = excludeInput ? excludeInput.value.trim() : '';
         const mediaExtText = mediaExtInput ? mediaExtInput.value.trim() : '';
+        const titleReplaceRules = titleReplaceInput ? titleReplaceInput.value.trim() : '';
         const autoStart = autoStartInput ? autoStartInput.checked : false;
+        const autoCloseWebui = autoCloseWebuiInput ? autoCloseWebuiInput.checked : false;
 
         const swal = window.Swal;
         if (!url) {
@@ -549,24 +570,41 @@ export function showSettings(swalRoot = shadowRoot): void {
           return false;
         }
 
-        return { url, excludeUrls, mediaExtList, autoStart };
+        return { url, excludeUrls, mediaExtList, titleReplaceRules, autoStart, autoCloseWebui };
       },
     })
     .then(result => {
       if (result.isConfirmed && result.value) {
-        const value = result.value as { url: string; excludeUrls: string; mediaExtList: string[]; autoStart: boolean };
+        const value = result.value as {
+          url: string;
+          excludeUrls: string;
+          mediaExtList: string[];
+          titleReplaceRules: string;
+          autoStart: boolean;
+          autoCloseWebui: boolean;
+        };
         GM_setValue(STORAGE_KEY_WEBUI_URL, value.url);
         setExcludeUrls(value.excludeUrls);
         setAutoStart(value.autoStart);
+        setAutoCloseWebui(value.autoCloseWebui);
+        setTitleReplaceRules(value.titleReplaceRules);
         const savedExtList = setMediaExtList(value.mediaExtList);
 
         const swal = window.Swal;
         if (savedExtList && swal) {
+          let message = `已保存 ${savedExtList.length} 个媒体扩展名类型`;
+          if (value.titleReplaceRules) {
+            const ruleCount = value.titleReplaceRules.split(',').filter(rule => rule.trim()).length;
+            message += `<br>已设置 ${ruleCount} 个标题替换规则`;
+          }
+          if (value.autoCloseWebui) {
+            message += '<br>已启用自动关闭WebUI页面';
+          }
           swal.fire({
             icon: 'success',
             title: '设置已保存',
-            html: `已保存 ${savedExtList.length} 个媒体扩展名类型`,
-            timer: 2000,
+            html: message,
+            timer: 2500,
             showConfirmButton: false,
           });
         } else if (swal) {
@@ -724,7 +762,8 @@ export function updateUI(): void {
       const url = decodeURIComponent((btn as HTMLElement).getAttribute('data-url') || '');
       const title = decodeURIComponent((btn as HTMLElement).getAttribute('data-title') || '');
       const autoStart = getAutoStart() ? '&autoStart=1' : '';
-      const downloadUrl = `${getWebuiUrl()}/page/download?from=capture&action=new${autoStart}&url=${encodeURIComponent(url + (title ? `|${title}` : ''))}`;
+      const autoCloseWebui = autoStart && getAutoCloseWebui() ? '&autoClose=1' : '';
+      const downloadUrl = `${getWebuiUrl()}/page/download?from=capture&action=new${autoStart}${autoCloseWebui}&url=${encodeURIComponent(url + (title ? `|${title}` : ''))}`;
       safeOpenUrl(downloadUrl);
     });
   });

@@ -1,10 +1,12 @@
 import {
   DEFAULT_MEDIA_EXT_LIST,
+  STORAGE_KEY_AUTO_CLOSE_WEBUI,
   STORAGE_KEY_AUTO_START,
   STORAGE_KEY_EXCLUDE_URLS,
   STORAGE_KEY_MEDIA_EXT_LIST,
   STORAGE_KEY_PANEL_POS,
   STORAGE_KEY_PANEL_VISIBLE,
+  STORAGE_KEY_TITLE_REPLACE_RULES,
   STORAGE_KEY_WEBUI_URL,
 } from './config';
 import type { PanelPosition } from './types';
@@ -72,4 +74,24 @@ export function getAutoStart(): boolean {
 /** 设置是否自动下载 */
 export function setAutoStart(autoStart: boolean): void {
   GM_setValue(STORAGE_KEY_AUTO_START, autoStart);
+}
+
+/** 获取标题替换规则 */
+export function getTitleReplaceRules(): string {
+  return GM_getValue(STORAGE_KEY_TITLE_REPLACE_RULES, '');
+}
+
+/** 设置标题替换规则 */
+export function setTitleReplaceRules(rules: string): void {
+  GM_setValue(STORAGE_KEY_TITLE_REPLACE_RULES, rules);
+}
+
+/** 获取是否自动关闭WebUI */
+export function getAutoCloseWebui(): boolean {
+  return GM_getValue(STORAGE_KEY_AUTO_CLOSE_WEBUI, false);
+}
+
+/** 设置是否自动关闭WebUI */
+export function setAutoCloseWebui(autoClose: boolean): void {
+  GM_setValue(STORAGE_KEY_AUTO_CLOSE_WEBUI, autoClose);
 }

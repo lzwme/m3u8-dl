@@ -15,12 +15,6 @@ export const useTasksStore = defineStore('tasks', () => {
 
   const filteredTasks = computed(() => {
     const taskValues = Object.values(tasks.value);
-    console.log(
-      '[TasksStore] filteredTasks computed, tasks.value keys:',
-      Object.keys(tasks.value).length,
-      'taskValues length:',
-      taskValues.length
-    );
     let taskList = taskValues;
 
     // 过滤掉已完成的任务（已完成的任务只在已完成页面显示）

@@ -163,11 +163,7 @@ const { t } = useI18n();
 
 const tasksStore = useTasksStore();
 
-const filteredTasks = computed(() => {
-  const tasks = tasksStore.filteredTasks;
-  console.log('[TaskList] filteredTasks computed, 数量:', tasks.length);
-  return tasks;
-});
+const filteredTasks = computed(() =>  tasksStore.filteredTasks);
 const selectedTasks = computed(() => tasksStore.selectedTasks);
 const queueStatus = computed(() => tasksStore.queueStatus);
 const statusFilter = computed(() => tasksStore.statusFilter);
