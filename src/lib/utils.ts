@@ -68,7 +68,30 @@ export async function getLocation(url: string, method = 'HEAD'): Promise<string>
  */
 export function formatHeaders(headers: string | OutgoingHttpHeaders) {
   if (!headers) return {};
-  if (typeof headers === 'string') headers = Object.fromEntries(headers.split('\n').map(line => line.split(':').map(d => d.trim())));
+
+  if (typeof headers === 'string') {
+    headers = headers.trim();
+    if (headers.startsWith('{') && headers.endsWith('}')) {
+      try {
+        headers = JSON.parse(headers);
+      } catch (e) {
+        console.error('解析 headers 失败:', e);
+      }
+    }
+
+    if (typeof headers === 'string') {
+      const parsed: Record<string, string> = {};
+      headers
+        .replace(/,\s*([a-zA-Z0-9_-]+:)/g, '\n$1') // 支持如 "Key1: Val1, Key2: Val2" 的格式
+        .split('\n')
+        .forEach(line => {
+          const idx = line.indexOf(':');
+          if (idx > 0) parsed[line.slice(0, idx).trim()] = line.slice(idx + 1).trim();
+        });
+      headers = parsed;
+    }
+  }
+
   return toLowcaseKeyObject(headers as Record<string, string>);
 }
 
