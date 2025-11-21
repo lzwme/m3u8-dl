@@ -9,17 +9,24 @@
 <script setup lang="ts">
 import { inject } from 'vue';
 import Layout from '@/components/Layout.vue';
-import WebBrowser from '@/components/WebBrowser.vue';
+import WebBrowser, { type M3u8CaptureItem } from '@/components/WebBrowser.vue';
+import type { DownloadTaskOptions } from '@/types/task';
 
 // 注入全局显示下载对话框的方法
-const showGlobalNewDownload = inject<(data?: { url?: string; title?: string }) => void>('showGlobalNewDownload');
+const showGlobalNewDownload = inject<(data?: DownloadTaskOptions) => void>('showGlobalNewDownload');
 
-function handleBatchDownload(items: Array<{ url: string; title: string }>) {
+function handleBatchDownload(items: Array<M3u8CaptureItem>) {
+  let firstHost = '';
+  let isSameHost = true;
   // 将多个链接以换行分隔，格式为 url | title
   const downloadUrls = items.map((item) => {
-    if (item.title) {
-      return `${item.url} | ${item.title}`;
+    if (isSameHost) {
+      const host = new URL(item.url).host;
+      if (!firstHost) firstHost = host;
+      else if (firstHost !== host) isSameHost = false;
     }
+
+    if (item.title) return `${item.url} | ${item.title}`;
     return item.url;
   }).join('\n');
 
@@ -27,6 +34,7 @@ function handleBatchDownload(items: Array<{ url: string; title: string }>) {
   if (showGlobalNewDownload) {
     showGlobalNewDownload({
       url: downloadUrls,
+      headers: isSameHost ? items.find(item => item.headers)?.headers || '' : '',
     });
   }
 }

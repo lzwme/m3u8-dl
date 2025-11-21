@@ -22,14 +22,17 @@ export interface DownloadTask {
   endTime?: number;
   errmsg?: string;
   showName?: string;
-  dlOptions?: {
-    filename?: string;
-    saveDir?: string;
-  };
-  options?: {
-    filename?: string;
-    saveDir?: string;
-  };
+  dlOptions?: DownloadTaskOptions;
+  options?: DownloadTaskOptions;
+}
+
+export interface DownloadTaskOptions {
+  filename?: string;
+  url?: string;
+  title?: string;
+  saveDir?: string;
+  ignoreSegments?: string;
+  headers?: string;
 }
 
 export interface QueueStatus {

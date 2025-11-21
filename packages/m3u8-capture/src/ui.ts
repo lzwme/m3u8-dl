@@ -740,7 +740,7 @@ export function updateUI(): void {
                   </div>
               </div>
               <div class="flex gap-2">
-                  <button class="m3u8-capture-download-btn flex-1 bg-blue-500 text-white border-none px-3.5 py-2 rounded-md cursor-pointer text-xs font-medium transition-all duration-200 hover:bg-blue-600 hover:-translate-y-0.5" data-url="${encodeURIComponent(item.url)}" data-title="${encodeURIComponent(title)}">
+                  <button class="m3u8-capture-download-btn flex-1 bg-blue-500 text-white border-none px-3.5 py-2 rounded-md cursor-pointer text-xs font-medium transition-all duration-200 hover:bg-blue-600 hover:-translate-y-0.5" data-url="${encodeURIComponent(item.url)}" data-title="${encodeURIComponent(title)}" data-headers="${encodeURIComponent(item.headers || '')}">
                       跳转下载
                   </button>
                   <button class="m3u8-capture-preview-btn bg-green-500 text-white border-none px-3.5 py-2 rounded-md cursor-pointer text-xs font-medium transition-all duration-200 hover:bg-green-600" data-url="${encodeURIComponent(item.url)}">
@@ -761,9 +761,14 @@ export function updateUI(): void {
       e.stopPropagation();
       const url = decodeURIComponent((btn as HTMLElement).getAttribute('data-url') || '');
       const title = decodeURIComponent((btn as HTMLElement).getAttribute('data-title') || '');
+      const headers = (btn as HTMLElement).getAttribute('data-headers') || '';
       const autoStart = getAutoStart() ? '&autoStart=1' : '';
       const autoCloseWebui = autoStart && getAutoCloseWebui() ? '&autoClose=1' : '';
-      const downloadUrl = `${getWebuiUrl()}/page/download?from=capture&action=new${autoStart}${autoCloseWebui}&url=${encodeURIComponent(url + (title ? `|${title}` : ''))}`;
+      let downloadUrl = `${getWebuiUrl()}/page/download?from=capture&action=new${autoStart}${autoCloseWebui}&url=${encodeURIComponent(url + (title ? `|${title}` : ''))}`;
+      // 如果有 headers，将其放到 hash 中
+      if (headers) {
+        downloadUrl += `#headers=${encodeURIComponent(headers)}`;
+      }
       safeOpenUrl(downloadUrl);
     });
   });

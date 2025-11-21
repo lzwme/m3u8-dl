@@ -14,7 +14,7 @@
       <div class="mb-16">
 
         <!-- System Detection -->
-        <div v-if="detectedSystem" class="animate-on-scroll fade-up bg-gradient-to-r from-primary-50 to-blue-50 border border-primary-200 rounded-xl p-6 mb-8 shadow-lg hover:shadow-xl transition-all duration-300">
+        <div v-if="detectedSystem" class="animate-on-scroll fade-up bg-gradient-to-r from-primary-50 to-blue-50 border border-primary-200 rounded-xl p-3 md:p-6 mb-8 shadow-lg hover:shadow-xl transition-all duration-300">
           <div class="flex items-center space-x-4">
             <div class="text-primary-600 text-3xl animate-pulse">
               <i v-if="detectedSystem.platform === 'win'" class="fab fa-windows"></i>
@@ -74,7 +74,7 @@
 
           <!-- Recommended Download -->
           <div v-if="recommendedAsset" class="mb-12 animate-on-scroll scale-up">
-            <div class="relative bg-gradient-to-br from-primary-500 via-primary-600 to-blue-700 border-2 border-primary-400 rounded-2xl p-8 shadow-2xl overflow-hidden group">
+            <div class="relative bg-gradient-to-br from-primary-500 via-primary-600 to-blue-700 border-2 border-primary-400 rounded-2xl p-4 sm:p-8 shadow-2xl overflow-hidden group">
               <!-- 背景装饰 -->
               <div class="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -mr-16 -mt-16 group-hover:scale-150 transition-transform duration-700"></div>
               <div class="absolute bottom-0 left-0 w-24 h-24 bg-white/10 rounded-full -ml-12 -mb-12 group-hover:scale-150 transition-transform duration-700" style="animation-delay: 0.2s;"></div>
@@ -82,18 +82,16 @@
               <div class="relative z-10">
                 <div class="mb-6">
                   <p class="text-sm font-semibold text-primary-100 mb-6 animate-pulse">{{ t('download.recommended.title') }}</p>
-                  <div class="flex items-center space-x-6 mb-6">
-                    <div class="text-5xl text-white group-hover:scale-110 transition-transform duration-300">
+                  <div class="flex flex-col sm:flex-row sm:items-center space-y-4 sm:space-y-0 sm:space-x-6 mb-6">
+                    <div class="text-4xl sm:text-5xl text-white group-hover:scale-110 transition-transform duration-300 flex-shrink-0">
                       <i :class="getAssetIcon(recommendedAsset.name)"></i>
                     </div>
-                    <div class="flex-1">
-                      <a
-                        :href="getProxyDownloadUrl(recommendedAsset.browser_download_url)"
-                        class="text-2xl font-bold text-white hover:text-primary-100 transition-colors block mb-3"
-                        download
+                    <div class="flex-1 min-w-0">
+                      <span
+                        class="text-xl sm:text-2xl font-bold text-white block mb-3 break-words"
                       >
                         {{ recommendedAsset.name }}
-                      </a>
+                      </span>
                       <div class="flex flex-wrap gap-x-6 gap-y-2 text-sm text-primary-100">
                         <span class="flex items-center">
                           <i class="fas fa-tag mr-2"></i>
@@ -114,11 +112,11 @@
                 <div class="mt-6">
                   <a
                     :href="getProxyDownloadUrl(recommendedAsset.browser_download_url)"
-                    class="group/btn relative inline-flex items-center justify-center bg-white text-primary-600 px-10 py-4 rounded-xl font-bold hover:bg-primary-50 transition-all duration-300 shadow-xl hover:shadow-2xl transform hover:-translate-y-1 overflow-hidden"
+                    class="group/btn relative inline-flex items-center justify-center bg-white text-primary-600 px-6 py-3 sm:px-10 sm:py-4 rounded-xl font-bold hover:bg-primary-50 transition-all duration-300 shadow-xl hover:shadow-2xl transform hover:-translate-y-1 overflow-hidden text-sm sm:text-base w-full sm:w-auto"
                     download
                   >
                     <span class="relative z-10 flex items-center">
-                      <i class="fas fa-download mr-3 group-hover/btn:animate-bounce"></i>
+                      <i class="fas fa-download mr-2 sm:mr-3 group-hover/btn:animate-bounce"></i>
                       {{ t('download.recommended.downloadButton') }}
                     </span>
                     <div class="absolute inset-0 bg-gradient-to-r from-primary-50 to-white opacity-0 group-hover/btn:opacity-100 transition-opacity duration-300"></div>
@@ -130,7 +128,7 @@
 
           <!-- Download List -->
           <div class="bg-white rounded-xl shadow-lg overflow-hidden animate-on-scroll fade-up" data-delay="200">
-            <div class="bg-gradient-to-r from-gray-50 to-gray-100 p-6">
+            <div class="bg-gradient-to-r from-gray-50 to-gray-100 p-3 md:p-6">
               <h3 class="text-2xl font-bold text-gray-900">{{ t('download.releases.downloadFiles') }}</h3>
             </div>
             <div class="p-6 space-y-3 overflow-y-auto">
@@ -141,20 +139,18 @@
                 :data-delay="index * 50"
                 :class="{ 'bg-gradient-to-r from-primary-50 to-blue-50 border-primary-300 shadow-md': isRecommendedAsset(asset), 'bg-gray-50 hover:bg-white': !isRecommendedAsset(asset) }"
               >
-                <div class="flex items-center justify-between p-4">
+                <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between p-2 sm:p-4 gap-3">
                   <div class="flex items-center space-x-4 flex-1 min-w-0">
-                    <div class="text-3xl text-primary-600 group-hover:scale-110 transition-transform duration-300">
+                    <div class="text-2xl sm:text-3xl text-primary-600 group-hover:scale-110 transition-transform duration-300 flex-shrink-0">
                       <i :class="getAssetIcon(asset.name)"></i>
                     </div>
                     <div class="flex-1 min-w-0">
-                      <a
-                        :href="getProxyDownloadUrl(asset.browser_download_url)"
-                        class="font-semibold text-gray-900 hover:text-primary-600 transition-colors truncate block text-lg"
-                        download
+                      <span
+                        class="font-semibold text-gray-900 break-words sm:truncate block text-base sm:text-lg"
                       >
                         {{ asset.name }}
-                      </a>
-                      <div class="flex items-center gap-4 mt-1">
+                      </span>
+                      <div class="flex items-center gap-4 mt-1 flex-wrap">
                         <p class="text-sm text-gray-500 flex items-center">
                           <i class="fas fa-file mr-1"></i>
                           {{ formatFileSize(asset.size) }}
@@ -168,10 +164,10 @@
                   </div>
                   <a
                     :href="getProxyDownloadUrl(asset.browser_download_url)"
-                    class="ml-4 group relative overflow-hidden bg-gradient-to-r from-primary-600 to-primary-700 text-white px-6 py-3 rounded-lg hover:from-primary-700 hover:to-primary-800 transition-all duration-300 font-medium shadow-md hover:shadow-lg transform hover:-translate-y-0.5 whitespace-nowrap"
+                    class="sm:ml-4 w-full sm:w-auto group relative overflow-hidden bg-primary-600 text-white px-4 py-2 sm:px-6 sm:py-3 rounded-lg hover:bg-primary-800 transition-all duration-300 font-medium shadow-md hover:shadow-lg transform hover:-translate-y-0.5 whitespace-nowrap text-sm sm:text-base text-center sm:text-left"
                     download
                   >
-                    <span class="relative z-10 flex items-center">
+                    <span class="relative z-10 flex items-center justify-center sm:justify-start">
                       <i class="fas fa-download mr-2 group-hover:animate-bounce"></i>
                       {{ t('download.releases.download') }}
                     </span>
@@ -192,7 +188,7 @@
 
       <!-- CLI Installation Section -->
       <div class="mb-16 bg-white rounded-xl shadow-lg overflow-hidden animate-on-scroll fade-up">
-        <div class="bg-gradient-to-r from-blue-600 via-blue-700 to-indigo-700 text-white p-8 relative overflow-hidden">
+        <div class="bg-gradient-to-r from-blue-600 via-blue-700 to-indigo-700 text-white p-4 sm:p-8 relative overflow-hidden">
           <div class="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -mr-16 -mt-16"></div>
           <div class="relative z-10">
             <div class="flex items-center gap-4 mb-3">
@@ -204,56 +200,56 @@
             <p class="text-blue-100 text-lg">{{ t('download.cli.subtitle') }}</p>
           </div>
         </div>
-        <div class="p-8">
+        <div class="p-4 sm:p-8">
           <p class="text-gray-700 text-lg mb-8">{{ t('download.cli.description') }}</p>
 
           <div class="space-y-6 mb-8">
-            <div class="group bg-gradient-to-r from-gray-50 to-white p-6 rounded-xl border border-gray-200 hover:border-blue-300 transition-all duration-300 hover-lift">
+            <div class="group bg-gradient-to-r from-gray-50 to-white p-3 md:p-6 rounded-xl border border-gray-200 hover:border-blue-300 transition-all duration-300 hover-lift">
               <div class="flex items-center mb-3">
                 <div class="w-10 h-10 bg-red-500 rounded-lg flex items-center justify-center text-white font-bold group-hover:scale-110 transition-transform">
                   NPM
                 </div>
                 <h3 class="text-xl font-semibold text-gray-900 ml-4">{{ t('download.cli.npm.title') }}</h3>
               </div>
-              <pre class="bg-gray-900 text-green-400 p-6 rounded-lg overflow-x-auto text-sm font-mono shadow-inner"><code>npm install -g @lzwme/m3u8-dl</code></pre>
+              <pre class="bg-gray-900 text-green-400 p-3 md:p-6 rounded-lg overflow-x-auto text-sm font-mono shadow-inner"><code>npm install -g @lzwme/m3u8-dl</code></pre>
             </div>
 
-            <div class="group bg-gradient-to-r from-gray-50 to-white p-6 rounded-xl border border-gray-200 hover:border-blue-400 transition-all duration-300 hover-lift">
+            <div class="group bg-gradient-to-r from-gray-50 to-white p-3 md:p-6 rounded-xl border border-gray-200 hover:border-blue-400 transition-all duration-300 hover-lift">
               <div class="flex items-center mb-3">
                 <div class="w-10 h-10 bg-blue-500 rounded-lg flex items-center justify-center text-white font-bold group-hover:scale-110 transition-transform">
                   Yarn
                 </div>
                 <h3 class="text-xl font-semibold text-gray-900 ml-4">{{ t('download.cli.yarn.title') }}</h3>
               </div>
-              <pre class="bg-gray-900 text-green-400 p-6 rounded-lg overflow-x-auto text-sm font-mono shadow-inner"><code>yarn global add @lzwme/m3u8-dl</code></pre>
+              <pre class="bg-gray-900 text-green-400 p-3 md:p-6 rounded-lg overflow-x-auto text-sm font-mono shadow-inner"><code>yarn global add @lzwme/m3u8-dl</code></pre>
             </div>
 
-            <div class="group bg-gradient-to-r from-gray-50 to-white p-6 rounded-xl border border-gray-200 hover:border-blue-500 transition-all duration-300 hover-lift">
+            <div class="group bg-gradient-to-r from-gray-50 to-white p-3 md:p-6 rounded-xl border border-gray-200 hover:border-blue-500 transition-all duration-300 hover-lift">
               <div class="flex items-center mb-3">
                 <div class="w-10 h-10 bg-orange-500 rounded-lg flex items-center justify-center text-white font-bold group-hover:scale-110 transition-transform">
                   PNPM
                 </div>
                 <h3 class="text-xl font-semibold text-gray-900 ml-4">{{ t('download.cli.pnpm.title') }}</h3>
               </div>
-              <pre class="bg-gray-900 text-green-400 p-6 rounded-lg overflow-x-auto text-sm font-mono shadow-inner"><code>pnpm add -g @lzwme/m3u8-dl</code></pre>
+              <pre class="bg-gray-900 text-green-400 p-3 md:p-6 rounded-lg overflow-x-auto text-sm font-mono shadow-inner"><code>pnpm add -g @lzwme/m3u8-dl</code></pre>
             </div>
           </div>
 
-          <div class="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl p-6 border border-blue-200 shadow-md">
+          <div class="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl p-3 md:p-6 border border-blue-200 shadow-md">
             <div class="flex items-center mb-3">
               <div class="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center text-white">
                 <i class="fas fa-play text-sm"></i>
               </div>
               <h3 class="text-lg font-semibold text-gray-900 ml-3">{{ t('download.cli.usage.title') }}</h3>
             </div>
-            <pre class="bg-gray-900 text-green-400 p-6 rounded-lg overflow-x-auto text-sm font-mono shadow-inner"><code>m3u8dl "https://example.com/video.m3u8"</code></pre>
+            <pre class="bg-gray-900 text-green-400 p-3 md:p-6 rounded-lg overflow-x-auto text-sm font-mono shadow-inner"><code>m3u8dl "https://example.com/video.m3u8"</code></pre>
           </div>
         </div>
       </div>
 
       <!-- Docker Deployment Section -->
       <div class="mb-16 bg-white rounded-xl shadow-lg overflow-hidden animate-on-scroll fade-up">
-        <div class="bg-gradient-to-r from-green-600 via-green-700 to-emerald-700 text-white p-8 relative overflow-hidden">
+        <div class="bg-gradient-to-r from-green-600 via-green-700 to-emerald-700 text-white p-4 sm:p-8 relative overflow-hidden">
           <div class="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -mr-16 -mt-16"></div>
           <div class="relative z-10">
             <div class="flex items-center gap-4 mb-3">
@@ -290,7 +286,7 @@
             </div>
           </div>
 
-          <div class="bg-green-50 rounded-lg p-4 border border-green-200">
+          <div class="bg-green-50 rounded-lg p-2 sm:p-4 border border-green-200">
             <h3 class="font-semibold text-gray-900 mb-2">{{ t('download.docker.access.title') }}</h3>
             <p class="text-gray-700 text-sm">{{ t('download.docker.access.desc') }}</p>
           </div>
@@ -299,7 +295,7 @@
 
       <!-- Browser Extension Section -->
       <div class="mt-16 bg-white rounded-xl shadow-lg overflow-hidden animate-on-scroll fade-up">
-        <div class="bg-gradient-to-r from-purple-600 via-pink-600 to-indigo-600 text-white p-8 relative overflow-hidden">
+        <div class="bg-gradient-to-r from-purple-600 via-pink-600 to-indigo-600 text-white p-4 sm:p-8 relative overflow-hidden">
           <div class="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -mr-16 -mt-16"></div>
           <div class="relative z-10">
             <div class="flex items-center gap-4 mb-3">
@@ -316,7 +312,7 @@
 
           <!-- Features -->
           <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-            <div class="bg-primary-50 p-4 rounded-lg border border-primary-200">
+            <div class="bg-primary-50 p-2 sm:p-4 rounded-lg border border-primary-200">
               <div class="flex items-start space-x-3">
                 <i class="fas fa-magic text-primary-600 text-xl mt-1"></i>
                 <div>
@@ -326,7 +322,7 @@
               </div>
             </div>
 
-            <div class="bg-primary-50 p-4 rounded-lg border border-primary-200">
+            <div class="bg-primary-50 p-2 sm:p-4 rounded-lg border border-primary-200">
               <div class="flex items-start space-x-3">
                 <i class="fas fa-tag text-primary-600 text-xl mt-1"></i>
                 <div>
@@ -336,7 +332,7 @@
               </div>
             </div>
 
-            <div class="bg-primary-50 p-4 rounded-lg border border-primary-200">
+            <div class="bg-primary-50 p-2 sm:p-4 rounded-lg border border-primary-200">
               <div class="flex items-start space-x-3">
                 <i class="fas fa-external-link-alt text-primary-600 text-xl mt-1"></i>
                 <div>
@@ -346,7 +342,7 @@
               </div>
             </div>
 
-            <div class="bg-primary-50 p-4 rounded-lg border border-primary-200">
+            <div class="bg-primary-50 p-2 sm:p-4 rounded-lg border border-primary-200">
               <div class="flex items-start space-x-3">
                 <i class="fas fa-filter text-primary-600 text-xl mt-1"></i>
                 <div>
@@ -358,10 +354,10 @@
           </div>
 
           <!-- Installation Steps -->
-          <div class="bg-gray-50 rounded-lg p-6 mb-6">
+          <div class="bg-gray-50 rounded-lg p-3 md:p-6 mb-6">
             <h3 class="text-xl font-bold text-gray-900 mb-4">{{ t('download.browserExtension.installation.title') }}</h3>
             <div class="space-y-4">
-              <div class="bg-white p-4 rounded-lg">
+              <div class="bg-white p-2 sm:p-4 rounded-lg">
                 <div class="flex items-start space-x-3">
                   <div class="flex-shrink-0 w-7 h-7 bg-primary-600 text-white rounded-full flex items-center justify-center font-bold text-sm">1</div>
                   <div class="flex-1">
@@ -374,7 +370,7 @@
                 </div>
               </div>
 
-              <div class="bg-white p-4 rounded-lg">
+              <div class="bg-white p-2 sm:p-4 rounded-lg">
                 <div class="flex items-start space-x-3">
                   <div class="flex-shrink-0 w-7 h-7 bg-primary-600 text-white rounded-full flex items-center justify-center font-bold text-sm">2</div>
                   <div class="flex-1">
@@ -393,7 +389,7 @@
                 </div>
               </div>
 
-              <div class="bg-white p-4 rounded-lg">
+              <div class="bg-white p-2 sm:p-4 rounded-lg">
                 <div class="flex items-start space-x-3">
                   <div class="flex-shrink-0 w-7 h-7 bg-primary-600 text-white rounded-full flex items-center justify-center font-bold text-sm">3</div>
                   <div class="flex-1">
@@ -406,7 +402,7 @@
           </div>
 
           <!-- Usage Example -->
-          <div class="bg-primary-50 rounded-lg p-6 border border-primary-200">
+          <div class="bg-primary-50 rounded-lg p-3 md:p-6 border border-primary-200">
             <h3 class="text-xl font-bold text-gray-900 mb-4">{{ t('download.browserExtension.usage.title') }}</h3>
             <ol class="space-y-3">
               <li v-for="(step, index) in usageSteps" :key="index" class="flex items-start space-x-3">

@@ -5,73 +5,106 @@ export interface DetectedSystem {
   arch: string;
 }
 
+interface NavigatorUAData {
+  brands: { brand: string; version: string }[];
+  mobile: boolean;
+  platform: string;
+  architecture?: string;
+  bitness?: string;
+  getHighEntropyValues?: (hints: string[]) => Promise<any>;
+}
+
+declare global {
+  interface Navigator {
+    userAgentData?: NavigatorUAData;
+  }
+}
+
 /**
  * 检测当前系统
  * @returns
  */
 export function detectSystem(): DetectedSystem | null {
-  const userAgent = navigator.userAgent.toLowerCase();
-  // @ts-expect-error - navigator.platform is deprecated but still works
-  let platform = (navigator.userAgentData?.platform || navigator.platform || '').toLowerCase();
-  if (!platform) {
-    // 从 userAgent 中推断平台信息
-    if (userAgent.includes('win')) platform = 'win';
-    else if (userAgent.includes('mac')) platform = 'mac';
-    else if (userAgent.includes('linux')) platform = 'linux';
-    else if (userAgent.includes('android')) platform = 'android';
-    else if (userAgent.includes('iphone') || userAgent.includes('ipad')) platform = 'ios';
-  }
+  if (typeof navigator === 'undefined') return null;
 
-  // 检测操作系统
+  const ua = navigator.userAgent.toLowerCase();
+  // navigator.platform is deprecated but still works as a fallback
+  const navPlatform = (navigator.userAgentData?.platform || navigator.platform || '').toLowerCase();
+
   let osName = '';
   let osIcon = '';
   let osPlatform = '';
-  let osArch = '';
+  let osArch = 'x64'; // 默认架构
 
-  // Windows 检测
-  if (platform.includes('win') || userAgent.includes('windows')) {
-    osName = 'Windows';
-    osIcon = '🪟';
-    osPlatform = 'win';
-    // 检测架构 - Windows 64位通常包含 WOW64 或 Win64
-    if (userAgent.includes('wow64') || userAgent.includes('win64') || userAgent.includes('x64')) {
-      osArch = 'x64';
+  // 1. iOS (iPhone/iPad/iPod) & iPadOS 桌面模式
+  // iPadOS 13+ 在桌面模式下 UA 表现为 Mac，但 maxTouchPoints > 0
+  const isIOS = /iphone|ipad|ipod/.test(ua) || (navPlatform.includes('mac') && navigator.maxTouchPoints > 1);
+
+  if (isIOS) {
+    osName = ua.includes('ipad') || (navPlatform.includes('mac') && navigator.maxTouchPoints > 1) ? 'iPadOS' : 'iOS';
+    osIcon = '🍎'; // 或者使用手机图标 📱
+    osPlatform = 'ios';
+    osArch = 'arm64'; // iOS 设备几乎都是 arm64
+  }
+  // 2. Android
+  else if (ua.includes('android') || navPlatform.includes('android')) {
+    osName = 'Android';
+    osIcon = '🤖';
+    osPlatform = 'android';
+
+    if (ua.includes('arm64') || ua.includes('aarch64')) {
+      osArch = 'arm64';
+    } else if (ua.includes('x86_64') || ua.includes('amd64')) {
+      osArch = 'x64'; // 模拟器常见
+    } else if (ua.includes('arm') || ua.includes('armeabi')) {
+      osArch = 'arm'; // 32位 arm
     } else {
-      osArch = 'ia32';
+      osArch = 'arm64'; // 现代 Android 默认推断为 arm64
     }
   }
-  // macOS 检测
-  else if (platform.includes('mac') || userAgent.includes('mac')) {
+  // 3. macOS
+  else if (navPlatform.includes('mac') || ua.includes('macintosh') || ua.includes('mac os x')) {
     osName = 'macOS';
     osIcon = '🍎';
     osPlatform = 'mac';
-    // macOS 架构检测
-    // 使用 navigator.userAgentData 如果可用（Chrome/Edge）
-    if (typeof navigator !== 'undefined' && 'userAgentData' in navigator) {
-      const uaData = navigator.userAgentData as { platform: string; architecture: string };
-      if (uaData.platform?.includes('arm') || uaData.architecture === 'arm') {
-        osArch = 'arm64';
-      } else {
-        osArch = 'x64';
-      }
-    } else if (userAgent.includes('arm') || userAgent.includes('aarch64')) {
+
+    // 尝试通过 userAgentData 检测
+    if (navigator.userAgentData?.architecture === 'arm') {
+      osArch = 'arm64';
+    } else if (ua.includes('arm64') || ua.includes('aarch64') || ua.includes('m1') || ua.includes('m2')) {
+      // 虽然浏览器通常混淆为 Intel，但部分环境可能暴露
       osArch = 'arm64';
     } else {
+      // 现代 macOS 浏览器即使在 Apple Silicon 上也常伪装成 Intel x64 以兼容旧网站
+      // 这里无法准确通过 JS 区分 Intel Mac 和 Apple Silicon Mac
+      // 默认为 x64 (Rosetta 2 可以运行 x64 应用)
       osArch = 'x64';
     }
   }
-  // Linux 检测
-  else if (platform.includes('linux') || userAgent.includes('linux')) {
+  // 4. Windows
+  else if (navPlatform.includes('win') || ua.includes('windows')) {
+    osName = 'Windows';
+    osIcon = '🪟';
+    osPlatform = 'win';
+
+    if (ua.includes('wow64') || ua.includes('win64') || ua.includes('x64')) {
+      osArch = 'x64';
+    } else if (ua.includes('arm64')) {
+      osArch = 'arm64'; // Windows on ARM
+    } else {
+      osArch = 'ia32'; // 32位
+    }
+  }
+  // 5. Linux (最后检测，避免覆盖 Android)
+  else if (navPlatform.includes('linux') || ua.includes('linux') || ua.includes('x11')) {
     osName = 'Linux';
     osIcon = '🐧';
     osPlatform = 'linux';
-    // Linux 架构检测
-    if (userAgent.includes('arm') || userAgent.includes('aarch64')) {
+
+    if (ua.includes('arm64') || ua.includes('aarch64')) {
       osArch = 'arm64';
-    } else if (userAgent.includes('x86_64') || userAgent.includes('amd64')) {
-      osArch = 'x64';
-    } else {
-      osArch = 'x64'; // 默认 x64
+    } else if (ua.includes('arm') || ua.includes('armv7')) {
+      osArch = 'arm';
     }
   } else {
     return null;

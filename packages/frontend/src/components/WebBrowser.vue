@@ -144,8 +144,15 @@ defineProps<{
   visible?: boolean;
 }>();
 
+export interface M3u8CaptureItem {
+  url: string;
+  title: string;
+  headers?: string;
+  pageUrl?: string;
+}
+
 const emit = defineEmits<{
-  (e: 'batch-download', data: Array<{ url: string; title: string }>): void;
+  (e: 'batch-download', data: Array<M3u8CaptureItem>): void;
 }>();
 
 const isElectron = computed(() => envConfig.isElectron);
@@ -157,7 +164,7 @@ const currentUrl = ref('');
 const browserVisible = ref(false);
 const canGoBack = ref(false);
 const canGoForward = ref(false);
-const m3u8List = ref<Array<{ url: string; title: string; pageUrl?: string }>>([]);
+const m3u8List = ref<Array<M3u8CaptureItem>>([]);
 const selectedIndices = ref<Set<number>>(new Set());
 
 function loadUrl() {
@@ -220,7 +227,7 @@ function deleteItem(index: number) {
   selectedIndices.value = newSelectedIndices;
 }
 
-function selectM3u8(item: { url: string; title: string }) {
+function selectM3u8(item: M3u8CaptureItem) {
   // 统一使用 batch-download 事件，即使是单个视频也作为数组传递
   emit('batch-download', [item]);
 }
@@ -263,34 +270,31 @@ function batchDownload() {
   }
 
   const selectedItems = Array.from(selectedIndices.value)
-    .map(index => m3u8List.value[index])
-    .map(item => ({
-      url: item.url,
-      title: item.title, // || t('webBrowser.unnamedVideo'),
-    }));
+    .map(index => m3u8List.value[index]);
 
   emit('batch-download', selectedItems);
   // 下载后清空选择
   selectedIndices.value.clear();
 }
 
-function handleM3u8Found(data: { url: string; title: string; pageUrl?: string }) {
+function handleM3u8Found(data: M3u8CaptureItem) {
   data.url = extractMediaUrlFromParams(data.url) || data.url;
 
   // 规范化 URL 进行比较，实现去重
   const normalizedUrl = normalizeUrl(data.url);
   const item = m3u8List.value.find(item => normalizeUrl(item.url) === normalizedUrl);
 
-  if (item) {
-    if (!item.title) item.title = data.title || pageTitle.value || '';
-    else return;
-  }
-
   const newItem = {
     url: data.url,
     title: data.title || pageTitle.value || '',
     pageUrl: data.pageUrl || currentUrl.value,
+    headers: data.headers,
   };
+
+  if (item) {
+    Object.assign(item, newItem);
+    return;
+  }
 
   // 检查是否需要替换已存在的链接
   // 对于已存在的 .m3u8 链接，如果去掉文件名后的前缀包含在新链接中，则替换
@@ -304,16 +308,15 @@ function handleM3u8Found(data: { url: string; title: string; pageUrl?: string })
         const prefix = item.url.substring(0, lastSlashIndex + 1); // 包含最后的 /
         if (data.url.includes(prefix)) {
           // 新链接包含旧链接的前缀，说明新链接更具体，替换它
-          m3u8List.value[i].url = newItem.url;
-          if (!m3u8List.value[i].title) m3u8List.value[i].title = newItem.title;
+          Object.assign(item, newItem);
           replaced = true;
           break;
+
         }
       }
     }
   }
 
-  // 如果没有替换，则添加新链接
   if (!replaced) m3u8List.value.push(newItem);
 
   toast({ text: t('webBrowser.newVideoFound', { title: data.title || t('webBrowser.unnamedVideo') }), type: 'success' });

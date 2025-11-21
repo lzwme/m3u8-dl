@@ -83,15 +83,13 @@ import { toast } from '@/utils/toast';
 import { optimizeTitle, urlsTextFormat } from '@/utils/formatTitle';
 import { useConfigStore } from '@/stores/config';
 import { useTasksStore } from '@/stores/tasks';
+import type { DownloadTaskOptions } from '@/types/task';
 
 const { t } = useI18n();
 
 const props = defineProps<{
   visible: boolean;
-  initialData?: {
-    url?: string;
-    title?: string;
-  };
+  initialData?: DownloadTaskOptions;
 }>();
 
 const emit = defineEmits<{
@@ -125,7 +123,7 @@ watch(
   () => props.visible,
   (visible) => {
     if (visible) {
-      saveDir.value = configStore.config.saveDir || '';
+      // saveDir.value = configStore.config.saveDir || '';
       // 如果有初始数据，填充表单
       if (props.initialData) {
         if (props.initialData.url) {
@@ -141,6 +139,21 @@ watch(
             downloadUrls.value = urlText;
           }
         }
+        if (props.initialData.title) {
+          filename.value = props.initialData.title;
+        }
+        if (props.initialData.saveDir) {
+          saveDir.value = props.initialData.saveDir;
+        }
+        if (props.initialData.ignoreSegments) {
+          ignoreSegments.value = props.initialData.ignoreSegments;
+        }
+        if (props.initialData.headers) {
+          headers.value = props.initialData.headers;
+          if (typeof headers.value === 'object') {
+            headers.value = JSON.stringify(headers.value, null, 2);
+          }
+        }
       }
     } else {
       // 重置表单
@@ -148,8 +161,9 @@ watch(
       downloadUrls.value = '';
       filename.value = '';
       ignoreSegments.value = '';
-      headers.value = '';
+      // headers.value = ''; // 不清空，保留上次输入的 headers
       subUrlRegex.value = '';
+      saveDir.value = configStore.config.saveDir || '';
     }
   }
 );

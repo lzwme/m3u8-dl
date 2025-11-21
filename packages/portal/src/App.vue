@@ -7,7 +7,7 @@
       </p>
     </div>
     <header class="bg-neutral/95 backdrop-blur-sm text-white sticky top-0 z-50 shadow-lg transition-all duration-300" :class="{ 'bg-neutral/98': isScrolled }">
-      <div class="container mx-auto px-4 py-3">
+      <div class="container mx-auto px-2 py-3 sm:px-4">
         <div class="flex items-center justify-between">
           <router-link to="/" class="group flex items-center text-white font-bold text-xl space-x-2 hover:text-secondary transition-all duration-300 flex-shrink-0">
             <div class="relative overflow-hidden rounded-lg">
@@ -17,7 +17,7 @@
             <span class="hidden lg:inline bg-gradient-to-r from-white to-gray-200 bg-clip-text text-transparent group-hover:from-secondary group-hover:to-white transition-all duration-300">M3U8-DL</span>
           </router-link>
           <nav class="flex-1 flex justify-end">
-            <ul class="flex flex-row items-center gap-1 sm:gap-2 md:gap-3 lg:gap-4 text-sm md:text-base font-medium flex-wrap justify-end">
+            <ul class="flex flex-row items-center gap-0.5 sm:gap-2 md:gap-3 lg:gap-4 text-sm md:text-base font-medium flex-wrap justify-end">
               <li class="nav-item">
                 <router-link
                   to="/"
@@ -126,7 +126,7 @@
       </router-view>
     </main>
 
-    <footer class="bg-gray-900 text-gray-300 mt-20">
+    <footer class="bg-gray-900 text-gray-300 mt-10">
       <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
           <div>

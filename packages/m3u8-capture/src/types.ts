@@ -5,16 +5,11 @@ export interface MediaLink {
   type: string;
   pageUrl: string;
   timestamp: number;
+  headers?: string;
 }
 
 /** 链接数据（用于 iframe 通信） */
-export interface LinkData {
-  url: string;
-  title: string;
-  type: string;
-  pageUrl: string;
-  timestamp: number;
-}
+export interface LinkData extends MediaLink {}
 
 /** 面板位置 */
 export interface PanelPosition {

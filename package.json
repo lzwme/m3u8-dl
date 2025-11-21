@@ -60,7 +60,7 @@
     "registry": "https://registry.npmjs.com"
   },
   "devDependencies": {
-    "@biomejs/biome": "^2.3.6",
+    "@biomejs/biome": "^2.3.7",
     "@eslint/js": "^9.39.1",
     "@lzwme/fed-lint-helper": "^2.6.6",
     "@types/express": "^5.0.5",

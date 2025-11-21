@@ -11,17 +11,20 @@ const mediaLinks = new Map<string, MediaLink>();
 setMediaLinksMap(mediaLinks);
 
 /** 添加媒体链接 */
-export function addMediaLink(url: string, title = ''): void {
+export function addMediaLink(url: string, title = '', headers = ''): void {
   url = extractMediaUrlFromParams(url) || url;
   if (!url || shouldExcludePageUrl(url)) return;
 
-  const originalTitle = title || getMediaTitle();
+  const normalizedUrl = normalizeUrl(url);
+  const item = mediaLinks.get(normalizedUrl);
+  const originalTitle = title || item?.title || getMediaTitle() || '';
   const linkData: LinkData = {
-    url: url,
-    title: applyTitleReplaceRules(originalTitle),
-    type: getFileType(url),
-    pageUrl: window.location.href,
     timestamp: Date.now(),
+    url: url,
+    pageUrl: window.location.href,
+    title: applyTitleReplaceRules(originalTitle),
+    type: getFileType(url) || item?.type || '',
+    headers: headers || item?.headers || '',
   };
 
   // 如果在 iframe 模式，发送给 top 窗口
@@ -40,10 +43,6 @@ export function addMediaLink(url: string, title = ''): void {
     return;
   }
 
-  const normalizedUrl = normalizeUrl(url);
-  const item = mediaLinks.get(normalizedUrl);
-  if (item?.title) return;
-
   mediaLinks.set(normalizedUrl, linkData);
   updateUI();
 }
@@ -58,7 +57,7 @@ function init(): void {
     window.addEventListener('message', event => {
       if (event.data?.type === 'm3u8-capture-link' && event.data.data) {
         const linkData: LinkData = event.data.data;
-        addMediaLink(linkData.url, linkData.title);
+        addMediaLink(linkData.url, linkData.title, linkData.headers || '');
       }
     });
   }

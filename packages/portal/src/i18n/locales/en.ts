@@ -8,7 +8,8 @@ export default {
     github: 'GitHub',
     language: 'Language',
     learnMore: 'Learn More',
-    browserWarning: 'Your browser kernel version is detected to be too low, which may prevent some content from displaying correctly. It is recommended to upgrade to the latest version of Chrome, Edge, or other modern browsers.',
+    browserWarning:
+      'Your browser kernel version is detected to be too low, which may prevent some content from displaying correctly. It is recommended to upgrade to the latest version of Chrome, Edge, or other modern browsers.',
     close: 'Close',
   },
   home: {

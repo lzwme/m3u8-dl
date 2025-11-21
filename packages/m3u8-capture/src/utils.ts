@@ -117,7 +117,7 @@ export function getEventCoordinates(e: MouseEvent | TouchEvent): EventCoordinate
 
 /** 应用标题替换规则 */
 export function applyTitleReplaceRules(title: string): string {
-  if (!title) return title;
+  if (!title || typeof title !== 'string' || title === 'NaN' || title === 'undefined') return '';
 
   const rules = getTitleReplaceRules();
   if (!rules.trim()) return title;

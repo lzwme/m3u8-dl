@@ -42,7 +42,7 @@
             </div>
 
             <!-- 装饰性元素 -->
-            <div class="mt-8 md:mt-12 animate-on-scroll fade-up" data-delay="600">
+            <div class="my-8 md:my-12 animate-on-scroll fade-up" data-delay="600">
               <div class="flex justify-center space-x-4 md:space-x-8 text-primary-200">
                 <div class="text-center floating" style="animation-delay: 0s;">
                   <div class="text-3xl md:text-4xl mb-1 md:mb-2">🧠</div>
@@ -367,7 +367,7 @@ await downloadM3u8('https://example.com/video.m3u8');</code></pre>
     </section>
 
     <!-- Browser Extension Section -->
-    <section class="py-12 md:py-20 bg-white">
+    <section class="py-12 md:py-20 bg-white break-all">
       <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="text-center mb-8 md:mb-12">
           <h2 class="text-2xl md:text-3xl font-bold text-gray-900 mb-3 md:mb-4">{{ t('home.browserExtension.title') }}</h2>
@@ -478,7 +478,7 @@ await downloadM3u8('https://example.com/video.m3u8');</code></pre>
     </section>
 
     <!-- CTA Section -->
-    <section class="py-12 md:py-20 bg-gradient-to-r from-primary-600 to-primary-700 text-white">
+    <section class="py-10 bg-gradient-to-r from-primary-600 to-primary-700 text-white">
       <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
         <h2 class="text-2xl md:text-3xl font-bold mb-4 md:mb-6">{{ t('home.cta.title') }}</h2>
         <p class="text-lg md:text-xl mb-6 md:mb-8 text-primary-100">

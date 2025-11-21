@@ -25,6 +25,7 @@ import { useVersionCheck } from '@/composables/useVersionCheck';
 import PasswordDialog from '@/components/PasswordDialog.vue';
 import NewDownloadDialog from '@/components/NewDownloadDialog.vue';
 import { toast } from './utils/toast';
+import { DownloadTaskOptions } from './types/task';
 
 const route = useRoute();
 const router = useRouter();
@@ -36,13 +37,13 @@ const passwordDialogRef = ref<InstanceType<typeof PasswordDialog> | null>(null);
 
 // 全局下载对话框状态
 const showGlobalDownloadDialog = ref(false);
-const globalDialogInitialData = ref<{ url?: string; title?: string } | undefined>(undefined);
+const globalDialogInitialData = ref<{ url?: string; title?: string; headers?: string } | undefined>(undefined);
 const newDownloadDialogRef = ref<InstanceType<typeof NewDownloadDialog> | null>(null);
 const shouldAutoStart = ref(false);
 const shouldAutoClose = ref(false);
 
 // 提供全局显示下载对话框的方法
-function showGlobalNewDownload(data?: { url?: string; title?: string }) {
+function showGlobalNewDownload(data?: DownloadTaskOptions) {
   globalDialogInitialData.value = data;
   showGlobalDownloadDialog.value = true;
 }
@@ -57,6 +58,7 @@ function handleGlobalDialogClose() {
   // 清除 URL 参数
   if (route.query.action === 'new' || route.query.url || route.query.autoStart || route.query.autoClose) {
     router.replace({ query: {} });
+    window.location.hash = '';
   }
 }
 
@@ -91,8 +93,30 @@ function handleRouteQuery() {
     const urlParam = route.query.url as string;
     shouldAutoStart.value = route.query.autoStart === '1';
     shouldAutoClose.value = route.query.autoClose === '1';
+    const params: DownloadTaskOptions = {
+      url: decodeURIComponent(urlParam),
+      title: route.query.title as string || '',
+    };
 
-    showGlobalNewDownload({ url: decodeURIComponent(urlParam), title: route.query.title as string || '' });
+    // 优先从 hash 中读取 headers（m3u8-capture 插件使用）
+    if (window.location.hash) {
+      try {
+        const hashParams = new URLSearchParams(window.location.hash.substring(1));
+        const headersFromHash = hashParams.get('headers');
+        if (headersFromHash) {
+          params.headers = decodeURIComponent(headersFromHash);
+        }
+      } catch (e) {
+        console.warn('[App] Failed to parse headers from hash:', e);
+      }
+    }
+
+    // 如果 hash 中没有，再从 query 参数中读取
+    if (!params.headers && route.query.headers) {
+      params.headers = decodeURIComponent(route.query.headers as string);
+    }
+
+    showGlobalNewDownload(params);
   }
 }
 

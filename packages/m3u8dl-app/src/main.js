@@ -1,4 +1,4 @@
-const { app, ipcMain, BrowserWindow, Tray, nativeImage, Menu, shell, dialog } = require('electron');
+const { app, ipcMain, BrowserWindow, Tray, nativeImage, Menu, shell, dialog, webContents } = require('electron');
 const fs = require('node:fs');
 const { homedir } = require('node:os');
 const path = require('node:path');
@@ -206,10 +206,11 @@ const T = {
       };
 
       // 监听网络请求，提取 m3u8 和 mp4 视频地址
-      this.webBrowserWindow.webContents.session.webRequest.onBeforeRequest(
+      this.webBrowserWindow.webContents.session.webRequest.onBeforeSendHeaders(
         { urls: ['*://*/*'] },
         async (details, callback) => {
           const url = details.url;
+          const headers = details.requestHeaders;
 
           // 检查是否是 m3u8 或 mp4 视频文件
           if (/\.(m3u8|mp4|mov|mkv|mp3|m4a|ogg)(\?|$|#)/i.test(url)) {
@@ -227,14 +228,15 @@ const T = {
 
             if (isNew) {
               // 获取发起请求的窗口信息
-              const requestWebContents = details.webContents;
+              const requestWebContents = details.webContents || (details.webContentsId ? webContents.fromId(details.webContentsId) : null);
               let pageUrl = '';
               let title = currentPageTitle || '';
               const notifyM3u8Found = () => {
-                mediaUrls.set(url, title);
+                mediaUrls.set(url, { title, headers });
                   mainWindow.webContents.send('web-browser:m3u8-found', {
                     url,
                     title,
+                    headers,
                     pageUrl: pageUrl || currentUrl,
                   });
               };
@@ -269,8 +271,8 @@ const T = {
               }
             }
           }
-          // 必须返回 {} 以允许请求继续，否则请求会被阻塞
-          callback({});
+          // 必须返回 requestHeaders 以允许请求继续
+          callback({ requestHeaders: details.requestHeaders });
         }
       );
 
@@ -314,12 +316,14 @@ const T = {
           });
 
           // 更新已发现的 m3u8 链接的标题（如果标题还是默认值）
-          for (const [url, oldTitle] of mediaUrls) {
-            if (!oldTitle && currentPageTitle) {
-              mediaUrls.set(url, currentPageTitle);
+          for (const [url, data] of mediaUrls) {
+            if (!data.title && currentPageTitle) {
+              data.title = currentPageTitle;
+              mediaUrls.set(url, data);
               mainWindow.webContents.send('web-browser:m3u8-found', {
                 url,
                 title: currentPageTitle,
+                headers: data.headers,
                 pageUrl: currentUrl,
               });
             }
