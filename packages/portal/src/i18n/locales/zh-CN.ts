@@ -2,11 +2,14 @@ export default {
   common: {
     home: '首页',
     download: '下载',
-    online: 'M3U8在线下载',
+    online: '在线下载器',
+    player: '在线播放器',
     api: 'API',
     github: 'GitHub',
     language: '语言',
     learnMore: '了解更多',
+    browserWarning: '检测到您的浏览器内核版本过低，可能无法正常显示部分内容。建议升级到最新版本的 Chrome、Edge 或其他现代浏览器。',
+    close: '关闭',
   },
   home: {
     title: 'M3U8-DL - 强大的 m3u8 视频批量下载工具',
@@ -19,10 +22,10 @@ export default {
       viewSource: '查看源码',
       typewriter: ['M3U8-DL', '强大的视频下载工具', '开源免费', '多线程加速'],
       features: {
+        smartExtract: '智能提取',
+        streamingPlayback: '边下边播',
+        cacheResume: '缓存续传',
         fastDownload: '极速下载',
-        secure: '安全可靠',
-        globalService: '全球服务',
-        continuousUpdate: '持续更新',
       },
     },
     features: {

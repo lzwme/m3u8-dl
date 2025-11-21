@@ -5,8 +5,7 @@
   <title>M3U8 Player</title>
   <meta charset="utf-8">
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
-  <meta content="width=device-width, initial-scale=1.0, viewport-fit=cover"
-    name="viewport" />
+  <meta content="width=device-width, initial-scale=1.0, viewport-fit=cover" name="viewport" />
   <link rel="shortcut icon" href="logo.png">
   <style>
     body {
@@ -37,7 +36,8 @@
         dplayer: 'https://s4.zstatic.net/ajax/libs/dplayer/1.26.0/DPlayer.min.js',
         artplayer: [
           'https://s4.zstatic.net/ajax/libs/artplayer/5.3.0/artplayer.min.js',
-          // 'https://fastly.jsdelivr.net/npm/artplayer-plugin-hls-control/dist/artplayer-plugin-hls-control.min.js',
+          'https://fastly.jsdelivr.net/npm/artplayer-plugin-hls-control/dist/artplayer-plugin-hls-control.min.js',
+          'https://fastly.jsdelivr.net/npm/artplayer-plugin-auto-thumbnail/dist/artplayer-plugin-auto-thumbnail.min.js',
         ],
       }
       const T = {
@@ -60,14 +60,11 @@
         },
         async loadJS(url) {
           if (Array.isArray(url)) {
-            for (const u of url) {
-              await T.loadJS(u);
-            }
+            for (const u of url) await T.loadJS(u);
             return;
           }
-          if (document.querySelector(`script[src="${url}"]`)) {
-            return;
-          }
+
+          if (document.querySelector(`script[src="${url}"]`)) return;
 
           return new Promise((resolve, reject) => {
             const script = document.createElement('script');
@@ -75,7 +72,7 @@
             script.onload = resolve;
             script.onerror = reject;
             document.body.appendChild(script);
-          });
+          }).catch(e => console.error(e));
         },
         sleep(ms) {
           return new Promise(resolve => setTimeout(resolve, ms));
@@ -122,20 +119,21 @@
         /** 使用 artplayer 播放 */
         async artplayer(videoUrl) {
           let art = T.data.artInc;
+          // 从 videoUrl 提取文件类型
+          const type = ['.mp4', '.mkv', '.avi', '.mov', '.wmv', '.flv', '.webm', '.m4v', '.m3u8', '.ogg', '.flv', '.webm'].find(d => videoUrl.includes(d)) || 'm3u8';
 
           if (art) {
             art.url = videoUrl;
+            art.type = type;
             art.playbackRate = +art.storage.get('playbackRate') || 1;
             return art;
-          } else {
-            await T.loadJS(CDN_CONFIG.artplayer);
           }
 
-          Artplayer.PLAYBACK_RATE = [0.5, 0.75, 1, 1.25, 1.5, 2, 3, 4, 8];
-          Artplayer.SEEK_STEP = 10;
+          await T.loadJS(CDN_CONFIG.artplayer);
 
-          // 从 videoUrl 提取文件类型
-          const type = ['.mp4', '.mkv', '.avi', '.mov', '.wmv', '.flv', '.webm', '.m4v', '.m3u8', '.ogg', '.flv', '.webm'].find(d => videoUrl.includes(d)) || 'm3u8';
+          Artplayer.PLAYBACK_RATE = [0.5, 0.75, 1, 1.25, 1.5, 2, 3, 4, 8, 16];
+          Artplayer.SEEK_STEP = 10; // 快进步长，单位秒
+          Artplayer.FAST_FORWARD_VALUE = 3; // 快进倍速
 
           art = new Artplayer({
             container: document.getElementById('dplayer'),
@@ -155,10 +153,44 @@
             miniProgressBar: true,
             pip: true, // 是否在底部控制栏里显示 画中画 的开关按钮
             playbackRate: true, // 是否显示视频播放速度功能
+            playsInline: true, // 在移动端是否使用 playsInline 模式
             screenshot: true,
             setting: true,
             theme: '#39f',
             type,
+            plugins: [
+              window.artplayerPluginHlsControl &&
+              artplayerPluginHlsControl({
+                quality: {
+                  // Show qualitys in control
+                  control: document.body.clientWidth > 768,
+                  // Show qualitys in setting
+                  setting: true,
+                  // Get the quality name from level
+                  getName: level => level.height + 'P',
+                  // I18n
+                  title: 'Quality',
+                  auto: 'Auto',
+                },
+                audio: {
+                  // Show audios in control
+                  control: false,
+                  // Show audios in setting
+                  setting: true,
+                  // Get the audio name from track
+                  getName: track => track.name,
+                  // I18n
+                  title: 'Audio',
+                  auto: 'Auto',
+                },
+              }),
+              window.artplayerPluginAutoThumbnail &&
+              artplayerPluginAutoThumbnail({
+                width: 160,
+                number: 100,
+                scale: 1,
+              }),
+            ].filter(Boolean),
             customType: {
               m3u8: function playM3u8(video, url, art) {
                 if (Hls.isSupported()) {

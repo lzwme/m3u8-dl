@@ -7,9 +7,9 @@ export function initStats({ gaId = '', baiduId = '' } = {}) {
   if (Array.isArray(win._hmt) && win._hmt.length > 0) return;
 
   win._hmt = [];
-  var hm = document.createElement('script');
+  const hm = document.createElement('script');
   hm.src = `https://hm.baidu.com/hm.js?${baiduId}`;
-  var s = document.getElementsByTagName('script')[0];
+  const s = document.getElementsByTagName('script')[0];
   s.parentNode!.insertBefore(hm, s);
 
   // 初始化 Google Analytics (GA4)

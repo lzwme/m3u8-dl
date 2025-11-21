@@ -34,21 +34,37 @@ const DEFAULT_CONCURRENCY = 5;
 const IS_GITHUB_CI = process.env.GITHUB_CI === '1' || process.env.CI === 'true';
 
 /**
- * 从 HTML 内容中提取所有 zstatic.net 的资源 URL
+ * 从 HTML 内容中提取所有 CDN 资源 URL
+ * 支持 zstatic.net 和 fastly.jsdelivr.net 格式
  */
-function extractCDNUrls(htmlContent) {
+function extractCDNUrls(htmlContent = '') {
   const urls = new Set();
 
   // 匹配所有 zstatic.net 的 URL（包括在 script、link 标签和 JavaScript 代码中的）
   // 匹配模式：https://s4.zstatic.net/ajax/libs/...
-  const urlPattern = /https:\/\/s4\.zstatic\.net\/ajax\/libs\/[^\s"'`<>]+/g;
-  const matches = htmlContent.match(urlPattern);
+  const zstaticPattern = /https:\/\/s4\.zstatic\.net\/ajax\/libs\/[^\s"'`<>]+/g;
+  const zstaticMatches = htmlContent.match(zstaticPattern);
 
-  if (matches) {
-    matches.forEach(match => {
+  if (zstaticMatches) {
+    zstaticMatches.forEach(match => {
       // 清理 URL，移除可能的引号、换行等
       const cleanUrl = match.replace(/['"`\s]+$/, '');
       if (cleanUrl.startsWith(ZSTATIC_CDN_BASE)) {
+        urls.add(cleanUrl);
+      }
+    });
+  }
+
+  // 匹配所有 fastly.jsdelivr.net 的 URL
+  // 匹配模式：https://fastly.jsdelivr.net/npm/...
+  const jsdelivrPattern = /https:\/\/[a-z]+\.jsdelivr\.net\/npm\/[^\s"'`<>]+/g;
+  const jsdelivrMatches = htmlContent.match(jsdelivrPattern);
+
+  if (jsdelivrMatches) {
+    jsdelivrMatches.forEach(match => {
+      // 清理 URL，移除可能的引号、换行等
+      const cleanUrl = match.replace(/['"`\s]+$/, '');
+      if (cleanUrl.match(/^https:\/\/[a-z]+\.jsdelivr\.net\/npm\//i)) {
         urls.add(cleanUrl);
       }
     });
@@ -76,15 +92,18 @@ function convertToCdnjsUrl(zstaticUrl) {
  *
  * 注意：此函数接收的 cdnUrl 始终是原始的 zstatic.net URL
  */
-function getLocalPath(cdnUrl) {
+function getLocalPath(cdnUrl = '') {
   const url = new URL(cdnUrl);
-  // 提取 /ajax/libs/ 之后的部分
-  const libsIndex = url.pathname.indexOf('/ajax/libs/');
-  if (libsIndex === -1) {
+  let relativePath = '';
+
+  if (cdnUrl.includes('jsdelivr.net/npm/')) {
+    relativePath = url.pathname.split('/npm/')[1];
+  } else if (cdnUrl.includes('/ajax/libs/')) {
+    relativePath = url.pathname.split('/ajax/libs/')[1];
+  } else {
     throw new Error(`Invalid CDN URL: ${cdnUrl}`);
   }
 
-  const relativePath = url.pathname.substring(libsIndex + '/ajax/libs/'.length);
   return path.join(CDN_DIR, relativePath);
 }
 
@@ -92,8 +111,6 @@ function getLocalPath(cdnUrl) {
  * 下载文件（使用 fetch API）
  */
 async function downloadFile(url, destPath) {
-  const destDir = path.dirname(destPath);
-
   if (fs.existsSync(destPath)) {
       console.log(`  ✓ 已存在，跳过: ${path.relative(ROOT_DIR, destPath)}`);
       return;
@@ -103,7 +120,7 @@ async function downloadFile(url, destPath) {
   let downloadUrl = url;
   if (IS_GITHUB_CI && url.startsWith(ZSTATIC_CDN_BASE)) {
     downloadUrl = convertToCdnjsUrl(url);
-    console.log(`  [CI] 使用 cdnjs: ${downloadUrl}`);
+    // console.log(`  [CI] 使用 cdnjs: ${downloadUrl}`);
   }
 
   try {
@@ -130,7 +147,7 @@ async function downloadFile(url, destPath) {
     }
 
     // 写入文件
-    mkdirp(destDir);
+    mkdirp(path.dirname(destPath));
     fs.writeFileSync(destPath, buffer);
 
     console.log(`  ✓ 下载完成: ${path.relative(ROOT_DIR, destPath)}`);

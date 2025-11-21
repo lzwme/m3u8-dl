@@ -1,5 +1,11 @@
 <template>
   <div id="app" class="min-h-screen bg-gray-50">
+    <div v-if="showLegacyBrowserWarning" style="background-color: #ca8a04; color: white; padding: 0.5rem 1rem; text-align: center; position: fixed; top: 0; left: 0; right: 0; z-index: 60;">
+      <p style="font-size: 1.2rem; font-weight: 500;">
+        {{ t('common.browserWarning') }}
+        <button @click="showLegacyBrowserWarning = false" style="margin-left: 1rem; text-decoration: underline; cursor: pointer;color:#222" onmouseover="this.style.color='#f00'" onmouseout="this.style.color='#222'">{{ t('common.close') }}</button>
+      </p>
+    </div>
     <header class="bg-neutral/95 backdrop-blur-sm text-white sticky top-0 z-50 shadow-lg transition-all duration-300" :class="{ 'bg-neutral/98': isScrolled }">
       <div class="container mx-auto px-4 py-3">
         <div class="flex items-center justify-between">
@@ -50,6 +56,21 @@
                   <span class="relative z-10 flex items-center gap-2">
                     <i class="fas fa-code group-hover:rotate-12 transition-transform duration-300"></i>
                     <span class="hidden lg:inline">{{ t('common.api') }}</span>
+                  </span>
+                  <div class="absolute inset-0 bg-gradient-to-r from-white/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                </a>
+              </li>
+              <li class="nav-item">
+                <a
+                  href="https://m3u8-player.lzw.me/"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  class="group relative flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-white/10 transition-all duration-300 overflow-hidden"
+                  :title="t('common.player')"
+                >
+                  <span class="relative z-10 flex items-center gap-2">
+                    <i class="fas fa-video group-hover:animate-pulse transition-all duration-300"></i>
+                    <span class="hidden lg:inline">{{ t('common.player') }}</span>
                   </span>
                   <div class="absolute inset-0 bg-gradient-to-r from-white/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
                 </a>
@@ -153,6 +174,21 @@ import LanguageSwitcher from './components/LanguageSwitcher.vue';
 const { t } = useI18n();
 const baseUrl = import.meta.env.BASE_URL;
 const isScrolled = ref(false);
+const showLegacyBrowserWarning = ref(false);
+
+// 检查浏览器版本
+const checkBrowserVersion = () => {
+  const ua = navigator.userAgent;
+  // 检测 Chrome/Chromium 内核
+  const chromeMatch = ua.match(/Chrome\/(\d+)/);
+  if (chromeMatch && chromeMatch[1]) {
+    const version = parseInt(chromeMatch[1], 10);
+    // 如果版本小于 100，显示警告
+    if (version < 100) {
+      showLegacyBrowserWarning.value = true;
+    }
+  }
+};
 
 // 滚动检测
 const handleScroll = () => {
@@ -160,6 +196,7 @@ const handleScroll = () => {
 };
 
 onMounted(() => {
+  checkBrowserVersion();
   window.addEventListener('scroll', handleScroll);
   handleScroll(); // 初始检查
 });

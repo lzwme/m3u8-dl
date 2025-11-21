@@ -177,7 +177,10 @@ const T = {
           category: 'public.app-category.productivity',
         },
         linux: {
-          target: ['AppImage', 'deb'],
+          target: [
+            { target: 'AppImage', arch: ['x64', 'arm64'] },
+            { target: 'deb', arch: ['x64', 'arm64'] }
+          ],
           maintainer: 'renxia <l@lzw.me>',
           category: 'Utility',
         },

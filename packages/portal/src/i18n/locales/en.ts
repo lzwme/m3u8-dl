@@ -2,11 +2,14 @@ export default {
   common: {
     home: 'Home',
     download: 'Download',
-    online: 'M3U8 Online',
+    online: 'M3U8 Downloader Online',
+    player: 'M3U8 Player Online',
     api: 'API',
     github: 'GitHub',
     language: 'Language',
     learnMore: 'Learn More',
+    browserWarning: 'Your browser kernel version is detected to be too low, which may prevent some content from displaying correctly. It is recommended to upgrade to the latest version of Chrome, Edge, or other modern browsers.',
+    close: 'Close',
   },
   home: {
     title: 'M3U8-DL - Powerful m3u8 Video Batch Downloader',
@@ -20,10 +23,10 @@ export default {
       viewSource: 'View Source',
       typewriter: ['M3U8-DL', 'Powerful Video Downloader', 'Open Source & Free', 'Multi-threaded Acceleration'],
       features: {
+        smartExtract: 'Smart Extract',
+        streamingPlayback: 'Stream & Download',
+        cacheResume: 'Cache & Resume',
         fastDownload: 'Fast Download',
-        secure: 'Secure & Reliable',
-        globalService: 'Global Service',
-        continuousUpdate: 'Continuous Updates',
       },
     },
     features: {

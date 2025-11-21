@@ -16,6 +16,11 @@ const routes = [
 const router = createRouter({
   history: createWebHistory('/portal/'),
   routes,
+  scrollBehavior(_to, _from, savedPosition) {
+    if (savedPosition?.top) return savedPosition;
+
+    return { top: 0, left: 0, behavior: 'smooth' };
+  },
 });
 
 // 设置 HTML lang 属性
@@ -27,4 +32,4 @@ app.use(i18n);
 app.use(router);
 
 app.mount('#app');
-initStats();
+setTimeout(() => initStats(), 300);

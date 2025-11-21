@@ -5,6 +5,7 @@
   "main": "cjs/index.js",
   "types": "cjs/index.d.ts",
   "license": "MIT",
+  "homepage": "https://m3u8-downloader.lzw.me/portal",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/lzwme/m3u8-dl.git"
@@ -59,15 +60,15 @@
     "registry": "https://registry.npmjs.com"
   },
   "devDependencies": {
-    "@biomejs/biome": "^2.3.5",
+    "@biomejs/biome": "^2.3.6",
     "@eslint/js": "^9.39.1",
     "@lzwme/fed-lint-helper": "^2.6.6",
     "@types/express": "^5.0.5",
     "@types/m3u8-parser": "^7.2.5",
     "@types/node": "^24.10.1",
     "@types/ws": "^8.18.1",
-    "@typescript-eslint/eslint-plugin": "^8.46.4",
-    "@typescript-eslint/parser": "^8.46.4",
+    "@typescript-eslint/eslint-plugin": "^8.47.0",
+    "@typescript-eslint/parser": "^8.47.0",
     "concurrently": "^9.2.1",
     "eslint": "^9.39.1",
     "eslint-config-prettier": "^10.1.8",
@@ -79,7 +80,7 @@
     "standard-version": "^9.5.0",
     "typedoc": "^0.28.14",
     "typescript": "^5.9.3",
-    "typescript-eslint": "^8.46.4",
+    "typescript-eslint": "^8.47.0",
     "ws": "^8.18.3"
   },
   "dependencies": {

@@ -38,11 +38,10 @@ const router = createRouter({
       component: About,
     },
   ],
-  scrollBehavior(_to, _from, _savedPosition) {
-    // if (savedPosition) {
-    //   return savedPosition;
-    // }
-    return { top: 0, left: 0 };
+  scrollBehavior(_to, _from, savedPosition) {
+    if (savedPosition?.top) return savedPosition;
+
+    return { top: 0, left: 0, behavior: 'smooth' };
   },
 });
 

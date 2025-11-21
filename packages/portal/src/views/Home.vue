@@ -3,13 +3,16 @@
     <!-- 粒子背景 -->
     <ParticleBackground />
 
+    <!-- 动画人物特效 -->
+    <AnimatedCharacters />
+
     <!-- Hero Section -->
-    <section class="gradient-animated text-white py-20 relative z-10">
+    <section class="gradient-animated text-white pt-12 md:pt-20 relative z-10">
       <GlowEffect>
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div class="text-center">
-            <div class="mb-6">
-              <h1 class="text-5xl md:text-7xl font-bold mb-6 animate-on-scroll fade-up">
+            <div class="mb-4 md:mb-6">
+              <h1 class="text-4xl md:text-5xl lg:text-7xl font-bold mb-4 md:mb-6 animate-on-scroll fade-up">
                 <TypewriterEffect
                   :text="typewriterTexts"
                   :speed="100"
@@ -18,19 +21,19 @@
                 />
               </h1>
             </div>
-            <p class="text-xl md:text-2xl mb-8 text-primary-100 max-w-4xl mx-auto animate-on-scroll fade-up" data-delay="200">
+            <p class="text-lg md:text-xl lg:text-2xl mb-6 md:mb-8 text-primary-100 max-w-4xl mx-auto animate-on-scroll fade-up" data-delay="200">
               {{ t('home.hero.subtitle') }}
             </p>
             <div class="flex justify-center space-x-4 md:space-x-6 animate-on-scroll fade-up" data-delay="400">
               <router-link to="/download"
-                class="group relative overflow-hidden bg-white text-primary-600 px-8 py-4 rounded-lg font-semibold shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2 hover:scale-105 active:scale-95 glow-effect ripple-effect">
+                class="group relative overflow-hidden bg-white text-primary-600 px-6 md:px-8 py-3 md:py-4 rounded-lg font-semibold shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2 hover:scale-105 active:scale-95 glow-effect ripple-effect">
                 <span class="relative z-10 flex items-center gap-2">
                   <i class="fas fa-download group-hover:animate-bounce"></i>
                   {{ t('home.hero.download') }}
                 </span>
               </router-link>
               <a href="https://github.com/lzwme/m3u8-dl" target="_blank" rel="noopener noreferrer"
-                class="group relative overflow-hidden bg-primary-700/80 backdrop-blur-sm text-white px-8 py-4 rounded-lg font-semibold border border-primary-400/30 shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2 hover:scale-105 active:scale-95 hover:bg-primary-600/90 glow-effect">
+                class="group relative overflow-hidden bg-primary-700/80 backdrop-blur-sm text-white px-6 md:px-8 py-3 md:py-4 rounded-lg font-semibold border border-primary-400/30 shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2 hover:scale-105 active:scale-95 hover:bg-primary-600/90 glow-effect">
                 <span class="relative z-10 flex items-center gap-2">
                   <i class="fab fa-github group-hover:animate-pulse"></i>
                   {{ t('home.hero.viewSource') }}
@@ -39,23 +42,23 @@
             </div>
 
             <!-- 装饰性元素 -->
-            <div class="mt-12 animate-on-scroll fade-up" data-delay="600">
-              <div class="flex justify-center space-x-8 text-primary-200">
+            <div class="mt-8 md:mt-12 animate-on-scroll fade-up" data-delay="600">
+              <div class="flex justify-center space-x-4 md:space-x-8 text-primary-200">
                 <div class="text-center floating" style="animation-delay: 0s;">
-                  <div class="text-4xl mb-2">⚡</div>
-                  <p class="text-sm">{{ t('home.hero.features.fastDownload') }}</p>
+                  <div class="text-3xl md:text-4xl mb-1 md:mb-2">🧠</div>
+                  <p class="text-xs md:text-sm">{{ t('home.hero.features.smartExtract') }}</p>
                 </div>
                 <div class="text-center floating" style="animation-delay: 0.5s;">
-                  <div class="text-4xl mb-2">🔒</div>
-                  <p class="text-sm">{{ t('home.hero.features.secure') }}</p>
+                  <div class="text-3xl md:text-4xl mb-1 md:mb-2">▶️</div>
+                  <p class="text-xs md:text-sm">{{ t('home.hero.features.streamingPlayback') }}</p>
                 </div>
                 <div class="text-center floating" style="animation-delay: 1s;">
-                  <div class="text-4xl mb-2">🌍</div>
-                  <p class="text-sm">{{ t('home.hero.features.globalService') }}</p>
+                  <div class="text-3xl md:text-4xl mb-1 md:mb-2">💾</div>
+                  <p class="text-xs md:text-sm">{{ t('home.hero.features.cacheResume') }}</p>
                 </div>
                 <div class="text-center floating" style="animation-delay: 1.5s;">
-                  <div class="text-4xl mb-2">🚀</div>
-                  <p class="text-sm">{{ t('home.hero.features.continuousUpdate') }}</p>
+                  <div class="text-3xl md:text-4xl mb-1 md:mb-2">⚡</div>
+                  <p class="text-xs md:text-sm">{{ t('home.hero.features.fastDownload') }}</p>
                 </div>
               </div>
             </div>
@@ -65,12 +68,12 @@
     </section>
 
     <!-- Features Section -->
-    <section class="py-20 bg-gradient-to-b from-white to-gray-50">
+    <section class="pt-12 md:pt-20 bg-gradient-to-b from-white to-gray-50">
       <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <h2 class="text-4xl font-bold text-center mb-16 text-gray-900 animate-on-scroll fade-up">
+        <h2 class="text-3xl md:text-4xl font-bold text-center mb-10 md:mb-16 text-gray-900 animate-on-scroll fade-up">
           {{ t('home.features.title') }}
         </h2>
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
           <div class="feature-card group animate-on-scroll fade-up" data-delay="0">
             <div class="relative overflow-hidden bg-gradient-to-br from-primary-50 to-white p-8 rounded-xl border border-primary-100 hover:border-primary-300 transition-all duration-300 hover-lift hover-3d">
               <div class="absolute top-0 right-0 w-20 h-20 bg-gradient-to-br from-primary-200/20 to-transparent rounded-bl-full"></div>
@@ -84,10 +87,6 @@
                 <p class="text-gray-600 leading-relaxed">
                   {{ t('home.features.multiThread.desc') }}
                 </p>
-                <div class="mt-4 flex items-center text-primary-600 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                  <span class="text-sm font-medium">{{ t('common.learnMore') }}</span>
-                  <i class="fas fa-arrow-right ml-2 group-hover:translate-x-2 transition-transform"></i>
-                </div>
               </div>
             </div>
           </div>
@@ -105,10 +104,6 @@
                 <p class="text-gray-600 leading-relaxed">
                   {{ t('home.features.playWhileDownload.desc') }}
                 </p>
-                <div class="mt-4 flex items-center text-secondary opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                  <span class="text-sm font-medium">{{ t('common.learnMore') }}</span>
-                  <i class="fas fa-arrow-right ml-2 group-hover:translate-x-2 transition-transform"></i>
-                </div>
               </div>
             </div>
           </div>
@@ -126,10 +121,6 @@
                 <p class="text-gray-600 leading-relaxed">
                   {{ t('home.features.batchDownload.desc') }}
                 </p>
-                <div class="mt-4 flex items-center text-accent opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                  <span class="text-sm font-medium">{{ t('common.learnMore') }}</span>
-                  <i class="fas fa-arrow-right ml-2 group-hover:translate-x-2 transition-transform"></i>
-                </div>
               </div>
             </div>
           </div>
@@ -147,10 +138,6 @@
                 <p class="text-gray-600 leading-relaxed">
                   {{ t('home.features.aesSupport.desc') }}
                 </p>
-                <div class="mt-4 flex items-center text-red-600 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                  <span class="text-sm font-medium">{{ t('common.learnMore') }}</span>
-                  <i class="fas fa-arrow-right ml-2 group-hover:translate-x-2 transition-transform"></i>
-                </div>
               </div>
             </div>
           </div>
@@ -168,10 +155,6 @@
                 <p class="text-gray-600 leading-relaxed">
                   {{ t('home.features.resumeFromCache.desc') }}
                 </p>
-                <div class="mt-4 flex items-center text-yellow-600 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                  <span class="text-sm font-medium">{{ t('common.learnMore') }}</span>
-                  <i class="fas fa-arrow-right ml-2 group-hover:translate-x-2 transition-transform"></i>
-                </div>
               </div>
             </div>
           </div>
@@ -189,10 +172,6 @@
                 <p class="text-gray-600 leading-relaxed">
                   {{ t('home.features.webui.desc') }}
                 </p>
-                <div class="mt-4 flex items-center text-indigo-600 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                  <span class="text-sm font-medium">{{ t('common.learnMore') }}</span>
-                  <i class="fas fa-arrow-right ml-2 group-hover:translate-x-2 transition-transform"></i>
-                </div>
               </div>
             </div>
           </div>
@@ -210,10 +189,6 @@
                 <p class="text-gray-600 leading-relaxed">
                   {{ t('home.features.videoParse.desc') }}
                 </p>
-                <div class="mt-4 flex items-center text-purple-600 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                  <span class="text-sm font-medium">{{ t('common.learnMore') }}</span>
-                  <i class="fas fa-arrow-right ml-2 group-hover:translate-x-2 transition-transform"></i>
-                </div>
               </div>
             </div>
           </div>
@@ -231,10 +206,6 @@
                 <p class="text-gray-600 leading-relaxed">
                   {{ t('home.features.smartExtract.desc') }}
                 </p>
-                <div class="mt-4 flex items-center text-pink-600 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                  <span class="text-sm font-medium">{{ t('common.learnMore') }}</span>
-                  <i class="fas fa-arrow-right ml-2 group-hover:translate-x-2 transition-transform"></i>
-                </div>
               </div>
             </div>
           </div>
@@ -252,10 +223,6 @@
                 <p class="text-gray-600 leading-relaxed">
                   {{ t('home.features.multipleWays.desc') }}
                 </p>
-                <div class="mt-4 flex items-center text-cyan-600 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                  <span class="text-sm font-medium">{{ t('common.learnMore') }}</span>
-                  <i class="fas fa-arrow-right ml-2 group-hover:translate-x-2 transition-transform"></i>
-                </div>
               </div>
             </div>
           </div>
@@ -264,17 +231,17 @@
     </section>
 
     <!-- Usage Section -->
-    <section class="py-20 bg-gradient-to-br from-gray-50 to-white">
+    <section class="pt-12 md:pt-20 bg-gradient-to-br from-gray-50 to-white">
       <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div class="text-center mb-16">
-          <h2 class="text-4xl font-bold mb-4 text-gray-900 animate-on-scroll fade-up">
+        <div class="text-center mb-10 md:mb-16">
+          <h2 class="text-3xl md:text-4xl font-bold mb-4 text-gray-900 animate-on-scroll fade-up">
             {{ t('home.usage.title') }}
           </h2>
-            <p class="text-xl text-gray-600 max-w-2xl mx-auto animate-on-scroll fade-up" data-delay="200">
+            <p class="text-lg md:text-xl text-gray-600 max-w-2xl mx-auto animate-on-scroll fade-up" data-delay="200">
               {{ t('home.usage.subtitle') }}
             </p>
         </div>
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8">
           <div class="usage-card animate-on-scroll fade-up" data-delay="0">
             <div class="relative overflow-hidden bg-gradient-to-br from-gray-50 to-white p-8 rounded-xl shadow-lg hover:shadow-2xl transition-all duration-300 hover-lift group">
               <div class="absolute top-4 right-4">
@@ -288,7 +255,7 @@
               </div>
               <pre class="bg-gray-900 text-green-400 p-6 rounded-lg overflow-x-auto text-sm shadow-inner"><code class="font-mono">npm install -g @lzwme/m3u8-dl
 m3u8dl "https://example.com/video.m3u8"</code></pre>
-              <div class="mt-4 flex items-center text-blue-600 opacity-0 group-hover:opacity-100 transition-opacity">
+              <div class="mt-4 flex items-center text-blue-600">
                 <i class="fas fa-bolt mr-2"></i>
                 <span class="text-sm font-medium">{{ t('home.usage.cli.description') }}</span>
               </div>
@@ -309,7 +276,7 @@ m3u8dl "https://example.com/video.m3u8"</code></pre>
               <pre class="bg-gray-900 text-green-400 p-6 rounded-lg overflow-x-auto text-sm shadow-inner"><code class="font-mono">import { downloadM3u8 } from '@lzwme/m3u8-dl';
 
 await downloadM3u8('https://example.com/video.m3u8');</code></pre>
-              <div class="mt-4 flex items-center text-purple-600 opacity-0 group-hover:opacity-100 transition-opacity">
+              <div class="mt-4 flex items-center text-purple-600">
                 <i class="fas fa-bolt mr-2"></i>
                 <span class="text-sm font-medium">{{ t('home.usage.api.description') }}</span>
               </div>
@@ -329,7 +296,7 @@ await downloadM3u8('https://example.com/video.m3u8');</code></pre>
               </div>
               <pre class="bg-gray-900 text-green-400 p-6 rounded-lg overflow-x-auto text-sm shadow-inner"><code class="font-mono">m3u8dl server
 # 访问 http://localhost:6600</code></pre>
-              <div class="mt-4 flex items-center text-green-600 opacity-0 group-hover:opacity-100 transition-opacity">
+              <div class="mt-4 flex items-center text-green-600">
                 <i class="fas fa-bolt mr-2"></i>
                 <span class="text-sm font-medium">{{ t('home.usage.web.description') }}</span>
               </div>
@@ -349,7 +316,7 @@ await downloadM3u8('https://example.com/video.m3u8');</code></pre>
               </div>
               <pre class="bg-gray-900 text-green-400 p-6 rounded-lg overflow-x-auto text-sm shadow-inner"><code class="font-mono">docker-compose up -d
 # 访问 http://localhost:6600</code></pre>
-              <div class="mt-4 flex items-center text-cyan-600 opacity-0 group-hover:opacity-100 transition-opacity">
+              <div class="mt-4 flex items-center text-cyan-600">
                 <i class="fas fa-bolt mr-2"></i>
                 <span class="text-sm font-medium">{{ t('home.usage.docker.description') }}</span>
               </div>
@@ -400,16 +367,16 @@ await downloadM3u8('https://example.com/video.m3u8');</code></pre>
     </section>
 
     <!-- Browser Extension Section -->
-    <section class="py-20 bg-white">
+    <section class="py-12 md:py-20 bg-white">
       <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div class="text-center mb-12">
-          <h2 class="text-3xl font-bold text-gray-900 mb-4">{{ t('home.browserExtension.title') }}</h2>
-          <p class="text-xl text-gray-600 mb-2">{{ t('home.browserExtension.subtitle') }}</p>
+        <div class="text-center mb-8 md:mb-12">
+          <h2 class="text-2xl md:text-3xl font-bold text-gray-900 mb-3 md:mb-4">{{ t('home.browserExtension.title') }}</h2>
+          <p class="text-lg md:text-xl text-gray-600 mb-2">{{ t('home.browserExtension.subtitle') }}</p>
           <p class="text-gray-600 max-w-3xl mx-auto">{{ t('home.browserExtension.description') }}</p>
         </div>
 
         <!-- Features -->
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 mb-8 md:mb-12">
           <div class="bg-primary-50 p-6 rounded-lg border border-primary-200">
             <div class="text-primary-600 text-3xl mb-3"><i class="fas fa-magic"></i></div>
             <h3 class="text-lg font-semibold mb-2 text-gray-900">{{
@@ -440,11 +407,11 @@ await downloadM3u8('https://example.com/video.m3u8');</code></pre>
         </div>
 
         <!-- Installation Steps -->
-        <div class="bg-gray-50 rounded-xl p-8 mb-8">
-          <h3 class="text-2xl font-bold text-gray-900 mb-6 text-center">{{ t('home.browserExtension.installation.title')
+        <div class="bg-gray-50 rounded-xl p-6 md:p-8 mb-8">
+          <h3 class="text-xl md:text-2xl font-bold text-gray-900 mb-4 md:mb-6 text-center">{{ t('home.browserExtension.installation.title')
             }}</h3>
-          <div class="space-y-6">
-            <div class="bg-white p-6 rounded-lg shadow-sm">
+          <div class="space-y-4 md:space-y-6">
+            <div class="bg-white p-4 md:p-6 rounded-lg shadow-sm">
               <div class="flex items-start space-x-4">
                 <div
                   class="flex-shrink-0 w-8 h-8 bg-primary-600 text-white rounded-full flex items-center justify-center font-bold">
@@ -460,7 +427,7 @@ await downloadM3u8('https://example.com/video.m3u8');</code></pre>
               </div>
             </div>
 
-            <div class="bg-white p-6 rounded-lg shadow-sm">
+            <div class="bg-white p-4 md:p-6 rounded-lg shadow-sm">
               <div class="flex items-start space-x-4">
                 <div
                   class="flex-shrink-0 w-8 h-8 bg-primary-600 text-white rounded-full flex items-center justify-center font-bold">
@@ -479,7 +446,7 @@ await downloadM3u8('https://example.com/video.m3u8');</code></pre>
               </div>
             </div>
 
-            <div class="bg-white p-6 rounded-lg shadow-sm">
+            <div class="bg-white p-4 md:p-6 rounded-lg shadow-sm">
               <div class="flex items-start space-x-4">
                 <div
                   class="flex-shrink-0 w-8 h-8 bg-primary-600 text-white rounded-full flex items-center justify-center font-bold">
@@ -495,10 +462,10 @@ await downloadM3u8('https://example.com/video.m3u8');</code></pre>
         </div>
 
         <!-- Usage Example -->
-        <div class="bg-primary-50 rounded-xl p-8 border border-primary-200">
-          <h3 class="text-2xl font-bold text-gray-900 mb-6 text-center">{{ t('home.browserExtension.usage.title') }}
+        <div class="bg-primary-50 rounded-xl p-6 md:p-8 border border-primary-200">
+          <h3 class="text-xl md:text-2xl font-bold text-gray-900 mb-4 md:mb-6 text-center">{{ t('home.browserExtension.usage.title') }}
           </h3>
-          <ol class="space-y-4 max-w-2xl mx-auto">
+          <ol class="space-y-3 md:space-y-4 max-w-2xl mx-auto">
             <li v-for="(step, index) in usageSteps" :key="index" class="flex items-start space-x-4">
               <div
                 class="flex-shrink-0 w-6 h-6 bg-primary-600 text-white rounded-full flex items-center justify-center text-sm font-bold">
@@ -511,10 +478,10 @@ await downloadM3u8('https://example.com/video.m3u8');</code></pre>
     </section>
 
     <!-- CTA Section -->
-    <section class="py-20 bg-gradient-to-r from-primary-600 to-primary-700 text-white">
+    <section class="py-12 md:py-20 bg-gradient-to-r from-primary-600 to-primary-700 text-white">
       <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-        <h2 class="text-3xl font-bold mb-6">{{ t('home.cta.title') }}</h2>
-        <p class="text-xl mb-8 text-primary-100">
+        <h2 class="text-2xl md:text-3xl font-bold mb-4 md:mb-6">{{ t('home.cta.title') }}</h2>
+        <p class="text-lg md:text-xl mb-6 md:mb-8 text-primary-100">
           {{ t('home.cta.subtitle') }}
         </p>
         <router-link to="/download"
@@ -533,6 +500,7 @@ import { useSEO } from '@/composables/useSEO';
 import { useScrollAnimations } from '@/composables/useScrollAnimations';
 import { locales } from '@/i18n';
 import ParticleBackground from '@/components/ParticleBackground.vue';
+import AnimatedCharacters from '@/components/AnimatedCharacters.vue';
 import GlowEffect from '@/components/GlowEffect.vue';
 import TypewriterEffect from '@/components/TypewriterEffect.vue';
 

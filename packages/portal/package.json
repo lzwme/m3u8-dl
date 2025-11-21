@@ -19,11 +19,13 @@
     "vue-router": "^4.6.3"
   },
   "devDependencies": {
+    "@csstools/postcss-cascade-layers": "^5.0.2",
     "@tailwindcss/postcss": "^4.1.17",
     "@types/node": "^24.10.1",
-    "@vitejs/plugin-vue": "^6.0.1",
+    "@vitejs/plugin-vue": "^6.0.2",
     "autoprefixer": "^10.4.22",
     "postcss": "^8.5.6",
+    "postcss-nested": "^7.0.2",
     "tailwindcss": "^4.1.17",
     "typescript": "^5.9.3",
     "vite": "^7.2.2"
