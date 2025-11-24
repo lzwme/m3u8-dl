@@ -11,7 +11,7 @@ interface NavigatorUAData {
   platform: string;
   architecture?: string;
   bitness?: string;
-  getHighEntropyValues?: (hints: string[]) => Promise<any>;
+  getHighEntropyValues?: (hints: string[]) => Promise<Record<string, unknown>>;
 }
 
 declare global {

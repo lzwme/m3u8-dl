@@ -17,23 +17,22 @@ jobs:
     concurrency:
       group: ${{ github.workflow }}-${{ github.ref }}
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
+          ref: main
           submodules: 'recursive'
 
-      - name: Install Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: 22
-          registry-url: https://registry.npmjs.com
-
-      - name: Install pnpm
-        uses: pnpm/action-setup@v4
+      - uses: pnpm/action-setup@v4
         id: pnpm-install
         with:
           run_install: false
           version: 10
+
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 24
+          cache: 'pnpm'
+          registry-url: https://registry.npmjs.com
 
       - name: Get pnpm store directory
         id: pnpm-cache
@@ -58,15 +57,6 @@ jobs:
       - run: npm publish
         env:
           NODE_AUTH_TOKEN: ${{secrets.NPM_TOKEN}}
-
-      - name: Build docs
-        run: npm run doc
-
-      - name: GitHub Pages action
-        uses: peaceiris/actions-gh-pages@v3
-        with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: ./docs
 
       # - name: Github Release
       #   uses: softprops/action-gh-release@v2

@@ -21,7 +21,7 @@
               <li class="nav-item">
                 <router-link
                   to="/"
-                  class="group relative flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-white/10 transition-all duration-300 overflow-hidden"
+                  class="group relative flex items-center gap-2 px-2 md:px-3 py-2 rounded-lg hover:bg-white/10 transition-all duration-300 overflow-hidden"
                   active-class="bg-white/10 text-secondary"
                   :title="t('common.home')"
                 >
@@ -35,7 +35,7 @@
               <li class="nav-item">
                 <router-link
                   to="/download"
-                  class="group relative flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-white/10 transition-all duration-300 overflow-hidden"
+                  class="group relative flex items-center gap-2 px-2 md:px-3 py-2 rounded-lg hover:bg-white/10 transition-all duration-300 overflow-hidden"
                   active-class="bg-white/10 text-secondary"
                   :title="t('common.download')"
                 >
@@ -49,7 +49,7 @@
               <li class="nav-item">
                 <a
                   href="../api"
-                  class="group relative flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-white/10 transition-all duration-300 overflow-hidden"
+                  class="group relative flex items-center gap-2 px-2 md:px-3 py-2 rounded-lg hover:bg-white/10 transition-all duration-300 overflow-hidden"
                   :title="t('common.api')"
                   target="_blank"
                 >
@@ -65,7 +65,7 @@
                   href="https://m3u8-player.lzw.me/"
                   target="_blank"
                   rel="noopener noreferrer"
-                  class="group relative flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-white/10 transition-all duration-300 overflow-hidden"
+                  class="group relative flex items-center gap-2 px-2 md:px-3 py-2 rounded-lg hover:bg-white/10 transition-all duration-300 overflow-hidden"
                   :title="t('common.player')"
                 >
                   <span class="relative z-10 flex items-center gap-2">
@@ -80,7 +80,7 @@
                   href="https://m3u8-downloader.lzw.me/"
                   target="_blank"
                   rel="noopener noreferrer"
-                  class="group relative flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-white/10 transition-all duration-300 overflow-hidden"
+                  class="group relative flex items-center gap-2 px-2 md:px-3 py-2 rounded-lg hover:bg-white/10 transition-all duration-300 overflow-hidden"
                   :title="t('common.online')"
                 >
                   <span class="relative z-10 flex items-center gap-2">
@@ -95,7 +95,7 @@
                   href="https://github.com/lzwme/m3u8-dl"
                   target="_blank"
                   rel="noopener noreferrer"
-                  class="group relative flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-white/10 transition-all duration-300 overflow-hidden"
+                  class="group relative flex items-center gap-2 px-2 md:px-3 py-2 rounded-lg hover:bg-white/10 transition-all duration-300 overflow-hidden"
                   :title="t('common.github')"
                 >
                   <span class="relative z-10 flex items-center gap-2">
