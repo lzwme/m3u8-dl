@@ -4,6 +4,7 @@ import { STORAGE_KEY_WEBUI_URL } from './config';
 import {
   getAutoCloseWebui,
   getAutoStart,
+  getCaptureHeaders,
   getExcludeUrls,
   getMediaExtList,
   getPanelPosition,
@@ -12,6 +13,7 @@ import {
   getWebuiUrl,
   setAutoCloseWebui,
   setAutoStart,
+  setCaptureHeaders,
   setExcludeUrls,
   setMediaExtList,
   setPanelPosition,
@@ -494,6 +496,7 @@ export function showSettings(swalRoot = shadowRoot): void {
   const autoStart = getAutoStart();
   const titleReplaceRules = getTitleReplaceRules();
   const autoCloseWebui = getAutoCloseWebui();
+  const captureHeaders = getCaptureHeaders();
 
   swal
     .fire({
@@ -530,7 +533,13 @@ export function showSettings(swalRoot = shadowRoot): void {
                           class="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500">
                       <label for="swal-auto-close-webui" class="ml-2 text-sm font-medium text-gray-700">开始下载后自动关闭WebUI页面</label>
                   </div>
-                  <p class="text-xs text-gray-500">仅当"自动开始下载"开启时有效，开始下载后将自动关闭打开的WebUI页面</p>
+                  <p class="text-xs text-gray-500 mb-4">仅当"自动开始下载"开启时有效，开始下载后将自动关闭打开的WebUI页面</p>
+                  <div class="flex items-center mb-4">
+                      <input id="swal-capture-headers" type="checkbox" ${captureHeaders ? 'checked' : ''}
+                          class="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500">
+                      <label for="swal-capture-headers" class="ml-2 text-sm font-medium text-gray-700">携带请求 header</label>
+                  </div>
+                  <p class="text-xs text-gray-500">启用后，跳转下载时会携带请求 header。在需要登录、防盗链等场景下，可以提高成功率</p>
               </div>
           `,
       showCancelButton: true,
@@ -546,12 +555,14 @@ export function showSettings(swalRoot = shadowRoot): void {
         const titleReplaceInput = swalRoot.getElementById('swal-title-replace-rules') as HTMLTextAreaElement;
         const autoStartInput = swalRoot.getElementById('swal-auto-start') as HTMLInputElement;
         const autoCloseWebuiInput = swalRoot.getElementById('swal-auto-close-webui') as HTMLInputElement;
+        const captureHeadersInput = swalRoot.getElementById('swal-capture-headers') as HTMLInputElement;
         const url = urlInput ? urlInput.value.trim() : '';
         const excludeUrls = excludeInput ? excludeInput.value.trim() : '';
         const mediaExtText = mediaExtInput ? mediaExtInput.value.trim() : '';
         const titleReplaceRules = titleReplaceInput ? titleReplaceInput.value.trim() : '';
         const autoStart = autoStartInput ? autoStartInput.checked : false;
         const autoCloseWebui = autoCloseWebuiInput ? autoCloseWebuiInput.checked : false;
+        const captureHeaders = captureHeadersInput ? captureHeadersInput.checked : false;
 
         const swal = window.Swal;
         if (!url) {
@@ -570,7 +581,7 @@ export function showSettings(swalRoot = shadowRoot): void {
           return false;
         }
 
-        return { url, excludeUrls, mediaExtList, titleReplaceRules, autoStart, autoCloseWebui };
+        return { url, excludeUrls, mediaExtList, titleReplaceRules, autoStart, autoCloseWebui, captureHeaders };
       },
     })
     .then(result => {
@@ -582,12 +593,14 @@ export function showSettings(swalRoot = shadowRoot): void {
           titleReplaceRules: string;
           autoStart: boolean;
           autoCloseWebui: boolean;
+          captureHeaders: boolean;
         };
         GM_setValue(STORAGE_KEY_WEBUI_URL, value.url);
         setExcludeUrls(value.excludeUrls);
         setAutoStart(value.autoStart);
         setAutoCloseWebui(value.autoCloseWebui);
         setTitleReplaceRules(value.titleReplaceRules);
+        setCaptureHeaders(value.captureHeaders);
         const savedExtList = setMediaExtList(value.mediaExtList);
 
         const swal = window.Swal;
@@ -761,14 +774,21 @@ export function updateUI(): void {
       e.stopPropagation();
       const url = decodeURIComponent((btn as HTMLElement).getAttribute('data-url') || '');
       const title = decodeURIComponent((btn as HTMLElement).getAttribute('data-title') || '');
-      const headers = (btn as HTMLElement).getAttribute('data-headers') || '';
+      let headers = (btn as HTMLElement).getAttribute('data-headers') || '';
+
+      // 如果启用了抓取 header 且 header 为空，则读取 cookie 和 referer
+      if (getCaptureHeaders() && !headers) {
+        const headerObj: Record<string, string> = {};
+        if (document.cookie) headerObj.cookie = document.cookie;
+        if (window.location.href) headerObj.referer = window.location.href;
+        if (Object.keys(headerObj).length > 0) headers = JSON.stringify(headerObj);
+      }
+
       const autoStart = getAutoStart() ? '&autoStart=1' : '';
       const autoCloseWebui = autoStart && getAutoCloseWebui() ? '&autoClose=1' : '';
       let downloadUrl = `${getWebuiUrl()}/page/download?from=capture&action=new${autoStart}${autoCloseWebui}&url=${encodeURIComponent(url + (title ? `|${title}` : ''))}`;
       // 如果有 headers，将其放到 hash 中
-      if (headers) {
-        downloadUrl += `#headers=${encodeURIComponent(headers)}`;
-      }
+      if (headers) downloadUrl += `#headers=${encodeURIComponent(headers)}`;
       safeOpenUrl(downloadUrl);
     });
   });

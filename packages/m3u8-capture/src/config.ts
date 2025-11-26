@@ -7,6 +7,7 @@ export const STORAGE_KEY_MEDIA_EXT_LIST = 'm3u8_capture_media_ext_list';
 export const STORAGE_KEY_AUTO_START = 'm3u8_capture_auto_start';
 export const STORAGE_KEY_TITLE_REPLACE_RULES = 'm3u8_capture_title_replace_rules';
 export const STORAGE_KEY_AUTO_CLOSE_WEBUI = 'm3u8_capture_auto_close_webui';
+export const STORAGE_KEY_CAPTURE_HEADERS = 'm3u8_capture_capture_headers';
 
 /** 默认媒体扩展名列表 */
 export const DEFAULT_MEDIA_EXT_LIST = [

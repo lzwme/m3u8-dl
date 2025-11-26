@@ -14,9 +14,7 @@ const routes = [
 ];
 
 const BASES = ['/m3u8-dl/portal/', '/portal/'];
-const base = import.meta.env.DEV
-  ? '/'
-  : BASES.find((b) => window.location.pathname.startsWith(b)) || '/portal/';
+const base = import.meta.env.DEV ? '/' : BASES.find(b => window.location.pathname.startsWith(b)) || '/portal/';
 
 const router = createRouter({
   history: createWebHistory(base),

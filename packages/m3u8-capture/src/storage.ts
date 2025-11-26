@@ -2,6 +2,7 @@ import {
   DEFAULT_MEDIA_EXT_LIST,
   STORAGE_KEY_AUTO_CLOSE_WEBUI,
   STORAGE_KEY_AUTO_START,
+  STORAGE_KEY_CAPTURE_HEADERS,
   STORAGE_KEY_EXCLUDE_URLS,
   STORAGE_KEY_MEDIA_EXT_LIST,
   STORAGE_KEY_PANEL_POS,
@@ -94,4 +95,14 @@ export function getAutoCloseWebui(): boolean {
 /** 设置是否自动关闭WebUI */
 export function setAutoCloseWebui(autoClose: boolean): void {
   GM_setValue(STORAGE_KEY_AUTO_CLOSE_WEBUI, autoClose);
+}
+
+/** 获取是否抓取请求 header */
+export function getCaptureHeaders(): boolean {
+  return GM_getValue(STORAGE_KEY_CAPTURE_HEADERS, false);
+}
+
+/** 设置是否抓取请求 header */
+export function setCaptureHeaders(capture: boolean): void {
+  GM_setValue(STORAGE_KEY_CAPTURE_HEADERS, capture);
 }

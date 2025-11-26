@@ -10,6 +10,7 @@ export default {
     learnMore: '了解更多',
     browserWarning: '检测到您的浏览器内核版本过低，可能无法正常显示部分内容。建议升级到最新版本的 Chrome、Edge 或其他现代浏览器。',
     close: '关闭',
+    backToTop: '回到顶部',
   },
   home: {
     title: 'M3U8-DL - 强大的 m3u8 视频批量下载工具',

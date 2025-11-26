@@ -163,6 +163,7 @@
         </div>
       </div>
     </footer>
+    <BackToTop />
   </div>
 </template>
 
@@ -170,6 +171,7 @@
 import { ref, onMounted, onUnmounted } from 'vue';
 import { useI18n } from 'vue-i18n';
 import LanguageSwitcher from './components/LanguageSwitcher.vue';
+import BackToTop from './components/BackToTop.vue';
 
 const { t } = useI18n();
 const baseUrl = import.meta.env.BASE_URL;

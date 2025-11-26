@@ -133,8 +133,10 @@ const particleColors = [
 
 // 鼓励语
 const popWords = [
-  'POP!', 'WOW!', 'NICE!', 'COOL!', '✨', '🌟',
-  '+1', 'BOOM!', 'GREAT!', 'SUPER!', 'YEAH!'
+  'POP!', 'WOW!', '✨', '🌟', '+1', 'BOOM!',
+  '点我干嘛', '嘿嘿，你注意到我了~', '哎呀！',
+  '别戳我！', '抓住你了！', '再点一下？', 'Biu~',
+  '好痒~', '你真闲~', '略略略~', '被发现了！'
 ];
 
 // 生成随机动画人物
@@ -175,7 +177,7 @@ function handleCharacterClick(characterId: number) {
     createParticles(centerX, centerY);
 
     // 添加漂浮文字
-    createFloatingText(centerX, centerY);
+    createFloatingText(centerX, centerY - 20);
 
     // 立即变换该角色的样式
     character.emoji = emojis[Math.floor(Math.random() * emojis.length)];
@@ -257,7 +259,7 @@ function createFloatingText(x: number, y: number) {
   setTimeout(() => {
     const index = floatingTexts.value.findIndex(t => t.id === id);
     if (index !== -1) floatingTexts.value.splice(index, 1);
-  }, 1000);
+  }, 2500);
 }
 
 // 定期更新动画人物
@@ -265,7 +267,7 @@ function startCharacterAnimation() {
   generateCharacters();
   animationInterval.value = window.setInterval(() => {
     generateCharacters();
-  }, Math.random() * 4000 + 3000); // 3-7秒变换一次
+  }, Math.random() * 10000 + 10000); // 10-20秒变换一次
 }
 
 onMounted(() => {
@@ -483,7 +485,7 @@ onUnmounted(() => {
   font-weight: 800;
   font-size: 20px;
   pointer-events: none;
-  animation: float-up 0.8s ease-out forwards;
+  animation: float-up 2s ease-out forwards;
   z-index: 10000;
   text-shadow: 0 2px 4px rgba(0,0,0,0.2);
   white-space: nowrap;

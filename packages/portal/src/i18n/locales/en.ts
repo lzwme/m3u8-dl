@@ -11,6 +11,7 @@ export default {
     browserWarning:
       'Your browser kernel version is detected to be too low, which may prevent some content from displaying correctly. It is recommended to upgrade to the latest version of Chrome, Edge, or other modern browsers.',
     close: 'Close',
+    backToTop: 'Back to Top',
   },
   home: {
     title: 'M3U8-DL - Powerful m3u8 Video Batch Downloader',

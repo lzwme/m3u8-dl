@@ -1,18 +1,10 @@
 <template>
   <div id="app">
     <router-view />
-    <PasswordDialog
-      :visible="showPasswordDialog"
-      @close="handlePasswordDialogClose"
-      @confirm="handlePasswordConfirm"
-      ref="passwordDialogRef"
-    />
-    <NewDownloadDialog
-      :visible="showGlobalDownloadDialog"
-      :initial-data="globalDialogInitialData"
-      @close="handleGlobalDialogClose"
-      ref="newDownloadDialogRef"
-    />
+    <PasswordDialog :visible="showPasswordDialog" @close="handlePasswordDialogClose" @confirm="handlePasswordConfirm"
+      ref="passwordDialogRef" />
+    <NewDownloadDialog :visible="showGlobalDownloadDialog" :initial-data="globalDialogInitialData"
+      @close="handleGlobalDialogClose" ref="newDownloadDialogRef" />
   </div>
 </template>
 
@@ -73,8 +65,8 @@ watch(showGlobalDownloadDialog, async (visible) => {
         if (autoClose) {
           setTimeout(() => {
             try {
-                window.close();
-              } catch (e) {
+              window.close();
+            } catch (e) {
               console.log('[App] 无法自动关闭页面，请手动关闭');
               toast('下载已开始，无法自动关闭页面，请手动关闭');
               // window.location.href = 'about:blank';
@@ -98,22 +90,24 @@ function handleRouteQuery() {
       title: route.query.title as string || '',
     };
 
-    // 优先从 hash 中读取 headers（m3u8-capture 插件使用）
-    if (window.location.hash) {
-      try {
+    try {
+      // 优先从 hash 中读取 headers（m3u8-capture 插件使用）
+      let headers = '';
+      if (window.location.hash) {
         const hashParams = new URLSearchParams(window.location.hash.substring(1));
-        const headersFromHash = hashParams.get('headers');
-        if (headersFromHash) {
-          params.headers = decodeURIComponent(headersFromHash);
-        }
-      } catch (e) {
-        console.warn('[App] Failed to parse headers from hash:', e);
+        headers = hashParams.get('headers') || '';
       }
-    }
 
-    // 如果 hash 中没有，再从 query 参数中读取
-    if (!params.headers && route.query.headers) {
-      params.headers = decodeURIComponent(route.query.headers as string);
+      // 如果 hash 中没有，再尝试从 query 参数中读取
+      if (!headers && route.query.headers) params.headers = decodeURIComponent(route.query.headers as string);
+
+      if (headers) {
+        params.headers = '';
+        const headersObj = JSON.parse(headers);
+        for (const [key, value] of Object.entries(headersObj)) params.headers += `${key}: ${value}\n`;
+      }
+    } catch (e) {
+      console.warn('[App] Failed to parse headers:', e);
     }
 
     showGlobalNewDownload(params);
