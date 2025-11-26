@@ -1,6 +1,6 @@
 import { existsSync, promises as fsPromises } from 'node:fs';
 import { homedir } from 'node:os';
-import { basename, dirname, resolve } from 'node:path';
+import { basename, dirname, extname, resolve } from 'node:path';
 import { assign, concurrency, getUrlParams, md5, mkdirp } from '@lzwme/fe-utils';
 import { cyan, gray, green, red } from 'console-log-colors';
 import type { Express, Request } from 'express';
@@ -327,6 +327,18 @@ export class DLServer {
       } else {
         delete cacheItem.localVideo;
         if (cacheItem.endTime) delete cacheItem.endTime;
+      }
+    } else if (!this.dlCache.has(url)) {
+      // 如果本地视频已存在，则重命名 filename
+      const localVideo = resolve(dlOptions.saveDir, dlOptions.filename);
+      const hasSameNameVideo = [...this.dlCache.values()].some(
+        d => d.dlOptions.saveDir === dlOptions.saveDir && d.dlOptions.filename === dlOptions.filename
+      );
+
+      if (hasSameNameVideo || (await checkFileExists(localVideo))) {
+        const ext = extname(localVideo) || '';
+        dlOptions.filename = `${basename(localVideo, ext)}.${Date.now()}${ext}`;
+        logger.info('存在重名视频，重命名filename：', gray(localVideo), '->', cyan(dlOptions.filename));
       }
     }
 
