@@ -1,6 +1,47 @@
 import { getMediaExtList } from './storage';
-import { getMediaExtReg } from './utils';
-// import type { MediaLink, LinkData } from './types';
+import type { LinkData, MediaLink } from './types';
+import { updateUI } from './ui';
+import { applyTitleReplaceRules, getMediaExtReg, isInIframeMode, normalizeUrl, shouldExcludePageUrl } from './utils';
+
+/** 存储抓取的媒体链接 Map */
+export const mediaLinks = new Map<string, MediaLink>();
+
+/** 添加媒体链接 */
+export function addMediaLink(url: string, title = '', headers: Record<string, string> = {}): void {
+  url = extractMediaUrlFromParams(url) || url;
+  if (!url || shouldExcludePageUrl(url)) return;
+
+  const normalizedUrl = normalizeUrl(url);
+  const item = mediaLinks.get(normalizedUrl);
+  const originalTitle = title || item?.title || getMediaTitle() || '';
+  const linkData: LinkData = {
+    timestamp: Date.now(),
+    url: url,
+    pageUrl: window.location.href,
+    title: applyTitleReplaceRules(originalTitle),
+    type: getFileType(url) || item?.type || '',
+    headers: Object.assign(headers, item?.headers || {}),
+  };
+
+  // 如果在 iframe 模式，发送给 top 窗口
+  if (isInIframeMode) {
+    try {
+      window.top?.postMessage(
+        {
+          type: 'm3u8-capture-link',
+          data: linkData,
+        },
+        '*'
+      );
+    } catch (e) {
+      console.warn('[M3U8 Capture] Failed to send link to top window:', e);
+    }
+    return;
+  }
+
+  mediaLinks.set(normalizedUrl, linkData);
+  updateUI();
+}
 
 /** 判断是否为媒体链接 */
 export function isMediaUrl(url: string | null | undefined): boolean {
@@ -41,7 +82,7 @@ export function getMediaTitle(doc: Document = document): string {
   let title = '';
 
   // 优先级1: 从 h1、h2、h1.title、h2.title 提取
-  const elTitleList = ['h1.title', 'h2.title', 'h1', 'h2'];
+  const elTitleList = ['h1.title', 'h2.title', 'h3.title', 'h1', 'h2', 'h3'];
   for (const el of elTitleList) {
     const element = doc.querySelector(el);
     if (element?.textContent) {
@@ -51,7 +92,7 @@ export function getMediaTitle(doc: Document = document): string {
   }
 
   // 优先级2: 从页面 title 提取
-  if (!title) {
+  if (!title && !isInIframeMode) {
     title = (doc.title || '').split(/ [-|_] /)[0].trim();
   }
 

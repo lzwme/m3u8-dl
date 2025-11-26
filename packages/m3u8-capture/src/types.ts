@@ -5,7 +5,7 @@ export interface MediaLink {
   type: string;
   pageUrl: string;
   timestamp: number;
-  headers?: string;
+  headers?: Record<string, string>;
 }
 
 /** 链接数据（用于 iframe 通信） */

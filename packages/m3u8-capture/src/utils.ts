@@ -2,6 +2,9 @@ import { DEFAULT_EXCLUDE_URLS } from './config';
 import { getExcludeUrls, getMediaExtList, getTitleReplaceRules, getWebuiUrl } from './storage';
 import type { EventCoordinates } from './types';
 
+/** 检查是否在 iframe 中且可以访问 window.top */
+export const isInIframeMode = window.top && window.top !== window.self;
+
 /** 使用 GM_addElement 创建 style 或 script 元素，避免 CSP 拦截 */
 export function addCssOrScript(key: string, parentEl: HTMLElement = document.head, type: 'css' | 'script' = 'css'): Promise<HTMLElement> {
   // 如果 key 长度小于 50，则认为是资源文本，否则认为是字符串
@@ -157,4 +160,10 @@ export function applyTitleReplaceRules(title: string): string {
     console.warn('[M3U8 Capture] 应用标题替换规则失败:', e);
     return title;
   }
+}
+
+export function isEmptyObject(obj: Record<string, unknown> | unknown[] | null | undefined): boolean {
+  if (obj == null) return true;
+  if (Array.isArray(obj)) return obj.length === 0;
+  return Object.keys(obj).length === 0;
 }

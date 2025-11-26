@@ -11,10 +11,10 @@ const baseDir = path.resolve(__dirname, '../');
 const rootDir = path.resolve(baseDir, '../..');
 const appBuildDir = path.resolve(baseDir, 'dist/app-build-tmp');
 const rootPkg = readJsonFileSync(path.resolve(rootDir, 'package.json'));
+const appPkg = readJsonFileSync(path.resolve(baseDir, './package.json'));
 
 const T = {
   prepare() {
-    const appPkg = readJsonFileSync(path.resolve(baseDir, './package.json'));
     appPkg.version = rootPkg.version;
     appPkg.dependencies = {
       'ffmpeg-static': '^5.2.0',
@@ -71,7 +71,7 @@ const T = {
         buildVersion: rootPkg.version,
         appId: 'cn.lzwme.m3u8dl',
         artifactName: '${productName}-${os}_${arch}-${version}.${ext}',
-        // electronVersion: '39.1.2',
+        electronVersion: appPkg.devDependencies.electron,
         copyright: `Copyright © ${new Date().getFullYear()} \${author}`,
         compression: 'normal',
         electronDownload: {

@@ -1,51 +1,8 @@
 import { initHooks, observeNetworkRequests, scanPageForMedias } from './hooks';
-import { extractMediaUrlFromParams, getFileType, getMediaTitle } from './media';
-import type { LinkData, MediaLink } from './types';
-import { hidePanel, isInIframeMode, setMediaLinksMap, updateUI } from './ui';
-import { applyTitleReplaceRules, normalizeUrl, shouldExcludePageUrl } from './utils';
-
-/** 存储抓取的媒体链接 */
-const mediaLinks = new Map<string, MediaLink>();
-
-// 将 mediaLinks 传递给 UI 模块
-setMediaLinksMap(mediaLinks);
-
-/** 添加媒体链接 */
-export function addMediaLink(url: string, title = '', headers = ''): void {
-  url = extractMediaUrlFromParams(url) || url;
-  if (!url || shouldExcludePageUrl(url)) return;
-
-  const normalizedUrl = normalizeUrl(url);
-  const item = mediaLinks.get(normalizedUrl);
-  const originalTitle = title || item?.title || getMediaTitle() || '';
-  const linkData: LinkData = {
-    timestamp: Date.now(),
-    url: url,
-    pageUrl: window.location.href,
-    title: applyTitleReplaceRules(originalTitle),
-    type: getFileType(url) || item?.type || '',
-    headers: headers || item?.headers || '',
-  };
-
-  // 如果在 iframe 模式，发送给 top 窗口
-  if (isInIframeMode) {
-    try {
-      window.top?.postMessage(
-        {
-          type: 'm3u8-capture-link',
-          data: linkData,
-        },
-        '*'
-      );
-    } catch (e) {
-      console.warn('[M3U8 Capture] Failed to send link to top window:', e);
-    }
-    return;
-  }
-
-  mediaLinks.set(normalizedUrl, linkData);
-  updateUI();
-}
+import { addMediaLink, mediaLinks } from './media';
+import type { LinkData } from './types';
+import { hidePanel, updateUI } from './ui';
+import { isInIframeMode, shouldExcludePageUrl } from './utils';
 
 /** 初始化 */
 function init(): void {
@@ -57,7 +14,7 @@ function init(): void {
     window.addEventListener('message', event => {
       if (event.data?.type === 'm3u8-capture-link' && event.data.data) {
         const linkData: LinkData = event.data.data;
-        addMediaLink(linkData.url, linkData.title, linkData.headers || '');
+        addMediaLink(linkData.url, linkData.title, linkData.headers);
       }
     });
   }

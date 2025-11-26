@@ -1,9 +1,8 @@
-import { addMediaLink } from './main';
-import { isMediaUrl } from './media';
+import { addMediaLink, isMediaUrl } from './media';
 import { getMediaExtList } from './storage';
 
 /** 过滤不必要的 headers */
-function filterHeaders(headers: Record<string, string> | Headers): string {
+function filterHeaders(headers: Record<string, string> | Headers): Record<string, string> {
   const headerObj: Record<string, string> = {};
 
   // 将 Headers 对象转换为普通对象
@@ -31,15 +30,12 @@ function filterHeaders(headers: Record<string, string> | Headers): string {
   // 过滤掉不需要的 headers
   Object.keys(headerObj).forEach(key => {
     // 排除 sec-* 开头的所有 headers
-    if (excludeKeys.includes(key) || key.startsWith('sec-')) {
+    if (excludeKeys.includes(key) || key.startsWith('sec-') || headerObj[key] == null) {
       delete headerObj[key];
     }
   });
 
-  if (Object.keys(headerObj).length === 0) return '';
-
-  // 转换为 JSON 字符串
-  return JSON.stringify(headerObj);
+  return headerObj;
 }
 
 /** 初始化拦截器 */

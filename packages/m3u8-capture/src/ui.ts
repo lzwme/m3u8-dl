@@ -1,6 +1,7 @@
 /// <reference path="./global.d.ts" />
 
 import { STORAGE_KEY_WEBUI_URL } from './config';
+import { mediaLinks } from './media';
 import {
   getAutoCloseWebui,
   getAutoStart,
@@ -21,11 +22,8 @@ import {
   setTitleReplaceRules,
 } from './storage';
 import { initSwalCSS, loadSwal } from './swal';
-import type { DragOffset, EventCoordinates, MediaLink } from './types';
-import { addCssOrScript, copyToClipboard, getEventCoordinates } from './utils';
-
-// 检查是否在 iframe 中且可以访问 window.top
-export const isInIframeMode = window.top && window.top !== window.self;
+import type { DragOffset, EventCoordinates } from './types';
+import { addCssOrScript, copyToClipboard, getEventCoordinates, isEmptyObject, isInIframeMode } from './utils';
 
 // UI 相关变量
 let shadowHost: HTMLElement | null = null;
@@ -42,13 +40,6 @@ let toggleButtonClickStartPos: EventCoordinates = { x: 0, y: 0 };
 let toggleButtonHasMoved = false;
 let toggleButtonAnimationFrame: number | null = null;
 const toggleButtonCurrentPos: EventCoordinates = { x: 0, y: 0 };
-
-// 存储媒体链接的 Map（从 main.ts 导入）
-let mediaLinks: Map<string, MediaLink>;
-
-export function setMediaLinksMap(map: Map<string, MediaLink>): void {
-  mediaLinks = map;
-}
 
 /** 创建 Shadow DOM 容器（样式隔离） */
 function createShadowHost(): ShadowRoot | null {
@@ -753,7 +744,10 @@ export function updateUI(): void {
                   </div>
               </div>
               <div class="flex gap-2">
-                  <button class="m3u8-capture-download-btn flex-1 bg-blue-500 text-white border-none px-3.5 py-2 rounded-md cursor-pointer text-xs font-medium transition-all duration-200 hover:bg-blue-600 hover:-translate-y-0.5" data-url="${encodeURIComponent(item.url)}" data-title="${encodeURIComponent(title)}" data-headers="${encodeURIComponent(item.headers || '')}">
+                  <button class="m3u8-capture-download-btn flex-1 bg-blue-500 text-white border-none px-3.5 py-2 rounded-md cursor-pointer text-xs font-medium transition-all duration-200 hover:bg-blue-600 hover:-translate-y-0.5"
+                  data-url="${encodeURIComponent(item.url)}"
+                  data-title="${encodeURIComponent(title)}"
+                  data-headers="${encodeURIComponent(isEmptyObject(item.headers) ? '' : JSON.stringify(item.headers))}">
                       跳转下载
                   </button>
                   <button class="m3u8-capture-preview-btn bg-green-500 text-white border-none px-3.5 py-2 rounded-md cursor-pointer text-xs font-medium transition-all duration-200 hover:bg-green-600" data-url="${encodeURIComponent(item.url)}">
@@ -774,21 +768,25 @@ export function updateUI(): void {
       e.stopPropagation();
       const url = decodeURIComponent((btn as HTMLElement).getAttribute('data-url') || '');
       const title = decodeURIComponent((btn as HTMLElement).getAttribute('data-title') || '');
-      let headers = (btn as HTMLElement).getAttribute('data-headers') || '';
-
-      // 如果启用了抓取 header 且 header 为空，则读取 cookie 和 referer
-      if (getCaptureHeaders() && !headers) {
-        const headerObj: Record<string, string> = {};
-        if (document.cookie) headerObj.cookie = document.cookie;
-        if (window.location.href) headerObj.referer = window.location.href;
-        if (Object.keys(headerObj).length > 0) headers = JSON.stringify(headerObj);
-      }
 
       const autoStart = getAutoStart() ? '&autoStart=1' : '';
       const autoCloseWebui = autoStart && getAutoCloseWebui() ? '&autoClose=1' : '';
       let downloadUrl = `${getWebuiUrl()}/page/download?from=capture&action=new${autoStart}${autoCloseWebui}&url=${encodeURIComponent(url + (title ? `|${title}` : ''))}`;
       // 如果有 headers，将其放到 hash 中
-      if (headers) downloadUrl += `#headers=${encodeURIComponent(headers)}`;
+      // 如果启用了抓取 header 且 header 为空，则读取 cookie 和 referer
+      if (getCaptureHeaders()) {
+        let headers = (btn as HTMLElement).getAttribute('data-headers');
+
+        if (!headers) {
+          const headerObj: Record<string, string> = {};
+          if (window.location.href) headerObj.referer = window.location.href;
+          if (document.cookie) headerObj.cookie = document.cookie;
+          if (Object.keys(headerObj).length > 0) headers = JSON.stringify(headerObj);
+        }
+
+        if (headers) downloadUrl += `#headers=${encodeURIComponent(headers)}`;
+      }
+
       safeOpenUrl(downloadUrl);
     });
   });
