@@ -3,7 +3,7 @@ import { getExcludeUrls, getMediaExtList, getTitleReplaceRules, getWebuiUrl } fr
 import type { EventCoordinates } from './types';
 
 /** 检查是否在 iframe 中且可以访问 window.top */
-export const isInIframeMode = window.top && window.top !== window.self;
+export const isInIframeMode = () => window.top && window.top !== window.self;
 
 /** 使用 GM_addElement 创建 style 或 script 元素，避免 CSP 拦截 */
 export function addCssOrScript(key: string, parentEl: HTMLElement = document.head, type: 'css' | 'script' = 'css'): Promise<HTMLElement> {

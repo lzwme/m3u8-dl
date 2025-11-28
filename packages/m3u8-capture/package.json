@@ -1,6 +1,6 @@
 {
   "name": "@lzwme/m3u8-capture",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "type": "module",
   "private": true,
   "scripts": {

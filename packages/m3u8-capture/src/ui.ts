@@ -21,9 +21,9 @@ import {
   setPanelVisible,
   setTitleReplaceRules,
 } from './storage';
-import { initSwalCSS, loadSwal } from './swal';
+import { initSwalCSS, initTailwindCSS, loadSwal } from './swal';
 import type { DragOffset, EventCoordinates } from './types';
-import { addCssOrScript, copyToClipboard, getEventCoordinates, isEmptyObject, isInIframeMode } from './utils';
+import { copyToClipboard, getEventCoordinates, isEmptyObject, isInIframeMode } from './utils';
 
 // UI 相关变量
 let shadowHost: HTMLElement | null = null;
@@ -54,7 +54,6 @@ function createShadowHost(): ShadowRoot | null {
 
   // 创建 Shadow DOM
   shadowRoot = shadowHost.attachShadow({ mode: 'open' });
-  addCssOrScript('TailwindCSS', shadowRoot as unknown as HTMLElement, 'css');
 
   const swalContainer = document.createElement('div');
   swalContainer.id = 'm3u8-capture-swal-container';
@@ -63,24 +62,23 @@ function createShadowHost(): ShadowRoot | null {
   // 添加基础样式重置（确保 Shadow DOM 内的样式不影响外部）
   const style = document.createElement('style');
   style.textContent = [
-    ':host { all: initial; font-family: system-ui, -apple-system, sans-serif; }',
+    ':host { all: initial; font-family: system-ui, -apple-system, sans-serif; font-size: 14px }',
     '* { box-sizing: border-box; }',
     '.hidden { display: none !important; }',
     `#${swalContainer.id},`,
     `#${swalContainer.id} * { pointer-events: auto !important; }`,
   ].join('\n');
   shadowRoot.appendChild(style);
-
-  loadSwal().then(() => {
-    initSwalCSS(shadowRoot!, swalContainer);
-  });
+  initSwalCSS(shadowRoot!, swalContainer);
+  initTailwindCSS(shadowRoot!);
+  loadSwal();
 
   return shadowRoot;
 }
 
 /** 创建圆形切换按钮（隐藏时显示） */
 export function createToggleButton(): void {
-  if (toggleButton || isInIframeMode) return;
+  if (toggleButton || isInIframeMode()) return;
 
   const root = createShadowHost();
   if (!root) return;
@@ -166,7 +164,7 @@ export function createToggleButton(): void {
 
 /** 更新切换按钮的数量徽章 */
 export function updateToggleButtonBadge(): void {
-  if (!toggleButtonBadge || isInIframeMode || !mediaLinks) return;
+  if (!toggleButtonBadge || isInIframeMode() || !mediaLinks) return;
 
   const count = mediaLinks.size;
   if (count > 0) {
@@ -179,7 +177,7 @@ export function updateToggleButtonBadge(): void {
 
 /** 显示面板 */
 export function showPanel(): void {
-  if (isInIframeMode || !createUI()) return;
+  if (isInIframeMode() || !createUI()) return;
 
   isPanelVisible = true;
   setPanelVisible(true);
@@ -189,7 +187,7 @@ export function showPanel(): void {
 
 /** 隐藏面板 */
 export function hidePanel(): void {
-  if (isInIframeMode) return;
+  if (isInIframeMode()) return;
   isPanelVisible = false;
   setPanelVisible(false);
   if (panelElement) panelElement.style.display = 'none';
@@ -224,7 +222,7 @@ export function clearList(): void {
 
 /** 创建主 UI 面板 */
 function createUI(): HTMLElement | null {
-  if (!document.body || isInIframeMode) return null;
+  if (!document.body || isInIframeMode()) return null;
   if (panelElement) return panelElement;
 
   const root = createShadowHost();
@@ -244,7 +242,7 @@ function createUI(): HTMLElement | null {
         }
       : {
           right: '20px',
-          top: '20px',
+          top: '30vh',
         };
 
   // 应用 Tailwind 类，同时保留动态位置样式
@@ -687,14 +685,15 @@ function safeOpenUrl(targetUrl: string): boolean {
 }
 
 export function updateUI(): void {
-  if (isInIframeMode || !mediaLinks) return;
+  console.log('updateUI', isInIframeMode(), mediaLinks, panelElement);
+  if (isInIframeMode() || !mediaLinks) return;
 
-  if (!createUI()) return;
+  if (!createUI() || !panelElement) return;
   updateToggleButtonBadge();
 
-  const list = panelElement?.querySelector('#m3u8-capture-list');
-  const empty = panelElement?.querySelector('#m3u8-capture-empty');
-  const count = panelElement?.querySelector('#m3u8-capture-count');
+  const list = panelElement.querySelector('#m3u8-capture-list');
+  const empty = panelElement.querySelector('#m3u8-capture-empty');
+  const count = panelElement.querySelector('#m3u8-capture-count');
 
   if (!list || !empty || !count) return;
 
@@ -763,7 +762,7 @@ export function updateUI(): void {
   });
 
   // 绑定下载按钮事件
-  panelElement?.querySelectorAll('.m3u8-capture-download-btn').forEach(btn => {
+  panelElement.querySelectorAll('.m3u8-capture-download-btn').forEach(btn => {
     btn.addEventListener('click', (e: Event) => {
       e.stopPropagation();
       const url = decodeURIComponent((btn as HTMLElement).getAttribute('data-url') || '');
@@ -792,7 +791,7 @@ export function updateUI(): void {
   });
 
   // 绑定在线播放按钮事件
-  panelElement?.querySelectorAll('.m3u8-capture-preview-btn').forEach(btn => {
+  panelElement.querySelectorAll('.m3u8-capture-preview-btn').forEach(btn => {
     btn.addEventListener('click', (e: Event) => {
       e.stopPropagation();
       const url = decodeURIComponent((btn as HTMLElement).getAttribute('data-url') || '');
@@ -802,7 +801,7 @@ export function updateUI(): void {
   });
 
   // 绑定复制按钮事件
-  panelElement?.querySelectorAll('.m3u8-capture-copy-btn').forEach(btn => {
+  panelElement.querySelectorAll('.m3u8-capture-copy-btn').forEach(btn => {
     btn.addEventListener('click', async (e: Event) => {
       e.stopPropagation();
       const url = (btn as HTMLElement).getAttribute('data-url') || '';

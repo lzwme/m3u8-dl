@@ -54,6 +54,7 @@ export async function loadSwal(): Promise<void> {
 export function initSwalCSS(shadowRoot: ShadowRoot, swalContainer: HTMLElement): void {
   addCssOrScript(
     GM_getResourceText('SwalCSS')
+      .replace(/(\d+)rem/g, '$1em')
       .replace(/:root *{/, `#${swalContainer.id} {`)
       .replace(/body/g, ''),
     shadowRoot as unknown as HTMLElement,
@@ -67,4 +68,12 @@ export function initSwalCSS(shadowRoot: ShadowRoot, swalContainer: HTMLElement):
       window.Swal = swalInstance.mixin({ target: swalContainer });
     }
   }, 500);
+}
+
+export function initTailwindCSS(shadowRoot: ShadowRoot): void {
+  addCssOrScript(
+    GM_getResourceText('TailwindCSS').replace(/(\d+)rem/g, '$1em'),
+    shadowRoot as unknown as HTMLElement,
+    'css'
+  );
 }

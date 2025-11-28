@@ -12,21 +12,22 @@ export function addMediaLink(url: string, title = '', headers: Record<string, st
   if (!url || shouldExcludePageUrl(url)) return;
 
   const normalizedUrl = normalizeUrl(url);
-  const item = mediaLinks.get(normalizedUrl);
-  const originalTitle = title || item?.title || getMediaTitle() || '';
+  const item = mediaLinks.get(normalizedUrl) || {} as MediaLink;
+  const originalTitle = title || item.title || getMediaTitle() || '';
   const linkData: LinkData = {
     timestamp: Date.now(),
     url: url,
     pageUrl: window.location.href,
-    title: applyTitleReplaceRules(originalTitle),
-    type: getFileType(url) || item?.type || '',
-    headers: Object.assign(headers, item?.headers || {}),
+    title: applyTitleReplaceRules(originalTitle).trim(),
+    type: getFileType(url) || item.type || '',
+    headers: Object.assign(headers, item.headers || {}),
   };
 
   // 如果在 iframe 模式，发送给 top 窗口
-  if (isInIframeMode) {
+  if (isInIframeMode()) {
     try {
-      window.top?.postMessage(
+      console.log('send link to top window', linkData);
+      window.top!.postMessage(
         {
           type: 'm3u8-capture-link',
           data: linkData,
@@ -82,28 +83,26 @@ export function getMediaTitle(doc: Document = document): string {
   let title = '';
 
   // 优先级1: 从 h1、h2、h1.title、h2.title 提取
-  const elTitleList = ['h1.title', 'h2.title', 'h3.title', 'h1', 'h2', 'h3'];
+  const elTitleList = ['h2.title', 'h1.title', 'div.sub-title', 'div.title', 'h2', 'h1'];
   for (const el of elTitleList) {
     const element = doc.querySelector(el);
-    if (element?.textContent) {
-      title = element.textContent.trim();
-      break;
+    if (element) {
+      title = applyTitleReplaceRules(element.textContent);
+      if (title) break;
     }
   }
 
   // 优先级2: 从页面 title 提取
-  if (!title && !isInIframeMode) {
-    title = (doc.title || '').split(/ [-|_] /)[0].trim();
-  }
-
-  // 优先级3: 如果是在 iframe 中，尝试从 top 窗口获取 title
-  if (!title && window.top !== window.self) {
+  if (!title) {
     try {
-      title = getMediaTitle(window.top?.document);
-    } catch (_e) {
+      if (!isInIframeMode()) title = (doc.title || '').split(/ [-|_] /)[0].trim();
+      else title = getMediaTitle(window.top!.document);
+    } catch(_e) {
       // ignore
     }
+    console.log('title2', title, isInIframeMode());
   }
+
   return title;
 }
 

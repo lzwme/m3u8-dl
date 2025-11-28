@@ -154,7 +154,7 @@ export function scanPageForMedias(): void {
     if (href && isMediaUrl(href)) {
       try {
         const absoluteUrl = new URL(href, window.location.href).href;
-        addMediaLink(absoluteUrl, link.textContent?.trim() || '');
+        addMediaLink(absoluteUrl, link.textContent);
       } catch (_e) {
         // 忽略无效 URL
       }
