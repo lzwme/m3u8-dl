@@ -23,7 +23,7 @@ import {
 } from './storage';
 import { initSwalCSS, initTailwindCSS, loadSwal } from './swal';
 import type { DragOffset, EventCoordinates } from './types';
-import { copyToClipboard, getEventCoordinates, isEmptyObject, isInIframeMode } from './utils';
+import { copyToClipboard, getEventCoordinates, headersToString, isInIframeMode } from './utils';
 
 // UI 相关变量
 let shadowHost: HTMLElement | null = null;
@@ -78,7 +78,7 @@ function createShadowHost(): ShadowRoot | null {
 
 /** 创建圆形切换按钮（隐藏时显示） */
 export function createToggleButton(): void {
-  if (toggleButton || isInIframeMode()) return;
+  if (toggleButton || isInIframeMode) return;
 
   const root = createShadowHost();
   if (!root) return;
@@ -164,7 +164,7 @@ export function createToggleButton(): void {
 
 /** 更新切换按钮的数量徽章 */
 export function updateToggleButtonBadge(): void {
-  if (!toggleButtonBadge || isInIframeMode() || !mediaLinks) return;
+  if (!toggleButtonBadge || isInIframeMode || !mediaLinks) return;
 
   const count = mediaLinks.size;
   if (count > 0) {
@@ -177,7 +177,7 @@ export function updateToggleButtonBadge(): void {
 
 /** 显示面板 */
 export function showPanel(): void {
-  if (isInIframeMode() || !createUI()) return;
+  if (isInIframeMode || !createUI()) return;
 
   isPanelVisible = true;
   setPanelVisible(true);
@@ -187,7 +187,7 @@ export function showPanel(): void {
 
 /** 隐藏面板 */
 export function hidePanel(): void {
-  if (isInIframeMode()) return;
+  if (isInIframeMode) return;
   isPanelVisible = false;
   setPanelVisible(false);
   if (panelElement) panelElement.style.display = 'none';
@@ -222,7 +222,7 @@ export function clearList(): void {
 
 /** 创建主 UI 面板 */
 function createUI(): HTMLElement | null {
-  if (!document.body || isInIframeMode()) return null;
+  if (!document.body || isInIframeMode) return null;
   if (panelElement) return panelElement;
 
   const root = createShadowHost();
@@ -685,8 +685,8 @@ function safeOpenUrl(targetUrl: string): boolean {
 }
 
 export function updateUI(): void {
-  console.log('updateUI', isInIframeMode(), mediaLinks, panelElement);
-  if (isInIframeMode() || !mediaLinks) return;
+  console.log('updateUI', isInIframeMode, mediaLinks, panelElement);
+  if (isInIframeMode || !mediaLinks) return;
 
   if (!createUI() || !panelElement) return;
   updateToggleButtonBadge();
@@ -746,7 +746,7 @@ export function updateUI(): void {
                   <button class="m3u8-capture-download-btn flex-1 bg-blue-500 text-white border-none px-3.5 py-2 rounded-md cursor-pointer text-xs font-medium transition-all duration-200 hover:bg-blue-600 hover:-translate-y-0.5"
                   data-url="${encodeURIComponent(item.url)}"
                   data-title="${encodeURIComponent(title)}"
-                  data-headers="${encodeURIComponent(isEmptyObject(item.headers) ? '' : JSON.stringify(item.headers))}">
+                  data-headers="${headersToString(item.headers, true)}">
                       跳转下载
                   </button>
                   <button class="m3u8-capture-preview-btn bg-green-500 text-white border-none px-3.5 py-2 rounded-md cursor-pointer text-xs font-medium transition-all duration-200 hover:bg-green-600" data-url="${encodeURIComponent(item.url)}">
@@ -762,11 +762,11 @@ export function updateUI(): void {
   });
 
   // 绑定下载按钮事件
-  panelElement.querySelectorAll('.m3u8-capture-download-btn').forEach(btn => {
+  panelElement.querySelectorAll<HTMLButtonElement>('.m3u8-capture-download-btn').forEach(btn => {
     btn.addEventListener('click', (e: Event) => {
       e.stopPropagation();
-      const url = decodeURIComponent((btn as HTMLElement).getAttribute('data-url') || '');
-      const title = decodeURIComponent((btn as HTMLElement).getAttribute('data-title') || '');
+      const url = decodeURIComponent(btn.getAttribute('data-url') || '');
+      const title = decodeURIComponent(btn.getAttribute('data-title') || '');
 
       const autoStart = getAutoStart() ? '&autoStart=1' : '';
       const autoCloseWebui = autoStart && getAutoCloseWebui() ? '&autoClose=1' : '';
@@ -774,16 +774,13 @@ export function updateUI(): void {
       // 如果有 headers，将其放到 hash 中
       // 如果启用了抓取 header 且 header 为空，则读取 cookie 和 referer
       if (getCaptureHeaders()) {
-        let headers = (btn as HTMLElement).getAttribute('data-headers');
+        let headers = btn.getAttribute('data-headers');
 
         if (!headers) {
-          const headerObj: Record<string, string> = {};
-          if (window.location.href) headerObj.referer = window.location.href;
-          if (document.cookie) headerObj.cookie = document.cookie;
-          if (Object.keys(headerObj).length > 0) headers = JSON.stringify(headerObj);
+          headers = headersToString({ referer: window.location.href, cookie: document.cookie }, true);
         }
 
-        if (headers) downloadUrl += `#headers=${encodeURIComponent(headers)}`;
+        if (headers) downloadUrl += `#headers=${headers}`;
       }
 
       safeOpenUrl(downloadUrl);

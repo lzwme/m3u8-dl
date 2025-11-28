@@ -114,8 +114,8 @@ async function m3u8InfoParse(u: string, o: M3u8DLOptions = {}) {
 
   const lang = getLang(o.lang);
   const m3u8Info = await parseM3U8(url, resolve(options.cacheDir, urlMd5), options.headers as IncomingHttpHeaders).catch(e => {
-    logger.error(t('download.status.parseFailed', lang), e.message);
-    console.log(e);
+    logger.error(t('download.status.parseFailed', lang), e?.message);
+    if (e) console.log(e);
   });
 
   if (m3u8Info && m3u8Info?.tsCount > 0) {

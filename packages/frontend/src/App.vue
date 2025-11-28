@@ -49,8 +49,7 @@ function handleGlobalDialogClose() {
   shouldAutoClose.value = false;
   // 清除 URL 参数
   if (route.query.action === 'new' || route.query.url || route.query.autoStart || route.query.autoClose) {
-    router.replace({ query: {} });
-    window.location.hash = '';
+    router.replace({ query: {}, hash: '' });
   }
 }
 
@@ -99,12 +98,17 @@ function handleRouteQuery() {
       }
 
       // 如果 hash 中没有，再尝试从 query 参数中读取
-      if (!headers && route.query.headers) params.headers = decodeURIComponent(route.query.headers as string);
+      if (!headers && route.query.headers) headers = decodeURIComponent(route.query.headers as string);
 
+      headers = headers.trim();
       if (headers) {
-        params.headers = '';
-        const headersObj = JSON.parse(headers);
-        for (const [key, value] of Object.entries(headersObj)) params.headers += `${key}: ${value}\n`;
+        try {
+          params.headers = '';
+          const headersObj = JSON.parse(headers);
+          for (const [key, value] of Object.entries(headersObj)) params.headers += `${key}: ${value}\n`;
+        } catch {
+          params.headers = headers;
+        }
       }
     } catch (e) {
       console.warn('[App] Failed to parse headers:', e);

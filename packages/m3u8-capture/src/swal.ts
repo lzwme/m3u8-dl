@@ -71,9 +71,5 @@ export function initSwalCSS(shadowRoot: ShadowRoot, swalContainer: HTMLElement):
 }
 
 export function initTailwindCSS(shadowRoot: ShadowRoot): void {
-  addCssOrScript(
-    GM_getResourceText('TailwindCSS').replace(/(\d+)rem/g, '$1em'),
-    shadowRoot as unknown as HTMLElement,
-    'css'
-  );
+  addCssOrScript(GM_getResourceText('TailwindCSS').replace(/(\d+)rem/g, '$1em'), shadowRoot as unknown as HTMLElement, 'css');
 }

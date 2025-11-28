@@ -75,7 +75,7 @@ export async function parseM3U8(content: string, cacheDir = './cache', headers?:
       if (!tsKeyInfo.uri.includes('://')) tsKeyInfo.uri = new URL(tsKeyInfo.uri, url).toString();
 
       if (tsKeyInfo?.uri && !result.crypto[tsKeyInfo.uri]) {
-        const r = await getRetry(tsKeyInfo.uri);
+        const r = await getRetry(tsKeyInfo.uri, headers);
 
         if (r.response.statusCode !== 200) {
           logger.error('获取加密 key 失败:', tsKeyInfo.uri, r.response.statusCode, r.data);

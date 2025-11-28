@@ -620,6 +620,7 @@ export class DLServer {
       for (const url of urlsToDelete) {
         const item = this.dlCache.get(url);
         if (item) {
+          logger.info('delete download task:', gray(url), cyan(item.status), cyan(item.localVideo), deleteCache, deleteVideo);
           m3u8DLStop(url, item.workPoll);
           this.dlCache.delete(url);
           list.push(item.url);
@@ -628,16 +629,16 @@ export class DLServer {
             const cacheDir = item.cacheDir;
             if (await checkFileExists(cacheDir)) {
               await fsPromises.rm(cacheDir, { recursive: true });
-              logger.debug('删除缓存目录：', cacheDir);
+              logger.info('删除缓存目录：', gray(cacheDir));
             }
           }
 
           if (deleteVideo) {
-            for (const ext of ['.ts', '.mp4']) {
+            for (const ext of ['', '.ts', '.mp4']) {
               const filepath = resolve(item.options.saveDir, item.options.filename + ext);
               if (await checkFileExists(filepath)) {
                 await fsPromises.unlink(filepath);
-                logger.debug('删除文件：', filepath);
+                logger.info('删除文件：', gray(filepath));
               }
             }
           }

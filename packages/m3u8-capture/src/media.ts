@@ -12,7 +12,7 @@ export function addMediaLink(url: string, title = '', headers: Record<string, st
   if (!url || shouldExcludePageUrl(url)) return;
 
   const normalizedUrl = normalizeUrl(url);
-  const item = mediaLinks.get(normalizedUrl) || {} as MediaLink;
+  const item = mediaLinks.get(normalizedUrl) || ({} as MediaLink);
   const originalTitle = title || item.title || getMediaTitle() || '';
   const linkData: LinkData = {
     timestamp: Date.now(),
@@ -24,7 +24,7 @@ export function addMediaLink(url: string, title = '', headers: Record<string, st
   };
 
   // 如果在 iframe 模式，发送给 top 窗口
-  if (isInIframeMode()) {
+  if (isInIframeMode) {
     try {
       console.log('send link to top window', linkData);
       window.top!.postMessage(
@@ -95,12 +95,12 @@ export function getMediaTitle(doc: Document = document): string {
   // 优先级2: 从页面 title 提取
   if (!title) {
     try {
-      if (!isInIframeMode()) title = (doc.title || '').split(/ [-|_] /)[0].trim();
+      if (!isInIframeMode) title = (doc.title || '').split(/ [-|_] /)[0].trim();
       else title = getMediaTitle(window.top!.document);
-    } catch(_e) {
+    } catch (_e) {
       // ignore
     }
-    console.log('title2', title, isInIframeMode());
+    console.log('title2', title, isInIframeMode);
   }
 
   return title;

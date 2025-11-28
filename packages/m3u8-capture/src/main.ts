@@ -10,7 +10,7 @@ function init(): void {
   if (shouldExcludePageUrl()) return;
 
   // 在非 iframe 模式下，监听来自子 iframe 的链接消息
-  if (!isInIframeMode()) {
+  if (!isInIframeMode) {
     window.addEventListener('message', event => {
       console.log('receive link from top window', event.data);
       if (event.data && event.data.type === 'm3u8-capture-link' && event.data.data) {
@@ -25,12 +25,12 @@ function init(): void {
 
   /** 等待 DOM 加载完成后创建 UI */
   const initUI = () => {
-    console.log('initUI', isInIframeMode(), shouldExcludePageUrl());
+    console.log('initUI', isInIframeMode, shouldExcludePageUrl());
     // 再次检查（可能在 DOM 加载期间 URL 变化了）
     if (shouldExcludePageUrl()) return;
 
     // 如果在 iframe 模式，不创建任何 UI
-    if (isInIframeMode()) return scanPageForMedias();
+    if (isInIframeMode) return scanPageForMedias();
 
     if (document.body) {
       scanPageForMedias();

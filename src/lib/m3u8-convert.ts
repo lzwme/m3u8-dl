@@ -24,16 +24,9 @@ export async function m3u8Convert(options: M3u8DLOptions, data: TsItemInfo[]) {
     if (process.platform === 'win32') filesAllArr = filesAllArr.map(d => d.replaceAll('\\', '/'));
     writeFileSync(ffconcatFile, `ffconcat version 1.0\n${filesAllArr.join('\n')}`);
 
-    let headersString = '';
-    if (options.headers) {
-      for (const [key, value] of Object.entries(options.headers)) {
-        headersString += `-headers "${key}: ${String(value)}" `;
-      }
-    }
-
     // ffmpeg -i nz.ts -c copy -map 0:v -map 0:a -bsf:a aac_adtstoasc nz.mp4
-    // const cmd = `"${ffmpegBin}" -async 1 -y -f concat -safe 0 -i "${ffconcatFile}" -acodec copy -vcodec copy -bsf:a aac_adtstoasc ${headersString} "${filepath}"`;
-    const cmd = `"${ffmpegBin}" -async 1 -y -f concat -safe 0 -i "${ffconcatFile}" -c:v copy -c:a copy -movflags +faststart -fflags +genpts -bsf:a aac_adtstoasc ${headersString} "${filepath}"`;
+    // const cmd = `"${ffmpegBin}" -async 1 -y -f concat -safe 0 -i "${ffconcatFile}" -acodec copy -vcodec copy -bsf:a aac_adtstoasc "${filepath}"`;
+    const cmd = `"${ffmpegBin}" -async 1 -y -f concat -safe 0 -i "${ffconcatFile}" -c:v copy -c:a copy -movflags +faststart -fflags +genpts -bsf:a aac_adtstoasc "${filepath}"`;
     logger.debug('[convert to mp4]cmd:', cyan(cmd));
     const r = execSync(cmd);
     ffmpegSupport = !r.error;
