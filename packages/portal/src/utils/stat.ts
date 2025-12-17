@@ -8,6 +8,7 @@ export function initStats({ gaId = '', baiduId = '' } = {}) {
 
   win._hmt = [];
   const hm = document.createElement('script');
+  hm.async = true;
   hm.src = `https://hm.baidu.com/hm.js?${baiduId}`;
   const s = document.getElementsByTagName('script')[0];
   s.parentNode!.insertBefore(hm, s);
