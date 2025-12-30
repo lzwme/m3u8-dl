@@ -146,6 +146,12 @@ export interface M3u8DLOptions {
   ffmpegPath?: string;
   /** 语言。可选值：zh-CN, en */
   lang?: 'zh-CN' | 'en';
+  /** 代理模式。可选值：custom, system, disabled */
+  proxyMode?: 'custom' | 'system' | 'disabled';
+  /** 代理地址。如果 proxyMode 为 'custom'，则必须指定 */
+  proxyUrl?: string;
+  /** 不使用代理的域名。多个域名用逗号分隔 */
+  noProxy?: string;
 }
 
 export interface M3u8DLResult extends Partial<DownloadResult> {

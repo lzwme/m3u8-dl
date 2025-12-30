@@ -82,6 +82,36 @@
                   </label>
                 </div>
               </div>
+
+
+              <!-- 代理模式选择 -->
+              <div>
+                <label class="block text-sm font-bold text-gray-700 mb-1">{{ $t('config.proxyMode') }}</label>
+                <select v-model="configStore.config.proxyMode"
+                  class="w-full p-2 border rounded-lg focus:ring-blue-500">
+                  <option value="disabled">{{ $t('config.proxyModeDisabled') }}</option>
+                  <option value="system">{{ $t('config.proxyModeSystem') }}</option>
+                  <option value="custom">{{ $t('config.proxyModeCustom') }}</option>
+                </select>
+                <p class="mt-1 text-sm text-gray-500">{{ $t('config.proxyModeHint') }}</p>
+              </div>
+
+              <!-- 仅在选择自定义代理时显示代理URL输入框 -->
+              <div v-if="configStore.config.proxyMode === 'custom'">
+                <label class="block text-sm font-bold text-gray-700 mb-1">{{ $t('config.proxyUrl') }}</label>
+                <input v-model="configStore.config.proxyUrl" type="text"
+                  class="w-full p-2 border rounded-lg focus:ring-blue-500" :placeholder="$t('config.proxyUrlPlaceholder')" />
+                <p class="mt-1 text-sm text-gray-500">{{ $t('config.proxyUrlHint') }}</p>
+              </div>
+
+              <!-- 仅在非禁用代理模式时显示 NO_PROXY 输入框 -->
+              <div v-if="configStore.config.proxyMode !== 'disabled'">
+                <label class="block text-sm font-bold text-gray-700 mb-1">{{ $t('config.noProxy') }}</label>
+                <input v-model="configStore.config.noProxy" type="text"
+                  class="w-full p-2 border rounded-lg focus:ring-blue-500" :placeholder="$t('config.noProxyPlaceholder')" />
+                <p class="mt-1 text-sm text-gray-500">{{ $t('config.noProxyHint') }}</p>
+              </div>
+
             </div>
 
             <div class="flex justify-end space-x-4">
@@ -136,9 +166,23 @@ const { connect } = useWebSocket('');
 onMounted(async () => {
   await configStore.loadConfig();
   token.value = configStore.token || localStorage.getItem('token') || '';
+
+  // 如果代理模式未设置，初始化为 disabled
+  if (!configStore.config.proxyMode) {
+    configStore.config.proxyMode = 'disabled';
+  }
 });
 
 async function handleUpdateConfig() {
+  // 验证：当代理模式为 custom 时，proxyUrl 必须填写
+  if (configStore.config.proxyMode === 'custom' && !configStore.config.proxyUrl?.trim()) {
+    toast({
+      text: t('config.proxyUrlRequired'),
+      type: 'error',
+    });
+    return;
+  }
+
   const result = await configStore.updateConfig();
   toast({
     text: result.message || t('config.configUpdated'),

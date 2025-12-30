@@ -64,6 +64,7 @@
     "@eslint/js": "^9.39.1",
     "@lzwme/fed-lint-helper": "^2.6.6",
     "@types/express": "^5.0.5",
+    "@types/global-agent": "^3.0.0",
     "@types/m3u8-parser": "^7.2.5",
     "@types/node": "^24.10.1",
     "@types/ws": "^8.18.1",
@@ -88,6 +89,7 @@
     "commander": "^14.0.2",
     "console-log-colors": "^0.5.0",
     "enquirer": "^2.4.1",
+    "global-agent": "^3.0.0",
     "m3u8-parser": "^7.2.0"
   },
   "files": [

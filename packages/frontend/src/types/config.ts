@@ -14,5 +14,9 @@ export interface DownloadConfig {
   /** 最大并发下载数 */
   maxDownloads: number;
   /** ffmpeg 可执行文件路径。如果未指定，则尝试使用系统 PATH 中的 'ffmpeg' */
-  ffmpegPath?: string;
+  ffmpegPath: string;
+  // 代理配置：'custom', 'system', 'disabled'
+  proxyMode?: 'custom' | 'system' | 'disabled';
+  proxyUrl?: string;
+  noProxy?: string; // NO_PROXY 配置
 }

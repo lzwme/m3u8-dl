@@ -9,6 +9,7 @@ import { fileDownload } from '../lib/file-download.js';
 import { formatOptions } from '../lib/format-options.js';
 import { getM3u8Urls } from '../lib/getM3u8Urls.js';
 import { getLang, LANG_CODES, t } from '../lib/i18n.js';
+import { initProxy } from '../lib/init-proxy.js';
 import { m3u8DLStop, m3u8Download } from '../lib/m3u8-download.js';
 import { checkFileExists, logger } from '../lib/utils.js';
 import type { M3u8DLOptions, M3u8DLProgressStats, M3u8DLResult, M3u8WorkerPool, TsItemInfo } from '../types/m3u8.js';
@@ -75,6 +76,10 @@ export class DLServer {
       saveDir: process.env.DS_SAVE_DIR || './downloads',
       threadNum: 4,
       ffmpegPath: process.env.DS_FFMPEG_PATH || undefined,
+      // 代理配置改为字符串模式：'custom', 'system', 'disabled'
+      proxyMode: process.env.DS_PROXY_MODE || 'system',
+      proxyUrl: process.env.DS_PROXY_URL || undefined,
+      noProxy: process.env.DS_NO_PROXY || undefined,
     } as M3u8DLOptions,
   };
   /** 下载任务缓存 */
@@ -105,6 +110,9 @@ export class DLServer {
     await this.createApp();
     this.initRouters();
     logger.debug('Server initialized', 'cacheSize:', this.dlCache.size, this.options, this.cfg.dlOptions);
+
+    // 初始化 global-agent 代理
+    initProxy(this.cfg.dlOptions);
   }
   private async loadCache() {
     const cacheFile = resolve(this.options.cacheDir, 'cache.json');
@@ -207,7 +215,12 @@ export class DLServer {
     }
 
     mkdirp(dirname(configPath));
-    return fsPromises.writeFile(configPath, JSON.stringify(this.cfg, null, 2));
+    const result = await fsPromises.writeFile(configPath, JSON.stringify(this.cfg, null, 2));
+
+    // 重新初始化代理
+    await initProxy(this.cfg.dlOptions);
+
+    return result;
   }
   private async createApp() {
     const { default: express } = await import('express');

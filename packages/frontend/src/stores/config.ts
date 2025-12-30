@@ -13,6 +13,10 @@ export const useConfigStore = defineStore('config', () => {
     showLocalPlay: true,
     maxDownloads: 3,
     ffmpegPath: '',
+    // 代理配置默认值
+    proxyMode: 'disabled',
+    proxyUrl: '',
+    noProxy: '', // NO_PROXY 默认值
   });
 
   const token = ref<string>('');
@@ -22,6 +26,10 @@ export const useConfigStore = defineStore('config', () => {
       const result = await fetchConfig();
       if (result && typeof result === 'object' && 'saveDir' in result) {
         Object.assign(config.value, result);
+        // 确保代理模式有默认值
+        if (!config.value.proxyMode) {
+          config.value.proxyMode = 'disabled';
+        }
         return true;
       }
       return false;
