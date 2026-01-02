@@ -49,7 +49,7 @@ function createShadowHost(): ShadowRoot | null {
   shadowHost = document.createElement('div');
   shadowHost.id = 'm3u8-capture-shadow-host';
   // 使用覆盖整个视口的容器，但 pointer-events: none，让子元素可以接收事件
-  shadowHost.style.cssText = 'position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 9999;';
+  shadowHost.style.cssText = 'position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 9999999;';
   document.body.appendChild(shadowHost);
 
   // 创建 Shadow DOM

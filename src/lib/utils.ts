@@ -101,7 +101,8 @@ export async function checkFileExists(filepath: string) {
     if (!filepath) return false;
     await access(filepath, constants.F_OK);
     return true;
-  } catch {
+  } catch (error) {
+    logger.debug('checkFileExists failed:', filepath, (error as Error).message);
     return false;
   }
 }

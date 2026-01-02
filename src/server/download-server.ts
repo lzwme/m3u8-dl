@@ -629,6 +629,7 @@ export class DLServer {
       const { urls, deleteCache = false, deleteVideo = false } = req.body;
       const urlsToDelete = urls as string[];
       const list: string[] = [];
+      const errors: string[] = [];
 
       for (const url of urlsToDelete) {
         const item = this.dlCache.get(url);
@@ -639,20 +640,66 @@ export class DLServer {
           list.push(item.url);
 
           if (deleteCache) {
-            const cacheDir = item.cacheDir;
-            if (await checkFileExists(cacheDir)) {
-              await fsPromises.rm(cacheDir, { recursive: true });
-              logger.info('删除缓存目录：', gray(cacheDir));
+            try {
+              const cacheDir = item.cacheDir;
+              if (cacheDir && (await checkFileExists(cacheDir))) {
+                await fsPromises.rm(cacheDir, { recursive: true, force: true });
+                logger.info('删除缓存目录：', gray(cacheDir));
+              }
+            } catch (error) {
+              const errorMsg = `删除缓存目录失败: ${(error as Error).message}`;
+              logger.error(errorMsg, gray(item.cacheDir));
+              errors.push(errorMsg);
             }
           }
 
           if (deleteVideo) {
-            for (const ext of ['', '.ts', '.mp4']) {
-              const filepath = resolve(item.options.saveDir, item.options.filename + ext);
-              if (await checkFileExists(filepath)) {
-                await fsPromises.unlink(filepath);
-                logger.info('删除文件：', gray(filepath));
+            try {
+              // 优先使用 item.localVideo（实际文件路径）
+              if (item.localVideo) {
+                const filepath = item.localVideo;
+                if (await checkFileExists(filepath)) {
+                  try {
+                    await fsPromises.rm(filepath, { recursive: true, force: true });
+                    logger.info('删除文件：', gray(filepath));
+                  } catch (error) {
+                    const errorMsg = `删除文件失败: ${filepath}, 错误: ${(error as Error).message}`;
+                    logger.error(errorMsg);
+                    errors.push(errorMsg);
+                    // 如果直接删除失败，可能是文件被占用
+                  }
+                }
+              } else {
+                // 如果 localVideo 不存在，尝试使用 dlOptions 构建路径（格式化后的参数更准确）
+                const saveDir = item.dlOptions?.saveDir || item.options?.saveDir;
+                const filename = item.dlOptions?.filename || item.options?.filename;
+
+                if (saveDir && filename) {
+                  // 尝试多种可能的扩展名
+                  for (const ext of ['', '.ts', '.mp4']) {
+                    const filepath = resolve(saveDir, filename + ext);
+                    if (await checkFileExists(filepath)) {
+                      try {
+                        await fsPromises.rm(filepath, { recursive: true, force: true });
+                        logger.info('删除文件：', gray(filepath));
+                        break; // 找到并删除后退出循环
+                      } catch (error) {
+                        const errorMsg = `删除文件失败: ${filepath}, 错误: ${(error as Error).message}`;
+                        logger.error(errorMsg);
+                        errors.push(errorMsg);
+                      }
+                    }
+                  }
+                } else {
+                  const errorMsg = `无法确定文件路径: saveDir=${saveDir}, filename=${filename}`;
+                  logger.warn(errorMsg, gray(url));
+                  errors.push(errorMsg);
+                }
               }
+            } catch (error) {
+              const errorMsg = `删除视频文件时发生错误: ${(error as Error).message}`;
+              logger.error(errorMsg, gray(url));
+              errors.push(errorMsg);
             }
           }
         }
@@ -664,7 +711,10 @@ export class DLServer {
         this.startNextPending();
       }
       const lang = this.getLangFromRequest(req);
-      res.json({ message: t('api.success.deleted', lang, { count: list.length }), code: 0, count: list.length });
+      const message = errors.length
+        ? `${t('api.success.deleted', lang, { count: list.length })}，但有 ${errors.length} 个错误: ${errors.join('; ')}`
+        : t('api.success.deleted', lang, { count: list.length });
+      res.json({ message, code: errors.length > 0 ? 1 : 0, count: list.length, errors: errors.length > 0 ? errors : undefined });
     });
 
     // API to rename download file
