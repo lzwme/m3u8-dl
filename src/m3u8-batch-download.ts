@@ -36,7 +36,7 @@ async function formatUrls(urls: string[], options: M3u8DLOptions): Promise<Map<s
       }
     }
 
-    const r = formatOptions(url, options);
+    const r = await formatOptions(url, options);
     taskset.set(r.url, r.options);
   }
 
@@ -96,8 +96,7 @@ export async function m3u8BatchDownload(urls: string[], options: M3u8DLOptions) 
         };
 
         if (o.type === 'parser') {
-          const vp = new VideoParser();
-          vp.download(url, o).then(r => afterDownload(r, url));
+          VideoParser.download(url, o).then(r => afterDownload(r, url));
         } else if (o.type === 'file') {
           fileDownload(url, o).then(r => afterDownload(r, url));
         } else {

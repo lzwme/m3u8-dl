@@ -2,6 +2,8 @@ import { DEFAULT_EXCLUDE_URLS } from './config';
 import { getExcludeUrls, getMediaExtList, getTitleReplaceRules, getWebuiUrl } from './storage';
 import type { EventCoordinates } from './types';
 
+export const IS_DEV = import.meta.env.DEV;
+
 /** 检查是否在 iframe 中且可以访问 window.top */
 export const isInIframeMode = window.top && window.top !== window.self;
 

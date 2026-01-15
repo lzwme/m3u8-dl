@@ -4,7 +4,7 @@ import { existsSync } from 'node:fs';
 import { cpus } from 'node:os';
 import { Worker } from 'node:worker_threads';
 
-type WorkerPoolCallback<R> = (err: Error | null, result: R, startTime: number) => void;
+type WorkerPoolCallback<R> = (err: Error, result: R, startTime: number) => void;
 
 const kWorkerFreedEvent = Symbol('kWorkerFreedEvent');
 
@@ -13,7 +13,7 @@ class WorkerPoolTaskInfo<R> extends AsyncResource {
   constructor(public callback: WorkerPoolCallback<R>) {
     super('WorkerPoolTaskInfo');
   }
-  done(err: Error | null, result: unknown) {
+  done(err: Error, result: unknown) {
     this.runInAsyncScope(this.callback, null, err, result, this.startTime);
     this.emitDestroy();
   }
@@ -77,7 +77,7 @@ export class WorkerPool<T = unknown, R = unknown> extends EventEmitter {
       // 如果发生未捕获的异常：调用传递给 `runTask` 并出现错误的回调。
       const r = this.workerTaskInfo.get(worker);
       if (r) {
-        r.done(err, null);
+        r.done(err as Error, null);
         this.workerTaskInfo.delete(worker);
       } else this.emit('error', err);
 

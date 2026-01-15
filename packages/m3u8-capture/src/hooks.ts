@@ -129,7 +129,7 @@ export function observeNetworkRequests(): void {
   try {
     observer.observe({ entryTypes: ['resource'] });
   } catch (_e) {
-    console.log('[M3U8 Capture] PerformanceObserver not supported');
+    console.warn('[M3U8 Capture] PerformanceObserver not supported');
   }
 }
 

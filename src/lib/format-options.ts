@@ -47,7 +47,7 @@ const fileSupportExtList = [
   '.rpm',
 ];
 
-export function formatOptions(url: string, opts: M3u8DLOptions) {
+export async function formatOptions(url: string, opts: M3u8DLOptions) {
   const options: M3u8DLOptions = {
     delCache: !opts.debug,
     saveDir: process.cwd(),
@@ -59,6 +59,16 @@ export function formatOptions(url: string, opts: M3u8DLOptions) {
   if (!options.type) {
     if (VideoParser.getPlatform(url).platform !== 'unknown') {
       options.type = 'parser';
+      if (!opts.filename) {
+        const info = await VideoParser.parse(url);
+        if (info.code === 0 && info.data?.title) {
+          options.filename = info.data.title
+            .split('\n')[0]
+            // 替换全部的非中英文、数字、下划线为下划线
+            .replace(/[^\u4e00-\u9fa5a-zA-Z0-9]+/g, '_')
+            .trim();
+        }
+      }
     } else {
       options.type = 'm3u8';
 

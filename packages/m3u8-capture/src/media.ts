@@ -26,7 +26,7 @@ export function addMediaLink(url: string, title = '', headers: Record<string, st
   // 如果在 iframe 模式，发送给 top 窗口
   if (isInIframeMode) {
     try {
-      console.log('send link to top window', linkData);
+      if (import.meta.env.DEV) console.log('send link to top window', linkData);
       window.top!.postMessage(
         {
           type: 'm3u8-capture-link',
@@ -100,7 +100,7 @@ export function getMediaTitle(doc: Document = document): string {
     } catch (_e) {
       // ignore
     }
-    console.log('title2', title, isInIframeMode);
+    if (import.meta.env.DEV) console.log('title2', title, isInIframeMode);
   }
 
   return title;

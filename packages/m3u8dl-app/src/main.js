@@ -90,7 +90,7 @@ const T = {
   tray: null,
   webBrowserWindow: null,
   async createMainWindow() {
-    const window = new BrowserWindow({
+    const mainWindow = new BrowserWindow({
       title: config.title,
       icon: config.logo,
       menuBarVisible: false,
@@ -106,8 +106,8 @@ const T = {
     });
 
     if (isDev && process.env.DS_DEV_CREATE_DL_SERVER !== '1') {
-      window.webContents.openDevTools();
-      window.loadURL(process.env.DS_DEV_URL || 'http://localhost:5173');
+      mainWindow.webContents.openDevTools();
+      mainWindow.loadURL(process.env.DS_DEV_URL || 'http://localhost:5173');
     } else {
       const { DLServer } = require(path.resolve(baseDir, './cjs/server/download-server.js'));
       const userHome = homedir();
@@ -129,19 +129,22 @@ const T = {
         configPath: path.resolve(userHome, '.m3u8-dl/config.json'),
       });
 
-      if (isDev) window.webContents.openDevTools();
-      window.loadURL(`http://localhost:${port}/?from=app`);
+      if (isDev) mainWindow.webContents.openDevTools();
+      mainWindow.loadURL(`http://localhost:${port}/?from=app`);
     }
 
+    mainWindow.on('close', () => {
+      if (!this.mainWindow.isDestroyed()) this.exit();
+    });
 
-    window.on('closed', () => (this.mainWindow = null));
-    window.on('minimize', () => window.hide());
+    mainWindow.on('closed', () => (this.mainWindow = null));
+    mainWindow.on('minimize', () => mainWindow.hide());
 
-    window.webContents.on('devtools-opened', () => setImmediate(() => window.focus()));
+    mainWindow.webContents.on('devtools-opened', () => setImmediate(() => mainWindow.focus()));
 
-    initAutoUpdater(window);
-    this.initWebBrowser(window);
-    return window;
+    initAutoUpdater(mainWindow);
+    this.initWebBrowser(mainWindow);
+    return mainWindow;
   },
   initWebBrowser(mainWindow) {
     const mediaUrls = new Map();
@@ -366,8 +369,7 @@ const T = {
 
       // 监听窗口关闭
       this.webBrowserWindow.on('closed', () => {
-        this.webBrowserWindow = null;
-        mainWindow.webContents.send('web-browser:closed');
+        this.mainWindow?.webContents?.send('web-browser:closed');
       });
 
       return this.webBrowserWindow;
@@ -379,14 +381,14 @@ const T = {
     // 处理 IPC 消息
     ipcMain.on('web-browser:load', (event, url) => {
       console.log('[WebBrowser] load URL:', url);
-      const window = createWebBrowserWindow();
+      const mainWindow = createWebBrowserWindow();
       clearData();
       currentUrl = url;
 
       // 设置用户代理，模拟真实浏览器
-      window.webContents.setUserAgent('Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36');
+      mainWindow.webContents.setUserAgent('Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36');
 
-      window.loadURL(url).catch((error) => {
+      mainWindow.loadURL(url).catch((error) => {
         console.error('[WebBrowser] load URL failed:', error);
         mainWindow.webContents.send('web-browser:error', {
           code: -1,
@@ -394,15 +396,15 @@ const T = {
         });
       });
 
-      window.show();
-      window.focus();
-      if (isDev) window.webContents.openDevTools();
+      mainWindow.show();
+      mainWindow.focus();
+      if (isDev) mainWindow.webContents.openDevTools();
     });
 
     ipcMain.on('web-browser:show', () => {
-      const window = createWebBrowserWindow();
-      window.show();
-      window.focus();
+      const mainWindow = createWebBrowserWindow();
+      mainWindow.show();
+      mainWindow.focus();
     });
 
     ipcMain.on('web-browser:hide', () => {
@@ -418,15 +420,15 @@ const T = {
     });
 
     ipcMain.on('web-browser:go-back', () => {
-      const window = createWebBrowserWindow();
-      if (window.webContents.canGoBack()) {
-        window.webContents.goBack();
+      const wbWindow = createWebBrowserWindow();
+      if (wbWindow.webContents.canGoBack()) {
+        wbWindow.webContents.goBack();
         // 延迟发送导航状态，等待页面加载
         setTimeout(() => {
-          if (window && !window.isDestroyed()) {
+          if (wbWindow && !wbWindow.isDestroyed()) {
             mainWindow.webContents.send('web-browser:navigation-state', {
-              canGoBack: window.webContents.canGoBack(),
-              canGoForward: window.webContents.canGoForward(),
+              canGoBack: wbWindow.webContents.canGoBack(),
+              canGoForward: wbWindow.webContents.canGoForward(),
             });
           }
         }, 100);
@@ -434,15 +436,15 @@ const T = {
     });
 
     ipcMain.on('web-browser:go-forward', () => {
-      const window = createWebBrowserWindow();
-      if (window.webContents.canGoForward()) {
-        window.webContents.goForward();
+      const wbWindow = createWebBrowserWindow();
+      if (wbWindow.webContents.canGoForward()) {
+        wbWindow.webContents.goForward();
         // 延迟发送导航状态，等待页面加载
         setTimeout(() => {
-          if (window && !window.isDestroyed()) {
+          if (wbWindow && !wbWindow.isDestroyed()) {
             mainWindow.webContents.send('web-browser:navigation-state', {
-              canGoBack: window.webContents.canGoBack(),
-              canGoForward: window.webContents.canGoForward(),
+              canGoBack: wbWindow.webContents.canGoBack(),
+              canGoForward: wbWindow.webContents.canGoForward(),
             });
           }
         }, 100);
@@ -450,14 +452,14 @@ const T = {
     });
 
     ipcMain.on('web-browser:reload', () => {
-      const window = createWebBrowserWindow();
-      window.webContents.reload();
+      const wbWindow = createWebBrowserWindow();
+      wbWindow.webContents.reload();
     });
 
     ipcMain.on('web-browser:close', () => {
+      console.log('web-browser:close', this.webBrowserWindow?.isDestroyed());
       if (this.webBrowserWindow && !this.webBrowserWindow.isDestroyed()) {
         this.webBrowserWindow.close();
-        this.webBrowserWindow = null;
       }
     });
   },
@@ -478,9 +480,9 @@ const T = {
         label: '打开调试',
         type: 'normal',
         click: () => {
-          [this.mainWindow, this.webBrowserWindow].forEach(window => {
-            if (!window?.isDestroyed()) {
-              window.webContents[window.webContents.isDevToolsOpened() ? 'closeDevTools' : 'openDevTools']()
+          [this.mainWindow, this.webBrowserWindow].forEach(win => {
+            if (win && !win?.isDestroyed()) {
+              win.webContents[win.webContents.isDevToolsOpened() ? 'closeDevTools' : 'openDevTools']()
             }
           });
         },
@@ -499,14 +501,16 @@ const T = {
       {
         label: '重启',
         type: 'normal',
-        click: () => this.mainWindow.close() & app.relaunch(),
+        click: () => {
+          this.exit()
+          app.relaunch()
+        }
       },
       {
         label: '退出',
         type: 'normal',
         click: () => {
-          this.mainWindow.close();
-          setTimeout(() => app.quit(), 2000);
+          this.exit();
         },
       },
     ]);
@@ -514,8 +518,15 @@ const T = {
     const tray = new Tray(iconImg.resize({ width: 20, height: 20 }));
     tray.setTitle(config.title);
     tray.setToolTip(config.title);
-    tray.on('double-click', () => this.mainWindow[this.mainWindow.isVisible() ? 'hide' : 'show']());
+    tray.on('double-click', () => {
+      if (this.mainWindow) {
+        this.mainWindow[this.mainWindow.isVisible() ? 'hide' : 'show']();
+      } else {
+        this.createMainWindow();
+      }
+    });
     tray.setContextMenu(contextMenu);
+    this.tray = tray;
     return tray;
   },
   initEvents() {
@@ -528,12 +539,7 @@ const T = {
     app.on('window-all-closed', () => {
       // on macOS it is common for applications to stay open until the user explicitly quits
       if (process.platform !== 'darwin') {
-        if (this.tray) this.tray.destroy();
-        this.tray = null;
-        if (this.webBrowserWindow && !this.webBrowserWindow.isDestroyed()) {
-          this.webBrowserWindow.close();
-        }
-        app.quit();
+        this.exit();
       }
     });
 
@@ -545,12 +551,18 @@ const T = {
       if (this.mainWindow != null) {
         this.mainWindow.hide();
 
-        if (firstHide && tray) {
+        if (firstHide && this.tray) {
           this.tray.displayBalloon({ title: '提示', content: '我隐藏到这里了哦，双击我显示主窗口！' });
           firstHide = false;
         }
       }
     });
+  },
+  exit() {
+    this.tray?.destroy();
+    this.mainWindow?.destroy();
+    this.webBrowserWindow?.destroy();
+    setTimeout(() => app.quit(), 1000);
   },
   init() {
   },

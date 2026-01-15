@@ -37,7 +37,7 @@ export class VideoParser {
   /**
    * 解析视频 URL
    */
-  public async parse(url: string, headers: Record<string, string> = {}): Promise<ApiResponse<VideoInfo>> {
+  public static async parse(url: string, headers: Record<string, string> = {}): Promise<ApiResponse<VideoInfo>> {
     const info = VideoParser.getPlatform(url);
     if (!info) return { code: 201, message: '不支持的视频平台' };
 
@@ -45,8 +45,8 @@ export class VideoParser {
     return await parserClass.parse(info.url, headers);
   }
 
-  public async download(url: string, options: M3u8DLOptions): Promise<M3u8DLResult> {
-    const info = await this.parse(url);
+  public static async download(url: string, options: M3u8DLOptions): Promise<M3u8DLResult> {
+    const info = await VideoParser.parse(url);
     logger.debug('解析视频信息', info);
 
     if (info.code || !info.data?.url) return { errmsg: info.message || '解析视频信息失败', options };
@@ -64,7 +64,7 @@ export class VideoParser {
       ...formatHeaders(options.headers),
     };
 
-    return fileDownload(url, options);
+    return fileDownload(info.data.url, options);
   }
   /**
    * 根据 URL 获取平台标识
@@ -91,7 +91,7 @@ export class VideoParser {
   /**
    * 获取所有支持的平台列表
    */
-  public getSupportedPlatforms(): string[] {
+  public static getSupportedPlatforms(): string[] {
     return Object.keys(VideoParser.platforms);
   }
 }

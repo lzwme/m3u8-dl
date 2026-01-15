@@ -327,7 +327,7 @@ export class DLServer {
       if (!options.filename) options.filename = item[1];
     }
 
-    const { options: dlOptions } = formatOptions(url, { ...this.cfg.dlOptions, ...options, cacheDir: this.options.cacheDir });
+    const { options: dlOptions } = await formatOptions(url, { ...this.cfg.dlOptions, ...options, cacheDir: this.options.cacheDir });
     if (!dlOptions.saveDir) dlOptions.saveDir = this.cfg.dlOptions.saveDir;
     const cacheItem = this.dlCache.get(url) || { options, dlOptions, status: 'pending', url };
     logger.debug('startDownload', url, dlOptions, cacheItem.status);
@@ -394,7 +394,7 @@ export class DLServer {
 
       item.endTime = Date.now();
       item.errmsg = r.errmsg;
-      item.status = r.errmsg ? 'error' : 'done';
+      item.status = r.isExist ? 'done' : r.errmsg ? 'error' : 'done';
       logger.info('Download complete:', item.status, red(r.errmsg), gray(url), cyan(r.filepath));
 
       this.dlCache.set(url, item);
@@ -405,8 +405,8 @@ export class DLServer {
 
     try {
       if (dlOptions.type === 'parser') {
-        const vp = new VideoParser();
-        vp.download(url, opts).then(r => afterDownload(r, url));
+        console.log('\n\nDownloading with VideoParser\n\n', dlOptions, url);
+        VideoParser.download(url, opts).then(r => afterDownload(r, url));
       } else if (dlOptions.type === 'file') {
         fileDownload(url, opts).then(r => afterDownload(r, url));
       } else {

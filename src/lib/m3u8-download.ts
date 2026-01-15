@@ -97,13 +97,13 @@ async function m3u8InfoParse(u: string, o: M3u8DLOptions = {}) {
   const ffmpegBin = o.ffmpegPath || 'ffmpeg';
   const ext = isSupportFfmpeg(ffmpegBin) ? '.mp4' : '.ts';
 
-  const { url, options, urlMd5 } = formatOptions(u, o);
+  const { url, options, urlMd5 } = await formatOptions(u, o);
 
   /** 最终合并转换后的文件路径 */
   let filepath = resolve(options.saveDir, options.filename);
   if (!filepath.endsWith(ext)) filepath += ext;
 
-  const result = { options, m3u8Info: null as Awaited<ReturnType<typeof parseM3U8>> | null, filepath };
+  const result = { options, m3u8Info: null as Awaited<ReturnType<typeof parseM3U8>>, filepath };
 
   if (cache.m3u8Info[url]) {
     Object.assign(result, cache.m3u8Info[url]);

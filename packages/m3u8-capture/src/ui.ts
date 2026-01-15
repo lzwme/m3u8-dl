@@ -631,7 +631,7 @@ function safeOpenUrl(targetUrl: string): boolean {
     const opened = window.open(targetUrl, '_blank');
     if (opened && !opened.closed) return true;
   } catch (e) {
-    console.log('[M3U8 Capture] window.open failed:', e);
+    console.warn('[M3U8 Capture] window.open failed:', e);
   }
 
   // 方法2: 如果在 iframe 中，尝试在父窗口打开
@@ -640,7 +640,7 @@ function safeOpenUrl(targetUrl: string): boolean {
       const opened = window.top.open(targetUrl, '_blank');
       if (opened && !opened.closed) return true;
     } catch (e) {
-      console.log('[M3U8 Capture] window.top.open failed:', e);
+      console.warn('[M3U8 Capture] window.top.open failed:', e);
     }
 
     // 方法3: 尝试在父窗口导航（如果无法打开新窗口）
@@ -648,7 +648,7 @@ function safeOpenUrl(targetUrl: string): boolean {
       window.top.location.href = targetUrl;
       return true;
     } catch (e) {
-      console.log('[M3U8 Capture] window.top.location.href failed:', e);
+      console.warn('[M3U8 Capture] window.top.location.href failed:', e);
     }
   }
 
@@ -685,7 +685,7 @@ function safeOpenUrl(targetUrl: string): boolean {
 }
 
 export function updateUI(): void {
-  console.log('updateUI', isInIframeMode, mediaLinks, panelElement);
+  if (import.meta.env.DEV) console.log('updateUI', isInIframeMode, mediaLinks, panelElement);
   if (isInIframeMode || !mediaLinks) return;
 
   if (!createUI() || !panelElement) return;

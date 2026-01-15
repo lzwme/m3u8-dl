@@ -15,21 +15,21 @@
   },
   "dependencies": {
     "pinia": "^3.0.4",
-    "vue": "^3.5.25",
-    "vue-i18n": "^11.2.2",
-    "vue-router": "^4.6.3"
+    "vue": "^3.5.26",
+    "vue-i18n": "^11.2.8",
+    "vue-router": "^4.6.4"
   },
   "devDependencies": {
-    "@csstools/postcss-cascade-layers": "^5.0.2",
-    "@tailwindcss/postcss": "^4.1.17",
-    "@tailwindcss/vite": "^4.1.17",
-    "@types/node": "^24.10.1",
-    "@vitejs/plugin-vue": "^6.0.2",
-    "autoprefixer": "^10.4.22",
+    "@csstools/postcss-cascade-layers": "^6.0.0",
+    "@tailwindcss/postcss": "^4.1.18",
+    "@tailwindcss/vite": "^4.1.18",
+    "@types/node": "^25.0.8",
+    "@vitejs/plugin-vue": "^6.0.3",
+    "autoprefixer": "^10.4.23",
     "postcss": "^8.5.6",
     "postcss-nested": "^7.0.2",
-    "tailwindcss": "^4.1.17",
+    "tailwindcss": "^4.1.18",
     "typescript": "^5.9.3",
-    "vite": "^7.2.4"
+    "vite": "^7.3.1"
   }
 }

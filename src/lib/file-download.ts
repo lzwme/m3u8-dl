@@ -8,7 +8,7 @@ import { formatHeaders, logger } from './utils.js';
 
 export async function fileDownload(u: string, opts: M3u8DLOptions): Promise<M3u8DLResult> {
   logger.debug('fileDownload', u, opts);
-  const { url, options } = formatOptions(u, opts);
+  const { url, options } = await formatOptions(u, opts);
   const lang = getLang(options.lang);
   const startTime = Date.now();
   const stats: M3u8DLProgressStats = {
@@ -73,7 +73,7 @@ export async function fileDownload(u: string, opts: M3u8DLOptions): Promise<M3u8
     stats.endTime = Date.now();
 
     return {
-      errmsg: r.filepath ? t('download.status.completed', lang) : t('download.status.failed', lang),
+      errmsg: r.filepath ? '' : t('download.status.failed', lang), // t('download.status.completed', lang)
       ...r,
       stats,
     };

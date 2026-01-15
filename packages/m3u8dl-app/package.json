@@ -18,12 +18,12 @@
   },
   "license": "MIT",
   "dependencies": {
-    "electron-updater": "^6.6.2",
-    "express": "^5.1.0",
-    "ws": "^8.18.3"
+    "electron-updater": "^6.7.3",
+    "express": "^5.2.1",
+    "ws": "^8.19.0"
   },
   "devDependencies": {
-    "electron": "39.2.4",
-    "electron-builder": "^26.0.12"
+    "electron": "39.2.7",
+    "electron-builder": "^26.4.0"
   }
 }
