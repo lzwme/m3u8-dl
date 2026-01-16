@@ -25,6 +25,7 @@ export default defineConfig({
   publicDir: 'public',
   server: {
     port: 5173,
+    host: '0.0.0.0',
     proxy: {
       ...['/api', '/localplay', '/local', '/ws', '/m3u8-capture.user.js'].reduce((acc, path) => ({
         ...acc,

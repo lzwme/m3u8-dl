@@ -66,7 +66,9 @@ export async function formatOptions(url: string, opts: M3u8DLOptions) {
             .split('\n')[0]
             // 替换全部的非中英文、数字、下划线为下划线
             .replace(/[^\u4e00-\u9fa5a-zA-Z0-9]+/g, '_')
-            .trim();
+            .trim()
+            .replace(/_+/g, '_')
+            .slice(0, 100);
         }
       }
     } else {

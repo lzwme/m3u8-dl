@@ -1,4 +1,4 @@
-@import "tailwindcss";
+@import 'tailwindcss';
 
 :root {
   /* 颜色系统 */
@@ -21,7 +21,9 @@
 }
 
 /* 全局默认边框颜色 */
-*, ::after, ::before {
+*,
+::after,
+::before {
   border-color: var(--color-border);
   box-sizing: border-box;
   border-style: solid;
@@ -109,7 +111,7 @@ button {
   position: fixed;
   top: 1rem;
   left: 1rem;
-  z-index: 51;
+  z-index: 49;
   padding: 0.5rem;
   background: white;
   border-radius: 0.5rem;
@@ -169,7 +171,6 @@ button {
   border-left: 4px solid #17a2b8;
 }
 
-
 .modal-overlay {
   background-color: rgba(0, 0, 0, 0.5);
   font-size: 14px;
@@ -180,4 +181,31 @@ button {
   font-size: 16px;
   padding-top: 0.25rem;
   padding-bottom: 0.25rem;
+}
+
+/* 高级选项折叠动画 */
+.animate-in {
+  animation: slideDown 0.3s ease-out;
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* 折叠内容过渡效果 */
+.advanced-content {
+  transition: all 0.3s ease;
+  overflow: hidden;
+}
+
+/* 自定义复选框样式 */
+input[type='checkbox']:checked {
+  background-color: var(--color-primary);
 }
