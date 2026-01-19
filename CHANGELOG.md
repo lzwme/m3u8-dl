@@ -2,6 +2,25 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [1.8.0](https://github.com/lzwme/m3u8-dl/compare/v1.7.0...v1.8.0) (2026-01-19)
+
+
+### Features
+
+* 新增自定义代理设置支持 ([e872759](https://github.com/lzwme/m3u8-dl/commit/e872759a287e730e80671228a3576b161f9fb212))
+* add browser compatibility configuration and enhance frontend styling; update dependencies and improve performance in various components ([c9968ab](https://github.com/lzwme/m3u8-dl/commit/c9968abde63fdef56e6c05602b61fbfff9d527e7))
+* add Collapse component for expandable sections in NewDownloadDialog; enhance UI with improved styling and layout; update localization for new features ([b4282ac](https://github.com/lzwme/m3u8-dl/commit/b4282ac194e2c30f6640a981330980616b9487f3))
+* **download-server:** implement filename renaming for existing local videos to prevent conflicts([#21](https://github.com/lzwme/m3u8-dl/issues/21)) ([a4b0e0d](https://github.com/lzwme/m3u8-dl/commit/a4b0e0d2b6ad6e6161b1ddd8178f0c8e07484bed))
+* **m3u8-capture:** add support for capturing request headers; update settings UI and storage management for enhanced user experience ([ab8f3d8](https://github.com/lzwme/m3u8-dl/commit/ab8f3d8bd47ebb68e6233d61b2c7aa30e1683ba9))
+* **m3u8-capture:** enhance download task options with headers support; update related components for improved media link handling ([7134979](https://github.com/lzwme/m3u8-dl/commit/713497950a9819d04fbeb942afb6b7731c88fd06))
+
+
+### Bug Fixes
+
+* 修复删除任务时视频文件可能未删除的问题 ([#24](https://github.com/lzwme/m3u8-dl/issues/24)) ([cf6f2ff](https://github.com/lzwme/m3u8-dl/commit/cf6f2ff8ed7df823e7225562ea5193b30408ac03))
+* enhance header parsing in formatHeaders utility to support multiple key-value pairs in a single string ([6df2cf2](https://github.com/lzwme/m3u8-dl/commit/6df2cf2a8cb824a01550140e3b4947ada3c43a71))
+* **m3u8-capture:** refactor iframe mode checks to use boolean value; improve header handling in UI components ([4141182](https://github.com/lzwme/m3u8-dl/commit/41411824d84f1c9a1360736d50551205c585d161))
+
 ## [1.7.0](https://github.com/lzwme/m3u8-dl/compare/v1.6.0...v1.7.0) (2025-11-19)
 
 
