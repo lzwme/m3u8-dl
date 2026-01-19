@@ -2,7 +2,7 @@ const fs = require('node:fs');
 const path = require('node:path');
 const { execSync } = require('node:child_process');
 const { build, Platform } = require('electron-builder');
-const { mkdirp, rmrf, readJsonFileSync } = require('@lzwme/fe-utils');
+const { assign, mkdirp, rmrf, readJsonFileSync } = require('@lzwme/fe-utils');
 const glob = require('fast-glob');
 const argv = require('minimist')(process.argv.slice(2));
 
@@ -16,18 +16,22 @@ const appPkg = readJsonFileSync(path.resolve(baseDir, './package.json'));
 const T = {
   prepare() {
     appPkg.version = rootPkg.version;
-    appPkg.dependencies = {
-      'ffmpeg-static': '^5.2.0',
-      ...rootPkg.dependencies,
-      ...appPkg.dependencies,
-    };
-    delete appPkg.devDependencies;
-    delete appPkg.dependencies.commander;
-    delete appPkg.dependencies.enquirer;
+
+    const distPkg = assign({
+      dependencies: {
+        "global-agent": "^3.0.0",
+        'ffmpeg-static': '^5.2.0',
+        ...rootPkg.dependencies,
+      },
+    }, appPkg);
+
+    delete distPkg.devDependencies;
+    delete distPkg.dependencies.commander;
+    delete distPkg.dependencies.enquirer;
 
     // if (isCI) rmrf(appBuildDir);
     mkdirp(appBuildDir);
-    fs.writeFileSync(path.resolve(appBuildDir, 'package.json'), JSON.stringify(appPkg, null, 2));
+    fs.writeFileSync(path.resolve(appBuildDir, 'package.json'), JSON.stringify(distPkg, null, 2));
     fs.cpSync(path.resolve(baseDir, 'src'), path.resolve(appBuildDir, 'src'), { recursive: true, force: true });
 
     execSync(`npm install --omit dev`, { stdio: 'inherit', cwd: appBuildDir });
@@ -155,7 +159,7 @@ const T = {
             },
             {
               target: 'dmg',
-              arch: ['x64', 'arm64', 'universal'],
+              arch: ['x64', 'arm64'], // 'universal' -- ffmpeg-static 不兼容
             },
           ],
           icon: 'build/icon/logo.icns',
