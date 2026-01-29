@@ -339,6 +339,19 @@ const uniqueLineCount = computed(() => {
   return uniqueLines.size;
 });
 
+// 重置表单
+const resetToDefault = () => {
+  playUrl.value = '';
+  downloadUrls.value = '';
+  filename.value = '';
+  ignoreSegments.value = '';
+  // headers.value = ''; // 不清空，保留上次输入的 headers
+  subUrlRegex.value = '';
+  saveDir.value = configStore.config.saveDir || '';
+  showAdvanced.value = false;
+  // showBasicSettings 不重置，保持用户偏好
+};
+
 watch(
   () => props.visible,
   visible => {
@@ -363,6 +376,9 @@ watch(
         }
         if (props.initialData.saveDir) {
           saveDir.value = props.initialData.saveDir;
+        } else {
+          // 如果 initialData 中没有 saveDir，使用配置中的默认值
+          saveDir.value = configStore.config.saveDir || '';
         }
         if (props.initialData.ignoreSegments) {
           ignoreSegments.value = props.initialData.ignoreSegments;
@@ -373,18 +389,11 @@ watch(
             headers.value = JSON.stringify(headers.value, null, 2);
           }
         }
+      } else {
+        resetToDefault()
       }
     } else {
-      // 重置表单
-      playUrl.value = '';
-      downloadUrls.value = '';
-      filename.value = '';
-      ignoreSegments.value = '';
-      // headers.value = ''; // 不清空，保留上次输入的 headers
-      subUrlRegex.value = '';
-      saveDir.value = configStore.config.saveDir || '';
-      showAdvanced.value = false;
-      // showBasicSettings 不重置，保持用户偏好
+      resetToDefault()
     }
   }
 );
