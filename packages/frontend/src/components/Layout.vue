@@ -135,7 +135,7 @@ function switchSection(section: string) {
 
 function openAriang() {
   const serverInfo = serverStore.serverInfo;
-  const ariangUrl = serverInfo.ariang ? './ariang/' : 'http://lzw.me/x/ariang/';
+  const ariangUrl = serverInfo.ariang ? '/ariang/' : 'http://lzw.me/x/ariang/';
   window.open(ariangUrl);
 }
 
