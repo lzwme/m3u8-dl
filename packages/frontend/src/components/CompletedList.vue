@@ -68,6 +68,13 @@
     >
       <div class="flex items-center space-x-2">
         <button
+          v-if="hasErrorTasksInSelection"
+          @click="handleBatchRedownload"
+          class="px-3 py-1 text-sm bg-green-500 hover:bg-green-600 text-white rounded"
+        >
+          <i class="fas fa-redo mr-1"></i>{{ $t('completedList.redownloadSelected') }}
+        </button>
+        <button
           @click="handleBatchDelete"
           class="px-3 py-1 text-sm bg-red-500 hover:bg-red-600 text-white rounded"
         >
@@ -146,6 +153,14 @@
                   :title="$t('completedList.viewDetail')"
                 >
                   <i class="fas fa-info-circle"></i>
+                </button>
+                <button
+                  v-if="isTaskError(task)"
+                  @click="redownloadTask(task)"
+                  class="text-green-600 hover:text-green-800"
+                  :title="$t('completedList.redownload')"
+                >
+                  <i class="fas fa-redo"></i>
                 </button>
                 <button
                   v-if="task.status === 'done' && !task.errmsg"
@@ -322,6 +337,11 @@ const completedTasks = computed(() => {
   return completed;
 });
 
+// 判断任务是否为异常状态：localVideo 为空或 errmsg 不为空
+function isTaskError(task: DownloadTask): boolean {
+  return !task.localVideo || !!task.errmsg;
+}
+
 // 搜索和收藏过滤
 const filteredTasks = computed(() => {
   let tasks = completedTasks.value;
@@ -416,6 +436,14 @@ const isIndeterminate = computed(
   }
 );
 
+// 检查选中的任务中是否有异常状态的任务
+const hasErrorTasksInSelection = computed(() => {
+  return selectedTasks.value.some(url => {
+    const task = tasksStore.tasks[url];
+    return task && isTaskError(task);
+  });
+});
+
 function handleSortChange() {
   // 排序字段改变时，重置到第一页
   currentPage.value = 1;
@@ -494,11 +522,12 @@ const emit = defineEmits<{
   (e: 'show-detail', task: DownloadTask): void;
   (e: 'local-play', data: { task: DownloadTask; url: string }): void;
   (e: 'delete', urls: string[]): void;
+  (e: 'redownload', tasks: DownloadTask[]): void;
 }>();
 
 const showRenameModal = ref(false);
 const renameTask = ref<DownloadTask | null>(null);
-const renameDialogRef = ref<InstanceType<typeof RenameDialog> | null>(null);
+// const renameDialogRef = ref<InstanceType<typeof RenameDialog> | null>(null);
 
 function showRenameDialog(task: DownloadTask) {
   renameTask.value = task;
@@ -534,6 +563,20 @@ function handleBatchDelete() {
   if (selectedTasks.value.length > 0) {
     emit('delete', selectedTasks.value);
     selectedTasks.value = [];
+  }
+}
+
+function redownloadTask(task: DownloadTask) {
+  emit('redownload', [task]);
+}
+
+function handleBatchRedownload() {
+  const errorTasks = selectedTasks.value
+    .map(url => tasksStore.tasks[url])
+    .filter(task => task && isTaskError(task)) as DownloadTask[];
+
+  if (errorTasks.length > 0) {
+    emit('redownload', errorTasks);
   }
 }
 

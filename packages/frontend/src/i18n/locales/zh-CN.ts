@@ -397,6 +397,8 @@ export default {
     invalidFilename: '文件名包含非法字符（不能包含 < > : " / \\ | ? *）',
     play: '播放',
     delete: '删除',
+    redownload: '重新下载',
+    redownloadSelected: '重新下载选中',
     noCompletedTasks: '暂无已完成的任务',
     selected: '已选择 {count} 项',
     deleteSelected: '删除选中',

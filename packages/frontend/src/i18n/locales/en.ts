@@ -405,6 +405,8 @@ export default {
     invalidFilename: 'Filename contains invalid characters (cannot contain < > : " / \\ | ? *)',
     play: 'Play',
     delete: 'Delete',
+    redownload: 'Redownload',
+    redownloadSelected: 'Redownload Selected',
     noCompletedTasks: 'No completed tasks',
     selected: 'Selected {count} items',
     deleteSelected: 'Delete Selected',
