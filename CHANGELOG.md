@@ -2,6 +2,19 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [1.9.0](https://github.com/lzwme/m3u8-dl/compare/v1.8.0...v1.9.0) (2026-03-03)
+
+
+### Features
+
+* 新增 m3u8-downloader skill ([45e70ea](https://github.com/lzwme/m3u8-dl/commit/45e70eaebe901fde6758224533572becef614618))
+
+
+### Bug Fixes
+
+* 修复 ariang 路由错误的问题 (close [#26](https://github.com/lzwme/m3u8-dl/issues/26)) ([cf65a37](https://github.com/lzwme/m3u8-dl/commit/cf65a379930d2647af15521d5be0ff1137e76d27))
+* 修复新建下载首次打开时保存位置没有显示默认值的问题 (close [#27](https://github.com/lzwme/m3u8-dl/issues/27)) ([8fb513a](https://github.com/lzwme/m3u8-dl/commit/8fb513a5d077d7f1eb6b46b674c944530118d624))
+
 ## [1.8.0](https://github.com/lzwme/m3u8-dl/compare/v1.7.0...v1.8.0) (2026-01-19)
 
 
