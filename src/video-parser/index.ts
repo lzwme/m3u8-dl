@@ -39,7 +39,7 @@ export class VideoParser {
    */
   public static async parse(url: string, headers: Record<string, string> = {}): Promise<ApiResponse<VideoInfo>> {
     const info = VideoParser.getPlatform(url);
-    if (!info) return { code: 201, message: '不支持的视频平台' };
+    if (info.errmsg) return { code: 400, message: info.errmsg || '不支持的视频平台' };
 
     const parserClass = VideoParser.platforms[info.platform].class;
     return await parserClass.parse(info.url, headers);
@@ -84,8 +84,8 @@ export class VideoParser {
 
       return { url, platform: 'unknown' };
     } catch (error) {
-      console.error('解析 URL 失败', url, error);
-      return { url, platform: 'unknown' };
+      // console.error('[parser]解析 URL 失败', url, (error as Error).message);
+      return { url, platform: 'unknown', errmsg: (error as Error).message };
     }
   }
   /**

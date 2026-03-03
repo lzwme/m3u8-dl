@@ -7,6 +7,7 @@ import { logger } from './lib/utils.js';
 import { VideoSerachAndDL } from './lib/video-search.js';
 import { m3u8BatchDownload } from './m3u8-batch-download';
 import type { CliOptions } from './types/m3u8';
+import { VideoParser } from './video-parser/index.js';
 
 const pkg = readJsonFileSync<PackageJson>(resolve(__dirname, '../package.json'));
 
@@ -24,7 +25,7 @@ process.on('SIGINT', signal => {
 });
 
 // Initialize language before using t()
-const initialLang = getLang();
+const initialLang = 'en'; // getLang();
 setLanguage(initialLang);
 
 program
@@ -85,6 +86,18 @@ program
   .description(t('cli.command.search.description', initialLang))
   .action(async (keyword, options: { url?: string[]; remoteConfigUrl?: string }) => {
     await VideoSerachAndDL(keyword, options, getOptions());
+  });
+
+program
+  .command('info <url>')
+  .description('解析视频 URL 并输出详细信息')
+  .option('--lang <lang>', t('cli.option.lang', initialLang))
+  .action(async (url: string) => {
+    getOptions(); // 处理语言设置
+    logger.info('正在解析视频 URL:', url);
+    const result = await VideoParser.parse(url);
+    console.log(JSON.stringify(result, null, 2));
+    process.exit();
   });
 
 program.parse(process.argv);

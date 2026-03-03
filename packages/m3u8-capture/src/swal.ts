@@ -54,7 +54,7 @@ export async function loadSwal(): Promise<void> {
 export function initSwalCSS(shadowRoot: ShadowRoot, swalContainer: HTMLElement): void {
   addCssOrScript(
     GM_getResourceText('SwalCSS')
-      .replace(/(\d+)rem/g, '$1em')
+      .replace(/([\d.]+)rem/g, '$1em')
       .replace(/:root *{/, `#${swalContainer.id} {`)
       .replace(/body/g, ''),
     shadowRoot as unknown as HTMLElement,
@@ -71,5 +71,11 @@ export function initSwalCSS(shadowRoot: ShadowRoot, swalContainer: HTMLElement):
 }
 
 export function initTailwindCSS(shadowRoot: ShadowRoot): void {
-  addCssOrScript(GM_getResourceText('TailwindCSS').replace(/(\d+)rem/g, '$1em'), shadowRoot as unknown as HTMLElement, 'css');
+  // 将 rem 替换为 em，避免受外部 html font-size 影响
+  // 使用 [\d.]+ 匹配包含小数的数字（如 0.25rem, 1.5rem）
+  addCssOrScript(
+    GM_getResourceText('TailwindCSS').replace(/([\d.]+)rem/g, '$1em'),
+    shadowRoot as unknown as HTMLElement,
+    'css'
+  );
 }
