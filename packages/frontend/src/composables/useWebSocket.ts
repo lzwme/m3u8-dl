@@ -13,6 +13,8 @@ let onPasswordVerifiedCallback: ((success: boolean) => void) | null = null;
 let globalToken = '';
 // 标记是否正在验证密码（避免在验证过程中显示"连接成功"提示）
 let isPasswordVerifying = false;
+// 标记连接是否曾经成功建立过（用于区分首次连接失败和已建立连接断开）
+let wasConnected = false;
 
 // 全局重新连接函数，使用新 token
 export function reconnectWithToken(newToken: string, isVerifying = false, onVerified?: (success: boolean) => void) {
@@ -115,6 +117,8 @@ function _connect(token: string) {
   };
 
   socket.onopen = () => {
+    // 标记连接已成功建立
+    wasConnected = true;
     // 如果正在验证密码，延迟显示成功提示，等待实际验证结果
     // 如果验证成功，会在收到 serverInfo 消息后显示成功提示
     if (!isPasswordVerifying) {
@@ -146,10 +150,13 @@ function _connect(token: string) {
       return;
     }
 
-    toast({
-      text: `Connection lost, will retry in ${globalReconnectDelay / 1000}s...`,
-      type: 'error',
-    });
+    // 只有在连接曾经成功建立后才显示"连接断开"提示
+    if (wasConnected) {
+      toast({
+        text: `Connection lost, will retry in ${globalReconnectDelay / 1000}s...`,
+        type: 'error',
+      });
+    }
 
     // 清除旧的定时器
     if (globalReconnectTimer) {
