@@ -351,7 +351,7 @@ m3u8Download('https://example.com/video.m3u8', {
 
 ```bash
 # Pull image
-docker pull renxia/m3u8dl-dl:latest
+docker pull renxia/m3u8-dl:latest
 
 # Run container
 docker run --rm -it \
@@ -360,7 +360,7 @@ docker run --rm -it \
   -p 6600:6600 \
   -e DS_PORT=6600 \
   -e DS_SECRET=your-secret-token \
-  renxia/m3u8dl-dl:latest
+  renxia/m3u8-dl:latest
 ```
 
 #### Using Docker Compose
@@ -370,7 +370,7 @@ Create `docker-compose.yml` file:
 ```yml
 services:
   m3u8-dl:
-    image: renxia/m3u8dl-dl:latest
+    image: renxia/m3u8-dl:latest
     container_name: m3u8-dl
     volumes:
       - ./downloads:/app/downloads
