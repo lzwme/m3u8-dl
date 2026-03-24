@@ -2,6 +2,19 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [1.9.1](https://github.com/lzwme/m3u8-dl/compare/v1.9.0...v1.9.1) (2026-03-24)
+
+
+### Features
+
+* 视频详情添加缓存目录展示和打开缓存目录功能 (close [#32](https://github.com/lzwme/m3u8-dl/issues/32)) ([854adc8](https://github.com/lzwme/m3u8-dl/commit/854adc8cec6b5717b84d1ac6183a6bc716b6a33e))
+
+
+### Bug Fixes
+
+* 修复 README 中 Docker 镜像名称错误 (m3u8dl-dl -> m3u8-dl) ([2ebcaf6](https://github.com/lzwme/m3u8-dl/commit/2ebcaf697c309b5a7aab738a9281f60f2a5f325b))
+* 修复首次打开页面时 WebSocket 误显示 Connection lost 提示的问题 ([842b531](https://github.com/lzwme/m3u8-dl/commit/842b53157f48f61a4705378d59673f610ef25e7d))
+
 ## [1.9.0](https://github.com/lzwme/m3u8-dl/compare/v1.8.0...v1.9.0) (2026-03-03)
 
 
