@@ -22,6 +22,7 @@ export interface DownloadTask {
   endTime?: number;
   errmsg?: string;
   showName?: string;
+  cacheDir?: string;
   dlOptions?: DownloadTaskOptions;
   options?: DownloadTaskOptions;
 }

@@ -22,8 +22,8 @@ export const envConfig = {
   /** 是否启用调试 */
   enableDebug: import.meta.env.DEV,
 
-  /** 是否启用 Electron */
-  isElectron: typeof window !== 'undefined' && !!window.electron,
+  /** 是否为 Native 应用环境 */
+  isNativeApp: typeof window !== 'undefined' && !!window.electron,
 
   /** WebSocket 地址 */
   wsUrl: `${window.location.protocol === 'https:' ? 'wss:' : 'ws:'}//${window.location.host}/ws`,

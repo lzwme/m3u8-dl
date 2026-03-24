@@ -108,6 +108,26 @@
               </button>
             </div>
           </div>
+          <div class="flex items-start" v-if="task.cacheDir">
+            <label class="font-bold text-right inline-block text-sm md:text-base"
+              style="min-width: 80px; max-width: 80px;">{{ $t('taskDetail.cacheDir') }}:</label>
+            <div class="ml-1 md:ml-2 flex-1 flex items-center gap-1 md:gap-2">
+              <div class="flex-1 p-1.5 md:p-2 bg-gray-50 rounded border text-xs md:text-sm text-gray-700 break-all">
+                {{ task.cacheDir }}
+              </div>
+              <button @click="copy(task.cacheDir || '')"
+                class="px-2 py-1.5 md:px-3 md:py-2 bg-blue-500 hover:bg-blue-600 text-white rounded transition-colors flex-shrink-0 text-sm"
+                :title="$t('taskDetail.copy')">
+                <i class="fas fa-copy"></i>
+              </button>
+              <button v-if="isNativeApp"
+                @click="openFolder(task.cacheDir || '')"
+                class="px-2 py-1.5 md:px-3 md:py-2 bg-green-500 hover:bg-green-600 text-white rounded transition-colors flex-shrink-0 text-sm"
+                :title="$t('taskDetail.openFolder')">
+                <i class="fas fa-folder-open"></i>
+              </button>
+            </div>
+          </div>
           <div class="flex items-start" v-if="task.errmsg">
             <label class="font-bold text-right inline-block text-sm md:text-base"
               style="min-width: 80px; max-width: 80px;">{{ $t('taskDetail.relatedInfo') }}:</label>
@@ -131,8 +151,10 @@ import type { DownloadTask } from '@/types/task';
 import { formatSize, formatTimeCost } from '@/utils/format';
 import { toast } from '@/utils/toast';
 import { copyToClipboard } from '@/utils/clipboard';
+import { useOpenFolder } from '@/composables/useOpenFolder';
 
 const { t } = useI18n();
+const { openFolder, isNativeApp } = useOpenFolder();
 
 defineProps<{
   visible: boolean;

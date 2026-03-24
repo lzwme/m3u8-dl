@@ -1,4 +1,4 @@
-import { existsSync, statSync } from 'node:fs';
+import { existsSync, statSync, writeFileSync } from 'node:fs';
 import type { IncomingHttpHeaders } from 'node:http';
 import { dirname, resolve, sep } from 'node:path';
 import { Barrier, formatTimeCost, rmrfAsync } from '@lzwme/fe-utils';
@@ -345,7 +345,10 @@ export async function m3u8Download(url: string, options: M3u8DLOptions = {}) {
     }
 
     result.stats = stats;
-    toLocalM3u8(m3u8Info.data);
+    // 记录视频基本信息到缓存目录 info.json 文件中
+    const infoPath = resolve(dirname(m3u8Info.data[0].tsOut), 'info.json');
+    if (!existsSync(infoPath)) writeFileSync(infoPath, JSON.stringify(Object.assign({ url }, options), null, 2));
+
     if (options.onInited) options.onInited(stats, m3u8Info, workPoll);
     runTask(m3u8Info.data);
 

@@ -462,6 +462,28 @@ const T = {
         this.webBrowserWindow.close();
       }
     });
+
+    // 打开文件夹
+    ipcMain.on('open-folder', (event, folderPath) => {
+      console.log('[Main] open-folder:', folderPath);
+      if (!folderPath) {
+        event.reply('open-folder-result', { success: false, error: '路径为空' });
+        return;
+      }
+      if (!fs.existsSync(folderPath)) {
+        event.reply('open-folder-result', { success: false, error: '目录不存在' });
+        return;
+      }
+      shell.openPath(folderPath).then(result => {
+        if (result === '') {
+          event.reply('open-folder-result', { success: true });
+        } else {
+          event.reply('open-folder-result', { success: false, error: `打开失败: ${result}` });
+        }
+      }).catch(err => {
+        event.reply('open-folder-result', { success: false, error: err.message || '打开失败' });
+      });
+    });
   },
   createTray() {
     const iconImg = nativeImage.createFromPath(config.logo);

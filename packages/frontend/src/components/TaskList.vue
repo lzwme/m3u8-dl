@@ -236,7 +236,7 @@ function showTaskDetail(task: DownloadTask) {
 }
 
 function preview(url: string) {
-  window.open(`https://m3u8-player.lzw.me?from=${envConfig.isElectron ? 'app' : 'webui'}&url=${encodeURIComponent(url)}`);
+  window.open(`https://m3u8-player.lzw.me?from=${envConfig.isNativeApp ? 'app' : 'webui'}&url=${encodeURIComponent(url)}`);
 }
 
 function localPlay(task: DownloadTask) {

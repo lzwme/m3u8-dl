@@ -25,7 +25,7 @@
           <i class="fas fa-download mr-3"></i>{{ $t('layout.downloadManagement') }}
         </button>
         <button
-          v-if="isElectron"
+          v-if="isNativeApp"
           @click="switchSection('web-browser')"
           class="nav-item w-full p-3 rounded-lg flex items-center"
           :class="{ active: activeSection === 'web-browser' }"
@@ -80,7 +80,7 @@ const serverStore = useServerStore();
 
 const sidebarCollapsed = ref(window.innerWidth <= 768);
 const activeSection = ref('download');
-const isElectron = computed(() => envConfig.isElectron);
+const isNativeApp = computed(() => envConfig.isNativeApp);
 
 const emit = defineEmits<{
   (e: 'new-download'): void;

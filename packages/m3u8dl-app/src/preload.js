@@ -1,6 +1,6 @@
 const { contextBridge, ipcRenderer } = require('electron');
 const ipcEvents = {
-  send: [
+  send: new Set([
     'checkForUpdate',
     'checkAppVersion',
     'web-browser:load',
@@ -11,8 +11,9 @@ const ipcEvents = {
     'web-browser:go-back',
     'web-browser:go-forward',
     'web-browser:reload',
-  ],
-  receive: [
+    'open-folder',
+  ]),
+  receive: new Set([
     'message',
     'version',
     'downloadProgress',
@@ -24,20 +25,23 @@ const ipcEvents = {
     'web-browser:url-changed',
     'web-browser:closed',
     'web-browser:navigation-state',
-  ],
+    'open-folder-result',
+  ]),
 };
 
 contextBridge.exposeInMainWorld('electron', {
   ipcRenderer,
   ipc: {
     send: (channel, data) => {
-      if (ipcEvents.send.includes(channel)) ipcRenderer.send(channel, data);
+      if (ipcEvents.send.has(channel)) ipcRenderer.send(channel, data);
+      else console.error(`Trying to send an invalid channel: ${channel}`);
     },
     on: (channel, func) => {
-      if (ipcEvents.receive.includes(channel)) ipcRenderer.on(channel, (event, ...args) => func(...args));
+      if (ipcEvents.receive.has(channel)) ipcRenderer.on(channel, (event, ...args) => func(...args));
+      else console.error(`Trying to receive an invalid channel: ${channel}`);
     },
     removeAllListeners: (channel) => {
-      if (ipcEvents.receive.includes(channel)) ipcRenderer.removeAllListeners(channel);
+      if (ipcEvents.receive.has(channel)) ipcRenderer.removeAllListeners(channel);
     },
   },
 });

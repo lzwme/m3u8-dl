@@ -1,5 +1,5 @@
 <template>
-  <div v-if="isElectron" class="web-browser-container border border-gray-300 rounded-lg p-4 bg-white">
+  <div v-if="isNativeApp" class="web-browser-container border border-gray-300 rounded-lg p-4 bg-white">
     <div class="flex items-center justify-between mb-3">
       <h3 class="text-lg font-semibold text-gray-800">
         <i class="fas fa-globe mr-2"></i>{{ $t('webBrowser.title') }}
@@ -155,7 +155,7 @@ const emit = defineEmits<{
   (e: 'batch-download', data: Array<M3u8CaptureItem>): void;
 }>();
 
-const isElectron = computed(() => envConfig.isElectron);
+const isNativeApp = computed(() => envConfig.isNativeApp);
 const url = ref('');
 const loading = ref(false);
 const error = ref('');
@@ -179,7 +179,7 @@ function loadUrl() {
     return;
   }
 
-  if (!isElectron.value) {
+  if (!isNativeApp.value) {
     toast({ text: t('webBrowser.electronOnly'), type: 'error' });
     return;
   }
@@ -195,7 +195,7 @@ function loadUrl() {
 }
 
 function stopLoading() {
-  if (isElectron.value) {
+  if (isNativeApp.value) {
     window.electron?.ipc.send('web-browser:stop');
   }
   loading.value = false;
@@ -353,33 +353,33 @@ function handleNavigationState(data: { canGoBack: boolean; canGoForward: boolean
 }
 
 function showBrowser() {
-  if (isElectron.value) {
+  if (isNativeApp.value) {
     window.electron?.ipc.send('web-browser:show');
     browserVisible.value = true;
   }
 }
 
 function hideBrowser() {
-  if (isElectron.value) {
+  if (isNativeApp.value) {
     window.electron?.ipc.send('web-browser:hide');
     browserVisible.value = false;
   }
 }
 
 function goBack() {
-  if (isElectron.value) {
+  if (isNativeApp.value) {
     window.electron?.ipc.send('web-browser:go-back');
   }
 }
 
 function goForward() {
-  if (isElectron.value) {
+  if (isNativeApp.value) {
     window.electron?.ipc.send('web-browser:go-forward');
   }
 }
 
 function reload() {
-  if (isElectron.value) {
+  if (isNativeApp.value) {
     window.electron?.ipc.send('web-browser:reload');
   }
 }
@@ -403,7 +403,7 @@ function handleError(data: { code: number; description: string }) {
 }
 
 onMounted(() => {
-  if (isElectron.value && window.electron) {
+  if (isNativeApp.value && window.electron) {
     const ipc = window.electron.ipc;
     ipc.on('web-browser:m3u8-found', handleM3u8Found);
     ipc.on('web-browser:page-title', handlePageTitle);
@@ -417,7 +417,7 @@ onMounted(() => {
 });
 
 onUnmounted(() => {
-  if (isElectron.value && window.electron) {
+  if (isNativeApp.value && window.electron) {
     const ipc = window.electron.ipc;
     ipc.removeAllListeners('web-browser:m3u8-found');
     ipc.removeAllListeners('web-browser:page-title');
