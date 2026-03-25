@@ -25,14 +25,6 @@
           <i class="fas fa-download mr-3"></i>{{ $t('layout.downloadManagement') }}
         </button>
         <button
-          v-if="isNativeApp"
-          @click="switchSection('web-browser')"
-          class="nav-item w-full p-3 rounded-lg flex items-center"
-          :class="{ active: activeSection === 'web-browser' }"
-        >
-          <i class="fas fa-globe mr-3"></i>{{ $t('layout.webBrowser') }}
-        </button>
-        <button
           @click="switchSection('completed')"
           class="nav-item w-full p-3 rounded-lg flex items-center"
           :class="{ active: activeSection === 'completed' }"
@@ -172,8 +164,6 @@ watch(
   (path) => {
     if (path.startsWith('/page/download')) {
       activeSection.value = 'download';
-    } else if (path.startsWith('/page/web-browser')) {
-      activeSection.value = 'web-browser';
     } else if (path.startsWith('/page/completed')) {
       activeSection.value = 'completed';
     } else if (path.startsWith('/page/config')) {

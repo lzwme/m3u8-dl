@@ -498,7 +498,7 @@ pnpm format
 pnpm fix
 ```
 
-构建桌面应用：
+构建桌面应用（[Electron](https://electronjs.org)）：
 
 ```bash
 # 进入应用目录
@@ -514,6 +514,15 @@ pnpm dev
 pnpm build
 ```
 
+构建桌面应用（[Electrobun](https://github.com/blackboardsh/electrobun)，需 [Bun](https://bun.sh)）：
+
+```bash
+# 仓库根目录（已 pnpm install）
+pnpm run build          # cjs + client
+pnpm run dev:app        # Electrobun 开发
+pnpm run build:app      # 打包到 packages/m3u8dl-electrobun/artifacts
+```
+
 ### 项目结构
 
 ```
@@ -527,6 +536,7 @@ m3u8-dl/
 ├── packages/
 │   ├── frontend/     # Vue 3 前端项目
 │   ├── m3u8dl-app/   # Electron 桌面应用
+│   ├── m3u8dl-electrobun/   # Electrobun 桌面壳（Bun）
 │   └── m3u8-capture/ # 浏览器油猴脚本（TypeScript + Vite）
 ├── cjs/              # 编译后的 CommonJS 代码
 └── client/           # 前端构建输出

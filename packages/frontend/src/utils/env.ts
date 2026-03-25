@@ -22,8 +22,17 @@ export const envConfig = {
   /** 是否启用调试 */
   enableDebug: import.meta.env.DEV,
 
-  /** 是否为 Native 应用环境 */
-  isNativeApp: typeof window !== 'undefined' && !!window.electron,
+  get isElectrobun() {
+    if (typeof window === 'undefined') return false;
+    const w = window as Window & { __electrobunWindowId?: number };
+    return typeof w.__electrobunWindowId === 'number';
+  },
+
+  /** 是否为桌面壳（Electrobun / 旧 Electron preload 注入的 nativeApi） */
+  get isNativeApp() {
+    if (typeof window === 'undefined') return false;
+    return this.isElectrobun || !!window.nativeApi;
+  },
 
   /** WebSocket 地址 */
   wsUrl: `${window.location.protocol === 'https:' ? 'wss:' : 'ws:'}//${window.location.host}/ws`,

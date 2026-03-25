@@ -48,7 +48,7 @@ packages/frontend/
 
 ## 构建输出
 
-构建后的文件会输出到 `../../client` 目录，保持与现有 Server 和 Electron 应用的兼容性。
+构建后的文件会输出到 `../../client` 目录，供 Web 服务与 Electron/Electrobun 桌面壳加载。
 
 ## 注意事项
 

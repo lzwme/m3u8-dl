@@ -363,8 +363,9 @@ async function handleCheckVersion() {
 }
 
 onMounted(() => {
-  if (window.electron) {
-    const ipc = window.electron.ipc;
+  if (window.nativeApi) {
+    const ipc = window.nativeApi.ipc;
+    ipc.removeAllListeners('downloadProgress');
     ipc.on('downloadProgress', (data: any) => {
       console.log('downloadProgress', data);
       serverStore.updateServerInfo({

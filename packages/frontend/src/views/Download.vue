@@ -196,8 +196,8 @@ function doPlay(url: string, task?: DownloadTask | null) {
 }
 
 function initElectronEvents() {
-  if (window.electron) {
-    const ipc = window.electron.ipc;
+  if (window.nativeApi) {
+    const ipc = window.nativeApi.ipc;
     ipc.on('message', (ev: any) => {
       if (typeof ev.data === 'string') {
         toast({ text: ev.data, type: 'info' });

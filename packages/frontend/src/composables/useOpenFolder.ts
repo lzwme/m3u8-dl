@@ -8,7 +8,7 @@ const IPC_RESULT_CHANNEL = 'open-folder-result';
 
 /**
  * 打开文件夹的通用 hook
- * 封装了 Electron IPC 通信逻辑，支持错误提示
+ * 桌面端通过 `window.nativeApi.ipc`（Electrobun 桥接）打开系统文件夹
  */
 export function useOpenFolder() {
   const { t } = useI18n();
@@ -29,7 +29,7 @@ export function useOpenFolder() {
       return false;
     }
 
-    window.electron?.ipc.send(IPC_CHANNEL, folderPath);
+    window.nativeApi?.ipc.send(IPC_CHANNEL, folderPath);
     return true;
   }
 
@@ -47,7 +47,7 @@ export function useOpenFolder() {
    */
   function registerListener() {
     if (isNativeApp) {
-      window.electron?.ipc.on(IPC_RESULT_CHANNEL, handleOpenFolderResult);
+      window.nativeApi?.ipc.on(IPC_RESULT_CHANNEL, handleOpenFolderResult);
     }
   }
 
@@ -56,7 +56,7 @@ export function useOpenFolder() {
    */
   function removeListener() {
     if (isNativeApp) {
-      window.electron?.ipc.removeAllListeners(IPC_RESULT_CHANNEL);
+      window.nativeApi?.ipc.removeAllListeners(IPC_RESULT_CHANNEL);
     }
   }
 

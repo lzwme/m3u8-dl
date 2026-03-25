@@ -68,13 +68,13 @@ export function useVersionCheck() {
       }
 
       if (!latestVersion) {
-        // Electron 环境下从 GitHub API 获取版本信息
-        if (window.electron) {
+        // 桌面端从 GitHub Releases 获取版本信息
+        if (window.nativeApi) {
           const response = await fetch('https://api.github.com/repos/lzwme/m3u8-dl/releases/latest');
           const r = await response.json();
           if (r.tag_name) latestVersion = r.tag_name.replace(/^v/, '');
         } else {
-          // 非 Electron 环境从 npm registry 获取
+          // 浏览器环境从 npm registry 获取
           const response = await fetch(`https://registry.${locale.value === 'zh-CN' ? 'npmmirror' : 'npmjs'}.com/@lzwme/m3u8-dl/latest`);
           const r = await response.json();
           if (r.version) latestVersion = r.version;
@@ -94,8 +94,8 @@ export function useVersionCheck() {
         }
 
         serverStore.updateServerInfo({ newVersion: latestVersion });
-        if (window.electron) {
-          window.electron.ipc.send('checkForUpdate');
+        if (window.nativeApi) {
+          window.nativeApi.ipc.send('checkForUpdate');
         } else if (showToast) {
           const url = locale.value === 'zh-CN' ? 'https://m3u8-player.lzw.me/download.html' : 'https://github.com/lzwme/m3u8-dl/releases';
           toast({

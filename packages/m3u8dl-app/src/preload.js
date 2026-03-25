@@ -29,7 +29,7 @@ const ipcEvents = {
   ]),
 };
 
-contextBridge.exposeInMainWorld('electron', {
+contextBridge.exposeInMainWorld('nativeApi', {
   ipcRenderer,
   ipc: {
     send: (channel, data) => {

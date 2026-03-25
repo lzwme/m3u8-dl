@@ -191,12 +191,12 @@ function loadUrl() {
   currentUrl.value = targetUrl;
   browserVisible.value = true;
 
-  window.electron?.ipc.send('web-browser:load', targetUrl);
+  window.nativeApi?.ipc.send('web-browser:load', targetUrl);
 }
 
 function stopLoading() {
   if (isNativeApp.value) {
-    window.electron?.ipc.send('web-browser:stop');
+    window.nativeApi?.ipc.send('web-browser:stop');
   }
   loading.value = false;
 }
@@ -354,33 +354,33 @@ function handleNavigationState(data: { canGoBack: boolean; canGoForward: boolean
 
 function showBrowser() {
   if (isNativeApp.value) {
-    window.electron?.ipc.send('web-browser:show');
+    window.nativeApi?.ipc.send('web-browser:show');
     browserVisible.value = true;
   }
 }
 
 function hideBrowser() {
   if (isNativeApp.value) {
-    window.electron?.ipc.send('web-browser:hide');
+    window.nativeApi?.ipc.send('web-browser:hide');
     browserVisible.value = false;
   }
 }
 
 function goBack() {
   if (isNativeApp.value) {
-    window.electron?.ipc.send('web-browser:go-back');
+    window.nativeApi?.ipc.send('web-browser:go-back');
   }
 }
 
 function goForward() {
   if (isNativeApp.value) {
-    window.electron?.ipc.send('web-browser:go-forward');
+    window.nativeApi?.ipc.send('web-browser:go-forward');
   }
 }
 
 function reload() {
   if (isNativeApp.value) {
-    window.electron?.ipc.send('web-browser:reload');
+    window.nativeApi?.ipc.send('web-browser:reload');
   }
 }
 
@@ -403,8 +403,8 @@ function handleError(data: { code: number; description: string }) {
 }
 
 onMounted(() => {
-  if (isNativeApp.value && window.electron) {
-    const ipc = window.electron.ipc;
+  if (isNativeApp.value && window.nativeApi) {
+    const ipc = window.nativeApi.ipc;
     ipc.on('web-browser:m3u8-found', handleM3u8Found);
     ipc.on('web-browser:page-title', handlePageTitle);
     ipc.on('web-browser:loading', handleLoading);
@@ -417,8 +417,8 @@ onMounted(() => {
 });
 
 onUnmounted(() => {
-  if (isNativeApp.value && window.electron) {
-    const ipc = window.electron.ipc;
+  if (isNativeApp.value && window.nativeApi) {
+    const ipc = window.nativeApi.ipc;
     ipc.removeAllListeners('web-browser:m3u8-found');
     ipc.removeAllListeners('web-browser:page-title');
     ipc.removeAllListeners('web-browser:loading');

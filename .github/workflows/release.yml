@@ -81,7 +81,7 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           # RENDERER_VITE_AIHUBMIX_SECRET: ${{ vars.RENDERER_VITE_AIHUBMIX_SECRET }}
-          NODE_OPTIONS: --max-old-space-size=8192
+          NODE_OPTIONS: --max-old-space-size=15360
 
       - name: Build Mac
         if: matrix.os == 'macos-latest'
@@ -96,7 +96,7 @@ jobs:
           # APPLE_APP_SPECIFIC_PASSWORD: ${{ vars.APPLE_APP_SPECIFIC_PASSWORD }}
           # APPLE_TEAM_ID: ${{ vars.APPLE_TEAM_ID }}
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          NODE_OPTIONS: --max-old-space-size=8192
+          NODE_OPTIONS: --max-old-space-size=15360
 
       - name: Build Windows
         if: matrix.os == 'windows-latest'
@@ -106,7 +106,7 @@ jobs:
           npm run build -- --win
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          NODE_OPTIONS: --max-old-space-size=8192
+          NODE_OPTIONS: --max-old-space-size=15360
 
       - name: Release
         uses: ncipollo/release-action@v1

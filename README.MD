@@ -498,7 +498,7 @@ pnpm format
 pnpm fix
 ```
 
-Build desktop application:
+Build desktop application ([Electron](https://electronjs.org)):
 
 ```bash
 # Enter application directory
@@ -514,6 +514,16 @@ pnpm dev
 pnpm build
 ```
 
+
+Build desktop application ([Electrobun](https://github.com/blackboardsh/electrobun); requires [Bun](https://bun.sh)):
+
+```bash
+# From repo root (after pnpm install)
+pnpm run build          # cjs + client
+pnpm run dev:app        # Electrobun dev (opens UI; dev UI uses Vite :5173 when reachable)
+pnpm run build:app      # Electrobun production build → packages/m3u8dl-electrobun/artifacts
+```
+
 ### Project Structure
 
 ```
@@ -527,6 +537,7 @@ m3u8-dl/
 ├── packages/
 │   ├── frontend/     # Vue 3 frontend project
 │   ├── m3u8dl-app/   # Electron desktop application
+│   ├── m3u8dl-electrobun/   # Electrobun desktop shell (Bun)
 │   └── m3u8-capture/ # Browser userscript (TypeScript + Vite)
 ├── cjs/              # Compiled CommonJS code
 └── client/           # Frontend build output

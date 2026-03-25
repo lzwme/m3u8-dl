@@ -1,0 +1,240 @@
+# 综合参考：
+# - https://github.com/b-open-io/tokenpass-desktop/blob/main/.github/workflows/release.yml
+#   （矩阵构建 → upload-artifact → 独立 release；可选 Apple / Windows 签名）
+# - https://github.com/aaditagrawal/typsmthng-desktop/blob/main/.github/workflows/release.yml
+#   （preflight 版本校验、预发布判断、质量门禁）
+name: Release Bun
+
+on:
+  push:
+    tags:
+      - v*.*.*
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Release tag（须为 vX.Y.Z，如 v2.0.0）'
+        required: true
+        default: 'v2.0.0'
+
+permissions:
+  contents: write
+
+env:
+  GITHUB_CI: 1
+  USE_HARD_LINKS: false
+
+jobs:
+  preflight:
+    runs-on: ubuntu-24.04
+    outputs:
+      tag: ${{ steps.meta.outputs.tag }}
+      prerelease: ${{ steps.meta.outputs.prerelease }}
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          ref: ${{ github.ref }}
+          fetch-depth: 0
+          submodules: 'recursive'
+
+      - id: meta
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
+            TAG="${{ github.event.inputs.tag }}"
+          else
+            TAG="${GITHUB_REF_NAME}"
+          fi
+
+          if [[ ! "$TAG" =~ ^v[0-9]+\.[0-9]+\.[0-9]+(-[a-zA-Z0-9.]+)?$ ]]; then
+            echo "Invalid tag: $TAG (expected vX.Y.Z or vX.Y.Z-prerelease)"
+            exit 1
+          fi
+
+          VERSION="${TAG#v}"
+          if [[ "$VERSION" == *-* ]]; then
+            echo "prerelease=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "prerelease=false" >> "$GITHUB_OUTPUT"
+          fi
+          echo "tag=$TAG" >> "$GITHUB_OUTPUT"
+          echo "Preflight OK: $TAG"
+
+      - uses: pnpm/action-setup@v4
+        with:
+          run_install: false
+          version: 10
+
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 24
+
+      - name: Quality checks
+        run: |
+          pnpm install --no-frozen-lockfile
+          pnpm test
+
+  build:
+    needs: preflight
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: macos-latest
+            platform: mac
+          - os: windows-latest
+            platform: win
+          - os: ubuntu-latest
+            platform: linux
+
+    runs-on: ${{ matrix.os }}
+    name: Build (${{ matrix.platform }})
+
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          ref: ${{ github.ref }}
+          submodules: 'recursive'
+
+      - uses: pnpm/action-setup@v4
+        with:
+          run_install: false
+          version: 10
+
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 24
+          registry-url: https://registry.npmjs.com
+
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Get pnpm store directory
+        id: pnpm-cache
+        shell: bash
+        run: echo "STORE_PATH=$(pnpm store path)" >> "$GITHUB_OUTPUT"
+
+      - uses: actions/cache@v4
+        with:
+          path: ${{ steps.pnpm-cache.outputs.STORE_PATH }}
+          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-pnpm-store
+
+      - run: pnpm install --no-frozen-lockfile
+
+      - name: Import Apple certificate
+        if: matrix.platform == 'mac'
+        env:
+          CSC_LINK: ${{ secrets.CSC_LINK }}
+          CSC_KEY_PASSWORD: ${{ secrets.CSC_KEY_PASSWORD }}
+        shell: bash
+        run: |
+          if [[ -z "${CSC_LINK:-}" ]]; then
+            echo "CSC_LINK not set; skip codesign keychain setup"
+            exit 0
+          fi
+          KEYCHAIN_PATH="$RUNNER_TEMP/app-signing.keychain-db"
+          KEYCHAIN_PASSWORD=$(openssl rand -base64 32)
+          echo "$CSC_LINK" | base64 --decode > "$RUNNER_TEMP/certificate.p12"
+          security create-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
+          security set-keychain-settings -lut 21600 "$KEYCHAIN_PATH"
+          security unlock-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
+          security import "$RUNNER_TEMP/certificate.p12" -P "$CSC_KEY_PASSWORD" -A -t cert -f pkcs12 -k "$KEYCHAIN_PATH"
+          security set-key-partition-list -S apple-tool:,apple: -s -k "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
+          security list-keychain -d user -s "$KEYCHAIN_PATH"
+          CERT_NAME=$(security find-identity -v -p codesigning "$KEYCHAIN_PATH" | grep "Developer ID Application" | head -1 | sed 's/.*"\(.*\)".*/\1/' || true)
+          if [[ -n "$CERT_NAME" ]]; then
+            echo "ELECTROBUN_DEVELOPER_ID=$CERT_NAME" >> "$GITHUB_ENV"
+          fi
+          rm -f "$RUNNER_TEMP/certificate.p12"
+
+      - name: Build cjs & frontend
+        run: npm run build
+
+      - name: Build Electrobun (stable)
+        run: pnpm -F @lzwme/m3u8-dl-electrobun run build:stable
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          NODE_OPTIONS: --max-old-space-size=15360
+          ELECTROBUN_TEAMID: ${{ secrets.APPLE_TEAM_ID }}
+          ELECTROBUN_APPLEID: ${{ secrets.APPLE_ID }}
+          ELECTROBUN_APPLEIDPASS: ${{ secrets.APPLE_APP_SPECIFIC_PASSWORD }}
+          WIN_CSC_LINK: ${{ secrets.WIN_CSC_LINK }}
+          WIN_CSC_KEY_PASSWORD: ${{ secrets.WIN_CSC_KEY_PASSWORD }}
+
+      - name: List build output
+        shell: bash
+        run: |
+          echo "=== dist/build ==="
+          ls -la packages/m3u8dl-electrobun/dist/build 2>/dev/null || echo "(none)"
+          echo "=== dist/artifacts ==="
+          ls -la packages/m3u8dl-electrobun/dist/artifacts 2>/dev/null || echo "(none)"
+          echo "=== common bundles ==="
+          find packages/m3u8dl-electrobun/dist -type f \( -name "*.dmg" -o -name "*.zip" -o -name "*.exe" -o -name "*.AppImage" -o -name "*.tar.gz" -o -name "*.tar.zst" \) 2>/dev/null || true
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: m3u8dl-${{ matrix.platform }}
+          path: |
+            packages/m3u8dl-electrobun/dist/artifacts/**/*.dmg
+            packages/m3u8dl-electrobun/dist/artifacts/**/*.zip
+            packages/m3u8dl-electrobun/dist/artifacts/**/*.exe
+            packages/m3u8dl-electrobun/dist/artifacts/**/*.AppImage
+            packages/m3u8dl-electrobun/dist/artifacts/**/*.json
+            packages/m3u8dl-electrobun/dist/artifacts/**/*.tar.zst
+            packages/m3u8dl-electrobun/dist/artifacts/**/*.tar.gz
+            packages/m3u8dl-electrobun/dist/artifacts/**/*.patch
+          if-no-files-found: warn
+
+  release:
+    needs: [preflight, build]
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          ref: ${{ github.ref }}
+          fetch-depth: 0
+          submodules: 'recursive'
+
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: release-assets
+          pattern: m3u8dl-*
+          merge-multiple: true
+
+      - name: List artifacts
+        run: find release-assets -type f 2>/dev/null | head -100 || true
+
+      - name: Write release notes body
+        run: |
+          TAG="${{ needs.preflight.outputs.tag }}"
+          cat > release_notes.md << EOF
+          ## M3U8-DL ${TAG}
+
+          构建产物见下方 Assets（按平台选择对应文件）。
+
+          ### 说明
+          - **macOS**：请使用当前架构（Apple Silicon / Intel）对应的安装包（若仓库仅提供单一矩阵产物，请以实际文件名为准）。
+          - **Windows**：请下载 \`.exe\` 或官方提供的压缩包。
+          - **Linux**：请使用 \`.AppImage\` / \`.tar.gz\` 等实际列出的格式。
+          EOF
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ needs.preflight.outputs.tag }}
+          name: ${{ needs.preflight.outputs.tag }}
+          body_path: release_notes.md
+          generate_release_notes: true
+          draft: true
+          prerelease: ${{ needs.preflight.outputs.prerelease == 'true' }}
+          make_latest: 'false'
+          fail_on_unmatched_files: false
+          files: release-assets/**/*
+          target_commitish: ${{ github.sha }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
