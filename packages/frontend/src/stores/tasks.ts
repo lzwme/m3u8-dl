@@ -19,7 +19,7 @@ export const useTasksStore = defineStore('tasks', () => {
 
     // 过滤掉已完成的任务（已完成的任务只在已完成页面显示）
     taskList = taskList.filter(task => {
-      const isCompleted = task.status === 'done' || (task.progress !== undefined && task.progress >= 100);
+      const isCompleted = task.status === 'done';
       return !isCompleted;
     });
 
