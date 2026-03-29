@@ -304,7 +304,8 @@ export async function m3u8Download(url: string, options: M3u8DLOptions = {}) {
           // 如果当前速度小于平均速度，则更新为平均速度
           if (stats.speed < stats.avgSpeed) stats.speed = stats.avgSpeed;
           stats.speedDesc = `${formatByteSize(stats.speed)}/s`;
-          stats.progress = Math.floor((finished / m3u8Info.tsCount) * 100);
+          stats.progress =
+            finished === m3u8Info.tsCount && options.convert !== false ? 99 : Math.floor((finished / m3u8Info.tsCount) * 100);
 
           if (downloadedDuration) {
             stats.remainingTime = (timeCost / downloadedDuration) * (m3u8Info.duration - stats.durationDownloaded);
@@ -361,11 +362,13 @@ export async function m3u8Download(url: string, options: M3u8DLOptions = {}) {
       logger.warn(t('download.status.downloadFailedRetry', lang), stats.tsFailed);
     } else if (options.convert !== false) {
       stats.errmsg = t('download.status.mergingVideo', lang);
+      stats.remainingTime = 0;
       if (options.onProgress) options.onProgress(stats.tsCount, m3u8Info.tsCount, null, stats);
       result.filepath = await m3u8Convert(options, m3u8Info.data);
       stats.errmsg = result.filepath ? '' : t('download.status.mergeFailed', lang);
 
       if (result.filepath && existsSync(result.filepath)) {
+        stats.progress = 100;
         stats.size = statSync(result.filepath).size;
         if (options.delCache) rmrfAsync(dirname(m3u8Info.data[0].tsOut));
       }

@@ -309,12 +309,10 @@ const currentPage = ref(1);
 const pageSize = ref(20);
 const goToPageInput = ref('');
 
-// 获取已完成的任务（progress === 100 或 status === 'done'）
+// 获取已完成的任务
 const completedTasks = computed(() => {
   const allTasks = Object.values(tasksStore.tasks);
-  const completed = allTasks.filter(
-    task => (task.status === 'done' || (task.progress !== undefined && task.progress >= 100))
-  );
+  const completed = allTasks.filter(task => task.status === 'done');
   // 设置 showName，与 tasks store 中的逻辑保持一致
   completed.forEach(task => {
     task.showName = task.filename || task.dlOptions?.filename || task.localVideo || task.url;
