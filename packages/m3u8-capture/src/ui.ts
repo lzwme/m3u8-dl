@@ -791,8 +791,9 @@ export function updateUI(): void {
   panelElement.querySelectorAll('.m3u8-capture-preview-btn').forEach(btn => {
     btn.addEventListener('click', (e: Event) => {
       e.stopPropagation();
+      const title = decodeURIComponent((btn as HTMLElement).getAttribute('data-title') || '');
       const url = decodeURIComponent((btn as HTMLElement).getAttribute('data-url') || '');
-      const previewUrl = `https://m3u8-player.lzw.me?from=capture&url=${encodeURIComponent(url)}`;
+      const previewUrl = `https://m3u8-player.lzw.me?from=capture&title=${encodeURIComponent(title)}&url=${encodeURIComponent(url)}`;
       safeOpenUrl(previewUrl);
     });
   });

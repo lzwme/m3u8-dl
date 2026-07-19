@@ -20,12 +20,12 @@ jobs:
       group: ${{ github.workflow }}-${{ github.ref }}
 
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
         with:
           ref: main
           submodules: 'recursive'
 
-      - uses: pnpm/action-setup@v4
+      - uses: pnpm/action-setup@v6
         id: pnpm-install
         with:
           run_install: false
@@ -41,7 +41,7 @@ jobs:
         shell: bash
         run: |
           echo "STORE_PATH=$(pnpm store path)" >> $GITHUB_OUTPUT
-      - uses: actions/cache@v4
+      - uses: actions/cache@v5
         name: Setup pnpm cache
         with:
           path: ${{ steps.pnpm-cache.outputs.STORE_PATH }}
