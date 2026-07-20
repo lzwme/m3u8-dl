@@ -72,6 +72,7 @@ const T = {
       targets: platform.createTarget(),
       config: {
         productName: 'M3U8-DL',
+        executableName: 'm3u8-dl',
         buildVersion: rootPkg.version,
         appId: 'cn.lzwme.m3u8dl',
         artifactName: '${productName}-${os}_${arch}-${version}.${ext}',
