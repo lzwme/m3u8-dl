@@ -55,7 +55,7 @@ export default {
     subUrlRegex: '播放页链接特征规则',
     subUrlRegexHint: '用于从视频列表页准确识别播放地址。如：play/845-1-。支持 * 通配符（会被转换为 .+）',
     videoLinks: '视频链接（每行一个，支持m3u8、mp4视频地址及抖音、微博、皮皮虾视频分享链接）',
-    videoLinksPlaceholder: '格式： URL | 名称(可选)、名称 | URL',
+    videoLinksPlaceholder: "格式： URL {'|'} 名称(可选)、名称 {'|'} URL",
     videoLinksDesc: '直接粘贴下载链接，支持多种格式',
     coreFeature: '核心功能',
     videoName: '视频名称',

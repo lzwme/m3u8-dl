@@ -37,7 +37,7 @@ jobs:
         id: pnpm-install
         with:
           run_install: false
-          version: 10
+          version: 11
 
       - uses: actions/setup-node@v6
         with:
@@ -57,7 +57,7 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-pnpm-store
 
-      - run: pnpm install --no-frozen-lockfile
+      - run: pnpm install --no-frozen-lockfile --ignore-scripts=false
 
       - name: Get release tag
         id: get-tag
@@ -76,7 +76,7 @@ jobs:
         if: matrix.os == 'ubuntu-latest'
         run: |
           cd packages/m3u8dl-app
-          pnpm install --no-frozen-lockfile
+          pnpm install --no-frozen-lockfile --ignore-scripts=false
           npm run build -- --linux
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -87,7 +87,7 @@ jobs:
         if: matrix.os == 'macos-latest'
         run: |
           cd packages/m3u8dl-app
-          pnpm install --no-frozen-lockfile
+          pnpm install --no-frozen-lockfile --ignore-scripts=false
           npm run build -- --mac
         env:
           # CSC_LINK: ${{ secrets.CSC_LINK }}
@@ -102,7 +102,7 @@ jobs:
         if: matrix.os == 'windows-latest'
         run: |
           cd packages/m3u8dl-app
-          pnpm install --no-frozen-lockfile
+          pnpm install --no-frozen-lockfile --ignore-scripts=false
           npm run build -- --win
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}

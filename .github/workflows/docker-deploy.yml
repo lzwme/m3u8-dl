@@ -32,7 +32,7 @@ jobs:
         id: pnpm-install
         with:
           run_install: false
-          version: 10
+          version: 11
 
       - uses: actions/setup-node@v6
         with:
@@ -56,10 +56,10 @@ jobs:
         run: |
           # 检查 lockfile 是否存在，如果不存在则使用 --no-frozen-lockfile
           if [ -f "pnpm-lock.yaml" ]; then
-            pnpm install --frozen-lockfile
+            pnpm install --frozen-lockfile --ignore-scripts=false
           else
             echo "Warning: pnpm-lock.yaml not found, installing without frozen-lockfile"
-            pnpm install --no-frozen-lockfile
+            pnpm install --no-frozen-lockfile --ignore-scripts=false
           fi
 
       - name: Build project

@@ -41,7 +41,7 @@ jobs:
         id: pnpm-install
         with:
           run_install: false
-          version: 10
+          version: 11
       - uses: actions/setup-node@v6
         with:
           node-version: ${{ matrix.node-version }}
@@ -60,5 +60,5 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-pnpm-store
 
-      - run: pnpm install --no-frozen-lockfile
+      - run: pnpm install --no-frozen-lockfile --ignore-scripts=false
       - run: pnpm test

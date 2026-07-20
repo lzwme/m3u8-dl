@@ -1,6 +1,6 @@
 {
   "name": "@lzwme/m3u8-capture",
-  "version": "1.0.5",
+  "version": "1.0.6",
   "type": "module",
   "private": true,
   "scripts": {
@@ -13,9 +13,9 @@
     "fix": "biome check --fix"
   },
   "devDependencies": {
-    "@types/node": "^25.0.8",
+    "@types/node": "^26.1.1",
     "@types/tampermonkey": "^5.0.5",
-    "typescript": "^5.9.3",
-    "vite": "^7.3.1"
+    "typescript": "^6.0.0",
+    "vite": "^8.1.5"
   }
 }

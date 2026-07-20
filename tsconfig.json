@@ -2,9 +2,9 @@
   "compilerOptions": {
     "forceConsistentCasingInFileNames": true,
     "target": "ESNext",
-    "module": "CommonJS",
+    "module": "Node16",
     "outDir": "cjs",
-    "moduleResolution": "node",
+    "moduleResolution": "Node16",
     "inlineSourceMap": false,
     "esModuleInterop": true,
     "allowSyntheticDefaultImports": true,

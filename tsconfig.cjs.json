@@ -3,8 +3,10 @@
   "compilerOptions": {
     "declaration": true,
     "outDir": "cjs",
+    "rootDir": "src",
     "target": "ESNext",
-    "module": "commonjs"
+    "module": "Node16",
+    "moduleResolution": "Node16"
   },
   "include": ["src/**/*.ts"],
   "exclude": ["node_modules/**", "__test__", "src/**/*.spec.ts"]

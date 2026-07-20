@@ -56,7 +56,7 @@ export default {
     subUrlRegexHint:
       'Used to accurately identify playback addresses from video list pages. Example: play/845-1-. Supports * wildcard (converted to .+)',
     videoLinks: 'Video Links (one per line, supports m3u8 addresses and Douyin, Weibo, Pipixia video share links)',
-    videoLinksPlaceholder: 'Format: URL | Name(optional), Name | URL',
+    videoLinksPlaceholder: "Format: URL {'|'} Name(optional), Name {'|'} URL",
     videoLinksDesc: 'Paste download links directly, supports multiple formats',
     coreFeature: 'Core Feature',
     videoName: 'Video Name',

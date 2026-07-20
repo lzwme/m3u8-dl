@@ -8,16 +8,12 @@
   },
   "files": {
     "ignoreUnknown": false,
-    "includes": [
-      "src/**/*.ts",
-      "!**/node_modules",
-      "!**/*.d.ts"
-    ]
+    "includes": ["src/**/*.ts", "!**/node_modules", "!**/*.d.ts"]
   },
   "linter": {
     "enabled": true,
     "rules": {
-      "recommended": true
+      "preset": "recommended"
     }
   },
   "assist": {
