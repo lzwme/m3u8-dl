@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [1.9.2](https://github.com/lzwme/m3u8-dl/compare/v1.9.1...v1.9.2) (2026-07-20)
+
+
+### Bug Fixes
+
+* 更新与批量下载容错及性能优化，修复新建任务不在下载列表显示的问题 (close [#34](https://github.com/lzwme/m3u8-dl/issues/34)) ([d50e2a1](https://github.com/lzwme/m3u8-dl/commit/d50e2a12e048f053c982dafebe35cbfbaef537d5))
+
 ### [1.9.1](https://github.com/lzwme/m3u8-dl/compare/v1.9.0...v1.9.1) (2026-03-24)
 
 
