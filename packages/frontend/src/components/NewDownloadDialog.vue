@@ -494,16 +494,24 @@ async function handleSubmit() {
 
   // 内置下载逻辑处理
   submitting.value = true;
+  // 仅回滚本次新插入的乐观任务，避免误删已存在任务
+  const optimisticUrls: string[] = [];
   try {
-    // 更新任务状态
+    // 乐观更新：立即在列表中展示新任务（此前 updateTask 会忽略不存在的 url）
     downloadList.forEach(item => {
       if (!/\.html?$/.test(item.url)) {
+        if (!tasksStore.tasks[item.url]) {
+          optimisticUrls.push(item.url);
+        }
         tasksStore.updateTask(item.url, {
-          status: 'resume',
+          url: item.url,
+          filename: item.filename,
+          status: 'pending',
           progress: 0,
           speed: 0,
           remainingTime: 0,
           size: 0,
+          dlOptions: item,
         });
       }
     });
@@ -514,9 +522,11 @@ async function handleSubmit() {
       toast({ text: result.message || t('toast.downloadStarted'), type: 'success' });
       close();
     } else {
+      if (optimisticUrls.length) tasksStore.deleteTasks(optimisticUrls);
       toast({ text: result.message || t('toast.downloadFailed'), type: 'error' });
     }
   } catch (error) {
+    if (optimisticUrls.length) tasksStore.deleteTasks(optimisticUrls);
     console.error('批量下载失败:', error);
     toast({ text: `${t('toast.downloadFailed')}: ${error instanceof Error ? error.message : t('error.unknownError')}`, type: 'error' });
   } finally {

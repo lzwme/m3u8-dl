@@ -90,17 +90,33 @@ export const useTasksStore = defineStore('tasks', () => {
   }
 
   function updateTask(url: string, updates: Partial<DownloadTask>) {
-    if (tasks.value[url]) {
-      tasks.value[url] = { ...tasks.value[url], ...updates };
-    }
+    const existing: Partial<DownloadTask> = tasks.value[url] || {};
+    // 新建任务时服务端会先推送 progress；若仅更新已存在项，列表不会出现新任务
+    tasks.value = {
+      ...tasks.value,
+      [url]: {
+        url,
+        status: 'pending',
+        ...existing,
+        ...updates,
+      } as DownloadTask,
+    };
   }
 
   function updateTasks(updates: Array<{ url: string; data: Partial<DownloadTask> }>) {
+    if (!updates.length) return;
+    const next = { ...tasks.value };
     updates.forEach(({ url, data }) => {
-      if (tasks.value[url]) {
-        tasks.value[url] = { ...tasks.value[url], ...data };
-      }
+      const existing: Partial<DownloadTask> = next[url] || {};
+
+      next[url] = {
+        url,
+        status: 'pending',
+        ...existing,
+        ...data,
+      } as DownloadTask;
     });
+    tasks.value = next;
   }
 
   function deleteTasks(urls: string[]) {

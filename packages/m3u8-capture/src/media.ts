@@ -119,8 +119,11 @@ export function extractMediaUrlFromParams(url: string): string | null {
       const decodedValue = decodeURIComponent(value);
       if (isMediaUrl(decodedValue)) return decodedValue;
     }
-  } catch {
-    // ignore
+  } catch (error) {
+    // 记录警告日志，便于调试
+    if (import.meta.env.DEV) {
+      console.warn('[M3U8 Capture] Failed to parse URL params:', url, error);
+    }
   }
 
   return null;

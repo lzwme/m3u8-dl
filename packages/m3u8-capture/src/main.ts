@@ -45,7 +45,7 @@ function init(): void {
     setTimeout(initUI, 100);
   }
 
-  // 监听页面变化（SPA 应用）
+  // 监听页面变化（SPA 应用）：路由切换时即时响应，无需等定时扫描
   let lastUrl = location.href;
   new MutationObserver(() => {
     const url = location.href;

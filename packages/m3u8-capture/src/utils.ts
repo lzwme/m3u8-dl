@@ -4,6 +4,10 @@ import type { EventCoordinates } from './types';
 
 export const IS_DEV = import.meta.env.DEV;
 
+// 缓存媒体扩展名正则表达式，避免频繁读取存储
+let cachedMediaReg: RegExp | null = null;
+let lastExtListHash = '';
+
 /** 检查是否在 iframe 中且可以访问 window.top */
 export const isInIframeMode = window.top && window.top !== window.self;
 
@@ -22,7 +26,18 @@ export function addCssOrScript(key: string, parentEl: HTMLElement = document.hea
 /** 获取媒体扩展名正则表达式 */
 export function getMediaExtReg(): RegExp {
   const extList = getMediaExtList();
-  return new RegExp(`\\.(${extList.join('|')})(\\?|$|#)`, 'i');
+  const currentHash = extList.join(',');
+
+  // 如果配置未变化，使用缓存的正则表达式
+  if (lastExtListHash === currentHash && cachedMediaReg) {
+    return cachedMediaReg;
+  }
+
+  // 配置变化或首次加载，重新生成正则表达式
+  cachedMediaReg = new RegExp(`\\.(${extList.join('|')})(\\?|$|#)`, 'i');
+  lastExtListHash = currentHash;
+
+  return cachedMediaReg;
 }
 
 /** 检查当前 URL 是否应该被排除 */
@@ -54,7 +69,7 @@ export function shouldExcludePageUrl(url?: string): boolean {
         if (regex.test(currentUrl)) return true;
       }
     } catch (e) {
-      // 正则表达式错误，忽略
+      // 正则表达式错误，记录警告日志
       console.warn('[M3U8 Capture] 排除规则格式错误:', rule, e);
     }
   }
@@ -151,6 +166,7 @@ export function applyTitleReplaceRules(title: string): string {
           result = result.replaceAll(rule, '');
         }
       } catch (e) {
+        // 记录警告日志
         console.warn('[M3U8 Capture] 标题替换规则格式错误:', rule, e);
       }
     }
@@ -159,6 +175,7 @@ export function applyTitleReplaceRules(title: string): string {
     result = result.replace(/\s+/g, ' ').trim();
     return result;
   } catch (e) {
+    // 记录警告日志
     console.warn('[M3U8 Capture] 应用标题替换规则失败:', e);
     return title;
   }

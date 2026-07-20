@@ -30,9 +30,18 @@ export function setExcludeUrls(urls: string): void {
 /** 获取媒体扩展名列表 */
 export function getMediaExtList(): string[] {
   const saved = GM_getValue(STORAGE_KEY_MEDIA_EXT_LIST, [] as string[]);
-  if (saved && Array.isArray(saved) && saved.length > 0) {
-    return saved;
+
+  // 严格验证返回值类型
+  if (Array.isArray(saved) && saved.length > 0) {
+    // 验证每个元素都是有效的扩展名
+    const isValid = saved.every(item => typeof item === 'string' && /^[a-z0-9]+$/i.test(item));
+    if (isValid) {
+      return saved;
+    }
+    // 如果验证失败，记录警告并返回默认值
+    console.warn('[M3U8 Capture] Invalid media extension list in storage, using defaults');
   }
+
   return [...DEFAULT_MEDIA_EXT_LIST];
 }
 
@@ -49,7 +58,17 @@ export function setMediaExtList(extList: string[]): string[] | null {
 
 /** 获取面板位置 */
 export function getPanelPosition(): PanelPosition | null {
-  return GM_getValue(STORAGE_KEY_PANEL_POS, null);
+  const saved = GM_getValue(STORAGE_KEY_PANEL_POS, null);
+
+  // 验证类型
+  if (saved && typeof saved === 'object' && 'x' in saved && 'y' in saved) {
+    const pos = saved as PanelPosition;
+    if (typeof pos.x === 'number' && typeof pos.y === 'number') {
+      return pos;
+    }
+  }
+
+  return null;
 }
 
 /** 设置面板位置 */

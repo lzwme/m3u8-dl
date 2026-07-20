@@ -541,13 +541,14 @@ export class DLServer {
     // });
 
     // API to start m3u8 download
-    app.post('/api/download', (req, res) => {
+    app.post('/api/download', async (req, res) => {
       const { list = [] } = req.body;
       const lang = this.getLangFromRequest(req);
 
       try {
         let duplicateCount = 0;
         let startedCount = 0;
+        const downloadPromises: Promise<unknown>[] = [];
 
         // 检查并统计重复的 URL，但仍允许下载
         for (const item of list) {
@@ -558,8 +559,25 @@ export class DLServer {
             } else {
               startedCount++;
             }
-            this.startDownload(url, options);
+            // 必须等待任务写入 dlCache 后再广播，否则前端收不到新任务
+            downloadPromises.push(this.startDownload(url, options));
           }
+        }
+
+        // 使用 allSettled：部分失败时仍广播已入库任务，避免整批 500 导致前端回滚/丢状态
+        const settled = await Promise.allSettled(downloadPromises);
+        const failed = settled.filter((r): r is PromiseRejectedResult => r.status === 'rejected');
+        const failedCount = failed.length;
+
+        if (failedCount === settled.length && settled.length > 0) {
+          const firstError = failed[0].reason;
+          const errMsg = firstError instanceof Error ? firstError.message : String(firstError || '');
+          res.status(500).json({
+            code: 1,
+            message: `${t('api.error.downloadFailed', lang)}: ${errMsg}`,
+            failedCount,
+          });
+          return;
         }
 
         let message = '';
@@ -568,11 +586,23 @@ export class DLServer {
         } else {
           message = t('api.success.downloadStarted', lang, { count: list.length });
         }
+        if (failedCount > 0) {
+          message = `${message}，${t('api.error.downloadFailed', lang)}: ${failedCount}`;
+        }
 
-        res.json({ message, code: 0, duplicateCount, startedCount });
+        res.json({
+          message,
+          code: 0,
+          duplicateCount,
+          startedCount,
+          failedCount,
+        });
         this.wsSend('tasks');
       } catch (error) {
-        res.status(500).json({ error: `${t('api.error.downloadFailed', lang)}: ${(error as Error).message || ''}` });
+        res.status(500).json({
+          code: 1,
+          message: `${t('api.error.downloadFailed', lang)}: ${(error as Error).message || ''}`,
+        });
       }
     });
 

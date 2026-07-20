@@ -162,14 +162,30 @@ export function scanPageForMedias(): void {
   });
 
   // 扫描所有可能的媒体 URL（通过正则）
+  // 优化：只扫描包含 http 的文本节点，避免处理整个 document.body.innerText
   if (document.body) {
-    const pageText = document.body.innerText || '';
     const extList = getMediaExtList();
     const extPattern = extList.join('|');
     const urlRegex = new RegExp(`https?:\\/\\/[^\\s"'<>]+\\.(${extPattern})(\\?[^\\s"'<>]*)?`, 'gi');
-    let match: RegExpExecArray | null;
-    while ((match = urlRegex.exec(pageText)) !== null) {
-      addMediaLink(match[0]);
+
+    // 使用 TreeWalker 高效遍历文本节点
+    const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT, {
+      acceptNode: node => {
+        // 只处理包含 http 的文本节点
+        const text = node.textContent || '';
+        return text.includes('http') ? NodeFilter.FILTER_ACCEPT : NodeFilter.FILTER_REJECT;
+      },
+    });
+
+    let node: Node | null;
+    while ((node = walker.nextNode())) {
+      const text = node.textContent || '';
+      // 跨节点复用 /g 正则时必须重置，否则 lastIndex 可能导致短文本节点漏扫
+      urlRegex.lastIndex = 0;
+      let match: RegExpExecArray | null;
+      while ((match = urlRegex.exec(text)) !== null) {
+        addMediaLink(match[0]);
+      }
     }
   }
 }
