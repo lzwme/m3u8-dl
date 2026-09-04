@@ -2,6 +2,18 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [1.10.0](https://github.com/lzwme/m3u8-dl/compare/v1.9.2...v1.10.0) (2026-09-04)
+
+
+### Features
+
+* 新增容器识别与可扩展合并器架构，支持 fMP4/TS 自动选择合并策略；解析并下载 EXT-X-MAP 初始化段 (close [#40](https://github.com/lzwme/m3u8-dl/issues/40)) ([80f1fa3](https://github.com/lzwme/m3u8-dl/commit/80f1fa32474e3fad30f8d98b52dc2cc20ce9b205))
+
+
+### Bug Fixes
+
+* **app:** 设置可执行文件名为 m3u8-dl; 显式添加 fast-glob 等依赖 ([d37dd1f](https://github.com/lzwme/m3u8-dl/commit/d37dd1f9dfcf3ca24a545f5fcc1825dd612c1680))
+
 ### [1.9.2](https://github.com/lzwme/m3u8-dl/compare/v1.9.1...v1.9.2) (2026-07-20)
 
 
