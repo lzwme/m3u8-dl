@@ -3,11 +3,38 @@ import { access, constants } from 'node:fs/promises';
 import type { OutgoingHttpHeaders } from 'node:http';
 import { resolve } from 'node:path';
 import { color, execSync, NLogger, Request, retry, toLowcaseKeyObject } from '@lzwme/fe-utils';
+import type { M3u8ByteRange } from '../types/m3u8.js';
 
 export const request = new Request({
   headers: { 'content-type': 'application/x-www-form-urlencoded; charset=UTF-8' },
   reqOptions: { rejectUnauthorized: false },
 });
+
+/** 判断 HTTP 状态码是否成功。使用 Range 请求(byte-range 分片)时服务端通常返回 206 */
+export function isOkStatus(statusCode?: number) {
+  return typeof statusCode === 'number' && statusCode >= 200 && statusCode < 300;
+}
+
+/**
+ * 追加 Range 请求头，用于支持 `EXT-X-BYTERANGE` 字节区间寻址的分片
+ */
+export function withRangeHeader(headers: OutgoingHttpHeaders | string | undefined, byterange?: M3u8ByteRange) {
+  if (!byterange?.length) return headers;
+
+  const offset = byterange.offset ?? 0;
+  return { ...formatHeaders(headers as OutgoingHttpHeaders), range: `bytes=${offset}-${offset + byterange.length - 1}` };
+}
+
+/**
+ * 按字节区间截取数据。
+ * 部分服务端会忽略 Range 请求并返回完整文件，此时需要按偏移量截取
+ */
+export function sliceByterange<T extends Buffer>(buffer: T, byterange?: M3u8ByteRange): Buffer {
+  if (!byterange?.length || buffer.byteLength <= byterange.length) return buffer;
+
+  const offset = byterange.offset ?? 0;
+  return buffer.subarray(offset, offset + byterange.length);
+}
 
 // process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
 export const getRetry = <T = string>(url: string, headers?: OutgoingHttpHeaders | string, retries = 3) =>
@@ -16,13 +43,13 @@ export const getRetry = <T = string>(url: string, headers?: OutgoingHttpHeaders 
     1000,
     retries,
     r => {
-      if (r.response.statusCode !== 200) {
+      if (!isOkStatus(r.response.statusCode)) {
         console.log();
         logger.warn(`[retry][${url}][${r.response.statusCode}]`, r.response.statusMessage || r.data);
         // throw Error(`[${r.response.statusCode}]${r.response.statusMessage || r.data}`);
       }
 
-      return r.response.statusCode === 200;
+      return isOkStatus(r.response.statusCode);
     }
   );
 

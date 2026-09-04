@@ -25,7 +25,9 @@ A free, open-source, and powerful m3u8 video batch downloader with multi-threade
 - **Batch Downloading**: Supports batch downloading of multiple m3u8 addresses, supports batch import from text files
 - **Resume from Cache**: Failed downloads retain cache, retries only download failed segments, saving bandwidth and time
 - **AES Encryption Support**: Automatically identifies and decrypts common AES-128 encrypted video streams
-- **Format Conversion**: Automatically merges and converts downloaded ts segments to mp4 format (requires [ffmpeg](https://ffmpeg.org/download.html))
+- **Multi-container Support**: Supports both MPEG-TS and fMP4 (m4s) segments, auto-detecting the container type and picking the matching merge strategy
+- **EXT-X-MAP Support**: Automatically downloads the init segment (ftyp+moov) declared by `EXT-X-MAP`, fixing fMP4 (m4s) streams that cannot be decoded or merged
+- **Format Conversion**: Automatically merges and converts downloaded ts/m4s segments to mp4 format ([ffmpeg](https://ffmpeg.org/download.html) recommended; fMP4 also works without ffmpeg by emitting a playable concatenated mp4)
 - **Multi-format Support**: Supports downloading video files in mp4, mkv, and other formats
 - **Segment Filtering**: Supports ignoring video segments in specified time ranges (e.g., skip intro and outro)
 
@@ -125,6 +127,25 @@ Install as a PC client. Easy to use, suitable for most regular users, with built
 
 > **Tip**: If you need to download and convert to `mp4` video format, you need to globally install [ffmpeg](https://ffmpeg.org/download.html).
 > Or use the `--ffmpeg-path` parameter to specify the path to ffmpeg.
+
+### Segment Containers and Merge Strategies
+
+HLS segments are not always `.ts`. The container type is auto-detected and the matching merge strategy is applied:
+
+| Container | Typical segments | Merge strategy | Without ffmpeg |
+| --- | --- | --- | --- |
+| `fmp4` | `.m4s` / `.mp4` (playlist contains `EXT-X-MAP`) | Concatenate the init segment (ftyp+moov) with all segments, then losslessly remux to a standard mp4 (`-c copy -movflags +faststart`) | Emits the concatenated fragmented MP4, which is generally playable |
+| `ts` | `.ts` / `.m2ts` | Remux to mp4 with the ffmpeg `concat` demuxer | Binary concatenation into a `.ts` file |
+
+About `EXT-X-MAP`:
+
+- fMP4 segments only contain `moof`+`mdat`; the codec parameters (`ftyp`+`moov`) live in the init segment declared by `EXT-X-MAP`;
+- Without the init segment, no segment can be decoded and merging fails (ffmpeg reports `Invalid data found when processing input`);
+- The init segment is downloaded while parsing the playlist and prepended automatically when merging;
+- The locally generated playlist for play-while-downloading also emits `#EXT-X-MAP`, so browser playback works as well.
+
+Byte-range addressed playlists (`EXT-X-BYTERANGE`, where all segments share one file and differ only by byte range) are also fully supported,
+avoiding the huge waste of re-downloading the whole media file for every segment.
 
 ### Using as CLI Command Line Tool
 
@@ -342,6 +363,25 @@ m3u8Download('https://example.com/video.m3u8', {
   ffmpegPath: ffmpegStatic, // Use ffmpeg-static package. Suitable for scenarios where ffmpeg is not globally installed
   // Or specify the absolute path of installed ffmpeg (if already in PATH environment variable, no need to specify)
   // ffmpegPath: '/usr/local/bin/ffmpeg',
+});
+
+// Example 6: Parse a playlist to inspect the container type and init segment
+const m3u8Info = await parseM3U8('https://example.com/video.m3u8', './cache');
+console.log('Segment container:', m3u8Info.container); // 'ts' | 'fmp4'
+console.log('Init segment (EXT-X-MAP):', m3u8Info.initSegment);
+
+// Example 7: Extend with a custom merge strategy (e.g. remux fMP4 into mkv)
+import { registerMerger } from '@lzwme/m3u8-dl';
+registerMerger({
+  name: 'fmp4-to-mkv',
+  container: 'fmp4',
+  priority: 40, // higher than the built-in fmp4 merger
+  support: ctx => ctx.ffmpegSupport,
+  async merge(ctx) {
+    // ctx.files holds the downloaded segment files, ctx.m3u8Info.initSegment the init segment
+    // return the produced file path, or an empty string to let the next merger try
+    return '';
+  },
 });
 ```
 

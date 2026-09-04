@@ -1,43 +1,14 @@
-export type TaskStatus = 'resume' | 'pending' | 'pause' | 'error' | 'done';
+import type { TaskItem } from '@lzwme/m3u8-dl/contract';
 
-export interface DownloadTask {
-  url: string;
-  filename?: string;
-  localVideo?: string;
-  localM3u8?: string;
-  status: TaskStatus;
-  progress?: number;
-  speed?: number;
-  speedDesc?: string;
-  avgSpeedDesc?: string;
-  remainingTime?: number;
-  downloadedSize?: number;
-  duration?: number;
-  size?: number;
-  tsCount?: number;
-  tsSuccess?: number;
-  tsFailed?: number;
-  threadNum?: number;
-  startTime?: number;
-  endTime?: number;
-  errmsg?: string;
+/** 保留旧命名，避免改动所有引用处 */
+export type { QueueStatus, TaskItem, TaskOptions as DownloadTaskOptions, TaskStatus } from '@lzwme/m3u8-dl/contract';
+
+/**
+ * WebUI 任务数据 = 服务端下发的 `TaskItem` + 本地派生字段。
+ *
+ * 类型源头在后端 `src/types/contract.ts`，新增或修改任务字段应改那里，不要在此重复声明。
+ */
+export interface DownloadTask extends TaskItem {
+  /** 展示名称。由 filename / dlOptions.filename / localVideo / url 推导，仅 WebUI 使用 */
   showName?: string;
-  cacheDir?: string;
-  dlOptions?: DownloadTaskOptions;
-  options?: DownloadTaskOptions;
-}
-
-export interface DownloadTaskOptions {
-  filename?: string;
-  url?: string;
-  title?: string;
-  saveDir?: string;
-  ignoreSegments?: string;
-  headers?: string;
-}
-
-export interface QueueStatus {
-  queueLength: number;
-  activeDownloads: string[];
-  maxConcurrent: number;
 }

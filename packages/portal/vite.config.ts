@@ -8,11 +8,11 @@ export default defineConfig({
   plugins: [vue(), tailwindcss()],
   resolve: {
     alias: {
-      '@': resolve(__dirname, 'src'),
+      '@': resolve(import.meta.dirname, 'src'),
     },
   },
   build: {
-    outDir: resolve(__dirname, '../../docs/portal'),
+    outDir: resolve(import.meta.dirname, '../../docs/portal'),
     emptyOutDir: true,
     assetsDir: 'assets',
   },

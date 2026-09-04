@@ -80,6 +80,9 @@ export default {
       downloadFailedRetry: '下载失败！请重试！',
       mergingVideo: '开始合并为视频文件，请稍等...',
       mergeFailed: '视频文件合并失败！',
+      initSegmentMissing: '缺失初始化片段(EXT-X-MAP)，fMP4(m4s) 分片无法合并为一个可播放的文件！',
+      remuxFallback: '标准 mp4 重新封装失败，已降级为分片拼接产物。该文件一般可正常播放，但可能不支持边下边播',
+      unsupportedCrypto: '暂不支持的加密方式: {method}，将按未加密处理',
       downloadFailedWithMessage: '下载失败: {message}',
     },
     error: {

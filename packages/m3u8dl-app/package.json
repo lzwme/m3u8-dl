@@ -20,10 +20,10 @@
   "dependencies": {
     "electron-updater": "^6.8.9",
     "express": "^5.2.1",
-    "ws": "^8.21.1"
+    "ws": "^8.21.3"
   },
   "devDependencies": {
-    "electron": "43.1.1",
+    "electron": "44.2.0",
     "electron-builder": "^26.15.3"
   }
 }

@@ -13,6 +13,9 @@ import { parseM3U8 } from './parseM3u8.js';
 import { isSupportFfmpeg, logger } from './utils.js';
 import { WorkerPool } from './worker_pool.js';
 
+/** 视频文件扩展名 */
+const VIDEO_EXT_RE = /\.(mp4|m4s|ts|mkv|mov|m4v|avi|flv|webm)$/i;
+
 /** 下载队列管理 */
 export class DownloadQueue {
   private queue: Array<{ url: string; options: M3u8DLOptions; priority: number }> = [];
@@ -94,14 +97,16 @@ const tsDlFile = resolve(__dirname, './ts-download.js');
 export const workPollPublic: M3u8WorkerPool = new WorkerPool(tsDlFile);
 
 async function m3u8InfoParse(u: string, o: M3u8DLOptions = {}) {
-  const ffmpegBin = o.ffmpegPath || 'ffmpeg';
-  const ext = isSupportFfmpeg(ffmpegBin) ? '.mp4' : '.ts';
+  const ffmpegSupport = isSupportFfmpeg(o.ffmpegPath || 'ffmpeg');
 
   const { url, options, urlMd5 } = await formatOptions(u, o);
 
-  /** 最终合并转换后的文件路径 */
+  /**
+   * 最终合并转换后的文件路径。
+   * 仅在未指定视频类扩展名时补充默认扩展名，实际扩展名由合并阶段依据容器类型确定
+   */
   let filepath = resolve(options.saveDir, options.filename);
-  if (!filepath.endsWith(ext)) filepath += ext;
+  if (!VIDEO_EXT_RE.test(filepath)) filepath += ffmpegSupport ? '.mp4' : '.ts';
 
   const result = { options, m3u8Info: null as Awaited<ReturnType<typeof parseM3U8>>, filepath };
 
@@ -256,7 +261,7 @@ export async function m3u8Download(url: string, options: M3u8DLOptions = {}) {
       speed: 0,
       speedDesc: '',
       remainingTime: 0,
-      localM3u8: toLocalM3u8(m3u8Info.data).replace(options.cacheDir, '').replaceAll(sep, '/').slice(1),
+      localM3u8: toLocalM3u8(m3u8Info).replace(options.cacheDir, '').replaceAll(sep, '/').slice(1),
       filename: options.filename,
       threadNum: options.threadNum,
     };
@@ -333,7 +338,7 @@ export async function m3u8Download(url: string, options: M3u8DLOptions = {}) {
             barrier.open();
           }
 
-          if (options.play && finished === playStart) localPlay(m3u8Info.data);
+          if (options.play && finished === playStart) localPlay(m3u8Info);
         });
       }
     };
@@ -362,7 +367,7 @@ export async function m3u8Download(url: string, options: M3u8DLOptions = {}) {
     } else if (options.convert !== false) {
       stats.errmsg = t('download.status.mergingVideo', lang);
       if (options.onProgress) options.onProgress(stats.tsCount, m3u8Info.tsCount, null, stats);
-      result.filepath = await m3u8Convert(options, m3u8Info.data);
+      result.filepath = await m3u8Convert(options, m3u8Info);
       stats.errmsg = result.filepath ? '' : t('download.status.mergeFailed', lang);
 
       if (result.filepath && existsSync(result.filepath)) {

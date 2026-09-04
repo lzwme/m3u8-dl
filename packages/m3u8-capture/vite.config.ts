@@ -47,10 +47,10 @@ function userscriptHeaderPlugin(): Plugin {
 export default defineConfig({
   plugins: [userscriptHeaderPlugin()],
   build: {
-    outDir: resolve(__dirname, '../../client'),
+    outDir: resolve(import.meta.dirname, '../../client'),
     emptyOutDir: false,
     rollupOptions: {
-      input: resolve(__dirname, 'src/main.ts'),
+      input: resolve(import.meta.dirname, 'src/main.ts'),
       output: {
         entryFileNames: 'm3u8-capture.user.js',
         format: 'iife',

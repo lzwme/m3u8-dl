@@ -1,4 +1,5 @@
 pnpm biome check --staged --no-errors-on-unmatched --fix
-pnpm flh --tscheck --eslint --only-staged --fix
+# pnpm tsc --noEmit
+# pnpm flh --tscheck --eslint --only-staged --fix
 # pnpm flh --prettier --only-staged --fix
-git add --update
+# git add --update

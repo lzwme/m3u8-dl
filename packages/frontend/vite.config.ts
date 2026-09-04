@@ -3,20 +3,24 @@ import tailwindcss from '@tailwindcss/vite';
 import vue from '@vitejs/plugin-vue';
 import { resolve } from 'node:path';
 
+const rootDir = import.meta.dirname;
+
 export default defineConfig({
   plugins: [vue(), tailwindcss()],
   resolve: {
     alias: {
-      '@': resolve(__dirname, 'src'),
+      '@': resolve(rootDir, 'src'),
+      // 前后端类型契约。仅 import type 使用，构建后会被完全擦除
+      '@lzwme/m3u8-dl/contract': resolve(rootDir, '../../src/types/contract.ts'),
     },
   },
   build: {
-    outDir: resolve(__dirname, '../../client'),
+    outDir: resolve(rootDir, '../../client'),
     emptyOutDir: false, // 不清空输出目录，保留其他文件如 play.html, logo.png 等
     assetsDir: 'assets',
     rollupOptions: {
       input: {
-        main: resolve(__dirname, 'index.html'),
+        main: resolve(rootDir, 'index.html'),
       },
     },
     // 确保构建后的 HTML 可以被 Server 正确读取和替换版本号

@@ -1,6 +1,42 @@
 import type { IncomingHttpHeaders } from 'node:http';
 import type { AnyObject, DownloadResult } from '@lzwme/fe-utils';
 import type { WorkerPool } from '../lib/worker_pool';
+import type { DownloadStats } from './contract.js';
+
+/**
+ * 分片容器类型
+ * - `ts`：MPEG-TS 分片（传统 HLS）
+ * - `fmp4`：fragmented MP4 分片（m4s/mp4），需配合 `EXT-X-MAP` 初始化段
+ * - `unknown`：未能识别，按二进制拼接兜底处理
+ */
+export type M3u8ContainerType = 'ts' | 'fmp4' | 'unknown';
+
+/** 字节区间。来源于 `EXT-X-BYTERANGE` 或 `EXT-X-MAP` 的 BYTERANGE 属性 */
+export interface M3u8ByteRange {
+  /** 字节长度 */
+  length: number;
+  /** 起始偏移量，默认为 0 */
+  offset?: number;
+}
+
+/**
+ * 初始化段信息，来源于 `EXT-X-MAP`（HLS v6+ / DASH fMP4 常见）
+ * 初始化段（init segment）包含 `ftyp` + `moov`，是 fMP4 分片能够被解码和合并的前提
+ */
+export interface M3u8MapInfo {
+  /** 初始化段的远程 url 地址 */
+  uri: string;
+  /** 初始化段本地保存路径 */
+  tsOut: string;
+  /** 字节范围。来源于 `EXT-X-MAP` 的 BYTERANGE 属性 */
+  byterange?: M3u8ByteRange;
+  /** 如果初始化段使用了加密算法，加密 key 的获取 uri */
+  keyUri?: string;
+  /** 文件大小(byte) */
+  tsSize?: number;
+  /** 初始化段的容器类型 */
+  container?: M3u8ContainerType;
+}
 
 export interface TsItemInfo {
   /** m3u8 文件地址，可以用于唯一标记识别、缓存清理等 */
@@ -17,6 +53,8 @@ export interface TsItemInfo {
   keyUri?: string;
   /** ts 文件下载保存路径 */
   tsOut: string;
+  /** 字节区间。来源于 `EXT-X-BYTERANGE`，表示该分片位于 url 对应文件的指定字节区间 */
+  byterange?: M3u8ByteRange;
   /** 下载成功的 ts 文件大小(byte) */
   tsSize?: number;
   /** 下载耗时(ms) */
@@ -40,6 +78,18 @@ export interface M3u8Info {
   data: TsItemInfo[];
   /** m3u8 文件信息 */
   manifest: AnyObject;
+  /**
+   * 初始化段信息(`EXT-X-MAP`)。
+   * fMP4(m4s) 类型的分片必须依赖初始化段才能正确解码与合并
+   */
+  initSegment?: M3u8MapInfo;
+  /**
+   * 分片容器类型。
+   * - `ts`：MPEG-TS 分片
+   * - `fmp4`：fragmented MP4 分片(m4s/mp4)
+   * - `unknown`：未能识别
+   */
+  container?: M3u8ContainerType;
 }
 
 export interface M3u8Crypto {
@@ -53,12 +103,15 @@ export interface M3u8Crypto {
   uri: string;
 }
 
-/** 下载进度统计 */
-export interface M3u8DLProgressStats {
+/**
+ * 下载进度统计。
+ *
+ * 公共字段继承传输契约 `DownloadStats`，此处仅将运行期必有的字段收紧为必填，
+ * 以保证与 WebUI 侧 `TaskItem` 的结构同源。
+ */
+export interface M3u8DLProgressStats extends DownloadStats {
   /** 开始下载的时间 */
   startTime: number;
-  /** 下载完成的时间 */
-  endTime?: number;
   /** 下载进度百分比 */
   progress: number;
   /** 总 ts 数量 */
@@ -71,8 +124,6 @@ export interface M3u8DLProgressStats {
   duration: number;
   /** 已下载的视频时长 */
   durationDownloaded: number;
-  /** 视频总大小 */
-  size?: number;
   /** 已下载的大小 */
   downloadedSize: number;
   /** 平均下载速度 */
@@ -87,16 +138,6 @@ export interface M3u8DLProgressStats {
   remainingTime: number;
   /** 实际下载的 URL */
   url: string;
-  /** 本地 m3u8 文件路径 */
-  localM3u8?: string;
-  /** 本地视频文件路径（合并后的视频文件） */
-  localVideo?: string;
-  /** 本地保存的文件名 */
-  filename?: string;
-  /** 并发下载线程数 */
-  threadNum?: number;
-  /** 最新的错误信息 */
-  errmsg?: string;
 }
 
 export type M3u8WorkerPool = WorkerPool<WorkerTaskInfo, { success: boolean; info: TsItemInfo; timeCost: number }>;

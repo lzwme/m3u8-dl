@@ -1,25 +1,27 @@
-import { createDecipheriv } from 'node:crypto';
 import { existsSync, promises } from 'node:fs';
 import type { OutgoingHttpHeaders } from 'node:http';
 import { dirname } from 'node:path';
 import { isMainThread, parentPort } from 'node:worker_threads';
 import { mkdirp } from '@lzwme/fe-utils';
 import type { M3u8Crypto, TsItemInfo, WorkerTaskInfo } from '../types/m3u8';
-import { getRetry, logger } from './utils.js';
+import { decryptSegmentData } from './crypto.js';
+import { getRetry, isOkStatus, logger, sliceByterange, withRangeHeader } from './utils.js';
 
 export async function tsDownload(info: TsItemInfo, cryptoInfo: M3u8Crypto, headers?: OutgoingHttpHeaders | string) {
   try {
     if (existsSync(info.tsOut)) return true;
 
-    const r = await getRetry(info.uri, headers);
+    // EXT-X-BYTERANGE：多个分片可能共用一个 url，仅通过字节区间区分
+    const r = await getRetry(info.uri, withRangeHeader(headers, info.byterange));
 
-    if (r.response.statusCode === 200) {
+    if (isOkStatus(r.response.statusCode)) {
       logger.debug('\n', info);
-      const data = cryptoInfo?.key ? aesDecrypt(r.buffer, cryptoInfo) : r.buffer;
+      const buffer = sliceByterange(r.buffer, info.byterange);
+      const data = decryptSegmentData(buffer, cryptoInfo);
 
       mkdirp(dirname(info.tsOut));
       await promises.writeFile(info.tsOut, data);
-      info.tsSize = r.buffer.byteLength;
+      info.tsSize = data.byteLength;
 
       return true;
     }
@@ -30,17 +32,6 @@ export async function tsDownload(info: TsItemInfo, cryptoInfo: M3u8Crypto, heade
   }
 
   return false;
-}
-
-function aesDecrypt(data: Buffer, cryptoInfo: M3u8Crypto) {
-  try {
-    const iv = cryptoInfo.iv || new Uint8Array(16);
-    const decipher = createDecipheriv(`${cryptoInfo.method}-cbc`.toLocaleLowerCase(), cryptoInfo.key, iv);
-    return Buffer.concat([decipher.update(Buffer.isBuffer(data) ? data : Buffer.from(data)), decipher.final()]);
-  } catch (err) {
-    console.log('aesDecrypt err:', err);
-    throw err;
-  }
 }
 
 if (!isMainThread && parentPort) {

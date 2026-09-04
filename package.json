@@ -60,24 +60,24 @@
     "registry": "https://registry.npmjs.com"
   },
   "devDependencies": {
-    "@biomejs/biome": "2.5.4",
+    "@biomejs/biome": "2.5.12",
     "@lzwme/fed-lint-helper": "^2.6.6",
     "@types/express": "^5.0.6",
     "@types/global-agent": "^3.0.0",
     "@types/m3u8-parser": "^7.2.6",
-    "@types/node": "^26.1.1",
+    "@types/node": "^26.4.1",
     "@types/ws": "^8.18.1",
-    "concurrently": "^10.0.3",
+    "concurrently": "^10.0.5",
     "express": "^5.2.1",
     "fast-glob": "^3.3.3",
     "husky": "^9.1.7",
     "minimist": "^1.2.8",
     "nodemon": "^3.1.14",
-    "prettier": "^3.9.5",
+    "prettier": "^3.9.6",
     "standard-version": "^9.5.0",
     "typedoc": "^0.28.20",
-    "typescript": "^6.0.0",
-    "ws": "^8.21.1"
+    "typescript": "^6",
+    "ws": "^8.21.3"
   },
   "dependencies": {
     "@lzwme/fe-utils": "^1.9.2",
@@ -90,6 +90,7 @@
   "files": [
     "cjs",
     "client/",
+    "src/types/contract.ts",
     "!client/ariang",
     "!client/local",
     "!cjs/type.js",

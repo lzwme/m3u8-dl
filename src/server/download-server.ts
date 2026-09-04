@@ -12,7 +12,8 @@ import { getLang, LANG_CODES, t } from '../lib/i18n.js';
 import { initProxy } from '../lib/init-proxy.js';
 import { m3u8DLStop, m3u8Download } from '../lib/m3u8-download.js';
 import { checkFileExists, logger } from '../lib/utils.js';
-import type { M3u8DLOptions, M3u8DLProgressStats, M3u8DLResult, M3u8WorkerPool, TsItemInfo } from '../types/m3u8.js';
+import type { ServerInfo, TaskItem } from '../types/contract.js';
+import type { M3u8DLOptions, M3u8DLResult, M3u8WorkerPool, TsItemInfo } from '../types/m3u8.js';
 import { VideoParser } from '../video-parser/index.js';
 
 interface DLServerOptions {
@@ -26,20 +27,16 @@ interface DLServerOptions {
   limitFileAccess?: boolean;
 }
 
-interface CacheItem extends Partial<M3u8DLProgressStats> {
-  url: string;
+interface CacheItem extends Omit<TaskItem, 'options' | 'dlOptions'> {
   /** 用户设置的参数 */
   options: M3u8DLOptions;
   /** 格式化后实际下载使用的参数 */
   dlOptions?: M3u8DLOptions;
-  status: 'pause' | 'resume' | 'done' | 'pending' | 'error';
   /**
    * 当前任务的 ts 信息
    * @deprecated 下一版本将移除
    */
   current?: TsItemInfo;
-  /** 当前任务的 ts 缓存目录 */
-  cacheDir?: string;
   workPoll?: M3u8WorkerPool;
 }
 
@@ -56,7 +53,7 @@ export class DLServer {
     debug: process.env.DS_DEBUG === '1',
     limitFileAccess: ['1', 'true'].includes(process.env.DS_LIMTE_FILE_ACCESS),
   };
-  private serverInfo = {
+  private serverInfo: ServerInfo = {
     version: '',
     ariang: false,
   };

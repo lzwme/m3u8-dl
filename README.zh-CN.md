@@ -25,7 +25,9 @@
 - **批量下载**：支持指定多个 m3u8 地址批量下载，支持文本文件批量导入
 - **缓存续传**：下载失败会保留缓存，重试时只下载失败的片段，节省带宽和时间
 - **AES 加密支持**：自动识别并解密常见的 AES-128 加密视频流
-- **格式转换**：自动将下载的 ts 片段合并转换为 mp4 格式（需安装 [ffmpeg](https://ffmpeg.org/download.html)）
+- **多容器支持**：同时支持 MPEG-TS 分片与 fMP4(m4s) 分片，自动识别容器类型并选择对应的合并策略
+- **EXT-X-MAP 支持**：自动下载 `EXT-X-MAP` 声明的初始化段(ftyp+moov)，解决 fMP4(m4s) 分片无法解码与合并的问题
+- **格式转换**：自动将下载的 ts/m4s 片段合并转换为 mp4 格式（推荐安装 [ffmpeg](https://ffmpeg.org/download.html)；fMP4 在无 ffmpeg 时也可直接拼接为可播放的 mp4）
 - **多格式支持**：支持下载 mp4、mkv 等格式的视频文件
 - **片段过滤**：支持忽略指定时间段的视频片段（如跳过片头片尾）
 
@@ -125,6 +127,25 @@ npx @lzwme/m3u8-dl -h
 
 > **提示**：如需要下载并转换为 `mp4` 视频格式，您需全局安装 [ffmpeg](https://ffmpeg.org/download.html)。
 > 或者使用 `--ffmpeg-path` 参数指定 ffmpeg 的路径。
+
+### 分片容器类型与合并策略
+
+HLS 的分片并非只有 `.ts` 一种容器。程序会自动识别容器类型，并选择对应的合并策略：
+
+| 容器类型 | 典型分片 | 合并策略 | 无 ffmpeg 时 |
+| --- | --- | --- | --- |
+| `fmp4` | `.m4s` / `.mp4`（播放列表含 `EXT-X-MAP`） | 先拼接初始化段(`ftyp`+`moov`)与全部分片，再用 ffmpeg 无损重新封装为标准 mp4(`-c copy -movflags +faststart`) | 直接输出拼接产物(fragmented MP4)，一般可正常播放 |
+| `ts` | `.ts` / `.m2ts` | ffmpeg `concat` 解复用器封装为 mp4 | 二进制拼接为 `.ts` |
+
+关于 `EXT-X-MAP`：
+
+- fMP4 分片只有 `moof`+`mdat`，编解码参数(`ftyp`+`moov`)全部位于 `EXT-X-MAP` 声明的初始化段中；
+- 缺少初始化段时，所有分片都无法被解码，合并也会失败（表现为 ffmpeg 报 `Invalid data found when processing input`）；
+- 程序在解析播放列表时会自动下载初始化段，并在合并时自动前置拼接；
+- 边下边播生成的本地播放列表也会写入 `#EXT-X-MAP`，保证浏览器侧可正常解码播放。
+
+此外，也完整支持 `EXT-X-BYTERANGE` 字节区间寻址的播放列表（多个分片共用同一个文件，仅通过字节区间区分），
+避免每个分片都重复下载整个媒体文件的巨大浪费。
 
 ### 作为 CLI 命令行工具使用
 
@@ -342,6 +363,25 @@ m3u8Download('https://example.com/video.m3u8', {
   ffmpegPath: ffmpegStatic, // 使用 ffmpeg-static 包。适合未全局安装 ffmpeg 的场景
   // 或指定已安装的绝对路径（若已在 PATH 环境变量中，则无需指定）
   // ffmpegPath: '/usr/local/bin/ffmpeg',
+});
+
+// 示例 6：解析播放列表，获取容器类型与初始化段信息
+const m3u8Info = await parseM3U8('https://example.com/video.m3u8', './cache');
+console.log('分片容器类型:', m3u8Info.container); // 'ts' | 'fmp4'
+console.log('初始化段(EXT-X-MAP):', m3u8Info.initSegment);
+
+// 示例 7：扩展自定义合并策略（如将 fMP4 封装为 mkv）
+import { registerMerger } from '@lzwme/m3u8-dl';
+registerMerger({
+  name: 'fmp4-to-mkv',
+  container: 'fmp4',
+  priority: 40, // 优先级高于内置的 fmp4 合并器
+  support: ctx => ctx.ffmpegSupport,
+  async merge(ctx) {
+    // ctx.files 为已下载的分片文件列表，ctx.m3u8Info.initSegment 为初始化段
+    // 返回生成的文件路径，返回空字符串则由下一个合并器继续尝试
+    return '';
+  },
 });
 ```
 

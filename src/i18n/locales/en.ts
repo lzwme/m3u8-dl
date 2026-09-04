@@ -83,6 +83,10 @@ export default {
       downloadFailedRetry: 'Download Failed! Please retry!',
       mergingVideo: 'Starting to merge video file, please wait...',
       mergeFailed: 'Video file merge failed!',
+      initSegmentMissing: 'Missing init segment (EXT-X-MAP), fMP4 (m4s) segments cannot be merged into a playable file!',
+      remuxFallback:
+        'Standard mp4 remux failed, falling back to the concatenated segments. The file is generally playable, but progressive playback may not be supported',
+      unsupportedCrypto: 'Unsupported encryption method: {method}, treating as unencrypted',
       downloadFailedWithMessage: 'Download failed: {message}',
     },
     error: {
