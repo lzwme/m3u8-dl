@@ -6,10 +6,15 @@ on:
       tag:
         description: 'Release tag (e.g. v1.0.0)'
         required: true
-        default: 'v1.3.0'
+        default: 'v1.10.0'
   push:
     tags:
       - v*.*.*
+
+concurrency:
+  # 同一 tag 上的发布操作串行化，避免并发写草稿互相冲突
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
 
 permissions:
   contents: write
@@ -28,28 +33,29 @@ jobs:
       fail-fast: false
 
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
         with:
-          ref: main
+          # tag 推送时构建并发布该 tag 对应的代码；workflow_dispatch 则基于 main
+          ref: ${{ github.event_name == 'push' && github.ref || 'main' }}
           submodules: 'recursive'
 
-      - uses: pnpm/action-setup@v4
-        id: pnpm-install
-        with:
-          run_install: false
-          version: 11
-
-      - uses: actions/setup-node@v6
+      - uses: actions/setup-node@v7
         with:
           node-version: 24
           registry-url: https://registry.npmjs.com
+
+      - uses: pnpm/action-setup@v6
+        id: pnpm-install
+        with:
+          version: 11
+          run_install: false
 
       - name: Get pnpm store directory
         id: pnpm-cache
         shell: bash
         run: |
           echo "STORE_PATH=$(pnpm store path)" >> $GITHUB_OUTPUT
-      - uses: actions/cache@v4
+      - uses: actions/cache@v6
         name: Setup pnpm cache
         with:
           path: ${{ steps.pnpm-cache.outputs.STORE_PATH }}
@@ -57,7 +63,55 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-pnpm-store
 
-      - run: pnpm install --no-frozen-lockfile --ignore-scripts=false
+      # electron-builder 每次会下载对应平台的 Electron(~120MB) 与打包工具链，
+      # macOS 一次要打包 x64/arm64 两个架构，重复下载非常耗时；这里按 OS 缓存其下载目录
+      - name: Cache electron & electron-builder downloads (Linux)
+        if: matrix.os == 'ubuntu-latest'
+        uses: actions/cache@v6
+        with:
+          path: |
+            ~/.cache/electron
+            ~/.cache/electron-builder
+          key: ${{ runner.os }}-electron-cache-${{ hashFiles('packages/m3u8dl-app/package.json') }}
+          restore-keys: |
+            ${{ runner.os }}-electron-cache-
+
+      - name: Cache electron & electron-builder downloads (macOS)
+        if: matrix.os == 'macos-latest'
+        uses: actions/cache@v6
+        with:
+          path: |
+            ~/Library/Caches/electron
+            ~/Library/Caches/electron-builder
+          key: ${{ runner.os }}-electron-cache-${{ hashFiles('packages/m3u8dl-app/package.json') }}
+          restore-keys: |
+            ${{ runner.os }}-electron-cache-
+
+      - name: Cache electron & electron-builder downloads (Windows)
+        if: matrix.os == 'windows-latest'
+        uses: actions/cache@v6
+        with:
+          path: |
+            ${{ env.LOCALAPPDATA }}/electron/Cache
+            ${{ env.LOCALAPPDATA }}/electron-builder/Cache
+            ~/.cache/electron
+            ~/.cache/electron-builder
+          key: ${{ runner.os }}-electron-cache-${{ hashFiles('packages/m3u8dl-app/package.json') }}
+          restore-keys: |
+            ${{ runner.os }}-electron-cache-
+
+      - name: Install dependencies
+        run: pnpm install --no-frozen-lockfile --ignore-scripts=false
+
+      # 打包时会在 dist/app-build-tmp 下重新 npm install（含 ffmpeg-static 大体积二进制），
+      # 缓存该目录的 node_modules 以避免每次全量重新下载
+      - name: Cache app-build dependencies
+        uses: actions/cache@v6
+        with:
+          path: packages/m3u8dl-app/dist/app-build-tmp/node_modules
+          key: ${{ runner.os }}-app-deps-${{ hashFiles('package.json', 'packages/m3u8dl-app/package.json') }}
+          restore-keys: |
+            ${{ runner.os }}-app-deps-
 
       - name: Get release tag
         id: get-tag
@@ -69,6 +123,20 @@ jobs:
             echo "tag=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
           fi
 
+      # 制品名与 latest*.yml 中的版本取自根包 package.json，发布 tag 必须与之一致，
+      # 否则会发布版本错位的产物，这里在构建前尽早拦截
+      - name: Verify tag matches package.json version
+        if: github.event_name == 'push'
+        shell: bash
+        run: |
+          tag="${GITHUB_REF#refs/tags/}"
+          pkg_version=$(node -p "require('./package.json').version")
+          if [ "$tag" != "v${pkg_version}" ]; then
+            echo "::error::Git tag ${tag} does not match package.json version v${pkg_version}."
+            exit 1
+          fi
+          echo "OK: tag=${tag} matches version v${pkg_version}"
+
       - name: Build cjs
         run: npm run build
 
@@ -79,9 +147,8 @@ jobs:
           pnpm install --no-frozen-lockfile --ignore-scripts=false
           npm run build -- --linux
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           # RENDERER_VITE_AIHUBMIX_SECRET: ${{ vars.RENDERER_VITE_AIHUBMIX_SECRET }}
-          NODE_OPTIONS: --max-old-space-size=8192
+          NODE_OPTIONS: --max-old-space-size=12288
 
       - name: Build Mac
         if: matrix.os == 'macos-latest'
@@ -95,8 +162,7 @@ jobs:
           # APPLE_ID: ${{ vars.APPLE_ID }}
           # APPLE_APP_SPECIFIC_PASSWORD: ${{ vars.APPLE_APP_SPECIFIC_PASSWORD }}
           # APPLE_TEAM_ID: ${{ vars.APPLE_TEAM_ID }}
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          NODE_OPTIONS: --max-old-space-size=8192
+          NODE_OPTIONS: --max-old-space-size=12288
 
       - name: Build Windows
         if: matrix.os == 'windows-latest'
@@ -105,8 +171,8 @@ jobs:
           pnpm install --no-frozen-lockfile --ignore-scripts=false
           npm run build -- --win
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          NODE_OPTIONS: --max-old-space-size=8192
+          # GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          NODE_OPTIONS: --max-old-space-size=12288
 
       - name: Release
         uses: ncipollo/release-action@v1

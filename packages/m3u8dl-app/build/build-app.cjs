@@ -65,11 +65,16 @@ const T = {
     }
   },
   async start() {
+    const startTime = Date.now();
     this.prepare();
 
     const platform = (argv.mac || process.platform === 'darwin') ? Platform.MAC : (argv.win || process.platform === 'win32') ? Platform.WINDOWS : (argv.linux ? Platform.LINUX : Platform.WINDOWS);
     const r = await build({
       targets: platform.createTarget(),
+      // 发布动作统一交给 GitHub Actions(.github/workflows/release.yml) 中的 ncipollo/release-action（draft）处理。
+      // 禁用 electron-builder 自身的发布：避免 git tag 场景下触发隐式发布，与 workflow 的草稿发布冲突
+      // （无 GH_TOKEN 时还会直接抛 "GitHub Personal Access Token is not set"）。
+      publish: 'never',
       config: {
         productName: 'M3U8-DL',
         executableName: 'm3u8-dl',
@@ -118,7 +123,7 @@ const T = {
             },
             {
               target: '7z',
-              arch: ['x64', 'ia32', 'arm64'],
+              arch: ['x64', 'arm64'],
             },
           ],
           // extraResources: ['../../cjs', '../../client'],
@@ -154,7 +159,8 @@ const T = {
           appId: 'cn.lzwme.m3u8dl-mac',
           category: 'public.app-category.productivity',
           target: [
-            {
+            // CI 下不产出 7z 压缩包：在 GitHub CI（单 job 串行双架构）下会显著拖长构建时长
+            isCI ? : null : {
               target: '7z',
               arch: ['x64', 'arm64'],
             },
@@ -162,7 +168,7 @@ const T = {
               target: 'dmg',
               arch: ['x64', 'arm64'], // 'universal' -- ffmpeg-static 不兼容
             },
-          ],
+          ].filter(Boolean),
           icon: 'build/icon/logo.icns',
         },
         nsis: {
@@ -201,7 +207,7 @@ const T = {
       },
     });
 
-    console.log('[electron]build done!', r);
+    console.log(`[electron]build done! Total time: ${((Date.now() - startTime) / 60_000).toFixed(2) } min`, r);
   },
 };
 

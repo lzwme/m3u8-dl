@@ -1,6 +1,6 @@
 import { defineConfig, Plugin } from 'vite';
 import { resolve } from 'path';
-import packageJson from './package.json';
+import packageJson from './package.json' with { type: 'json' };
 
 /** UserScript 头部内容 */
 const USERSCRIPT_HEADER = `// ==UserScript==

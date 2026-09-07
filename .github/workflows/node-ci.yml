@@ -34,31 +34,37 @@ jobs:
             os: ubuntu-latest
     name: Node ${{ matrix.node-version }} on ${{ matrix.os }}
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
         with:
+          ref: main
           submodules: 'recursive'
-      - uses: pnpm/action-setup@v4
-        id: pnpm-install
-        with:
-          run_install: false
-          version: 11
-      - uses: actions/setup-node@v6
+
+      - uses: actions/setup-node@v7
         with:
           node-version: ${{ matrix.node-version }}
           registry-url: https://registry.npmjs.com
+
+      - uses: pnpm/action-setup@v6
+        id: pnpm-install
+        with:
+          version: 11
+          run_install: false
 
       - name: Get pnpm store directory
         id: pnpm-cache
         shell: bash
         run: |
           echo "STORE_PATH=$(pnpm store path)" >> $GITHUB_OUTPUT
-      - uses: actions/cache@v4
+      - uses: actions/cache@v6
         name: Setup pnpm cache
         with:
           path: ${{ steps.pnpm-cache.outputs.STORE_PATH }}
-          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
+          key: ${{ runner.os }}-${{ matrix.node-version }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
           restore-keys: |
-            ${{ runner.os }}-pnpm-store
+            ${{ runner.os }}-${{ matrix.node-version }}-pnpm-store-
+            ${{ runner.os }}-pnpm-store-
 
-      - run: pnpm install --no-frozen-lockfile --ignore-scripts=false
+      - name: Install dependencies
+        run: pnpm install --no-frozen-lockfile --ignore-scripts=false
+
       - run: pnpm test
