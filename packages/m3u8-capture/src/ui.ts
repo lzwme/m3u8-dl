@@ -23,7 +23,7 @@ import {
 } from './storage';
 import { initSwalCSS, initTailwindCSS, loadSwal } from './swal';
 import type { DragOffset, EventCoordinates } from './types';
-import { copyToClipboard, escapeHtml, getEventCoordinates, headersToString, isInIframeMode } from './utils';
+import { applyTitleReplaceRules, copyToClipboard, escapeHtml, getEventCoordinates, headersToString, isInIframeMode } from './utils';
 
 // UI 相关变量
 let shadowHost: HTMLElement | null = null;
@@ -511,6 +511,7 @@ export function showSettings(swalRoot = shadowRoot): void {
                       class="w-full p-2.5 border border-gray-300 rounded-md mb-4 focus:outline-none focus:ring-2 focus:ring-blue-500"
                       placeholder="例如：/\\[.*?\\]//g, /第.*?话//g">${titleReplaceRules}</textarea>
                   <p class="text-xs text-gray-500 mb-4">在获取标题后，将根据这些规则进行替换。支持正则表达式，格式：/pattern/flags 或 plain-text</p>
+                  <p class="text-xs text-gray-500 mb-4">标题来源优先级：书名号《作品名》 &gt; 页面 h1 / og:title &gt; 页面标题（自动去掉站点名后缀），并自动补齐「第N集」等剧集信息</p>
                   <div class="flex items-center mb-4">
                       <input id="swal-auto-start" type="checkbox" ${autoStart ? 'checked' : ''}
                           class="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500">
@@ -798,7 +799,8 @@ export function updateUI(): void {
       e.stopPropagation();
       const url = decodeURIComponent((btn as HTMLElement).getAttribute('data-url') || '');
       // 标题优先取列表项记录的标题，缺失时回退到当前页面标题
-      const title = decodeURIComponent((btn as HTMLElement).getAttribute('data-title') || '') || getMediaTitle();
+      const title =
+        decodeURIComponent((btn as HTMLElement).getAttribute('data-title') || '') || applyTitleReplaceRules(getMediaTitle()).trim();
       const previewUrl = `https://m3u8-player.lzw.me?from=capture&title=${encodeURIComponent(title)}&url=${encodeURIComponent(url)}`;
       safeOpenUrl(previewUrl);
     });

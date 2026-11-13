@@ -1,4 +1,5 @@
 import { getMediaExtList } from './storage';
+import { composeMediaTitle, resolveMediaTitle } from './title';
 import type { LinkData, MediaLink } from './types';
 import { updateUI } from './ui';
 import { applyTitleReplaceRules, getMediaExtReg, isInIframeMode, normalizeUrl, shouldExcludePageUrl } from './utils';
@@ -13,12 +14,13 @@ export function addMediaLink(url: string, title = '', headers: Record<string, st
 
   const normalizedUrl = normalizeUrl(url);
   const item = mediaLinks.get(normalizedUrl) || ({} as MediaLink);
-  const originalTitle = title || item.title || getMediaTitle() || '';
+  // 显式标题 > 页面标题 > 历史标题；替换规则只在此处统一应用一次
+  const finalTitle = composeMediaTitle(title, resolveMediaTitle(), item.title);
   const linkData: LinkData = {
     timestamp: Date.now(),
     url: url,
     pageUrl: window.location.href,
-    title: applyTitleReplaceRules(originalTitle).trim(),
+    title: applyTitleReplaceRules(finalTitle).trim(),
     type: getFileType(url) || item.type || '',
     headers: Object.assign(headers, item.headers || {}),
   };
@@ -78,32 +80,9 @@ export function getFileType(url: string): string {
   return 'media';
 }
 
-/** 获取媒体标题 */
+/** 获取媒体标题（页面标题解析结果，不含用户配置的替换规则） */
 export function getMediaTitle(doc: Document = document): string {
-  let title = '';
-
-  // 优先级1: 从 h1、h2、h1.title、h2.title 提取
-  const elTitleList = ['h2.title', 'h1.title', 'div.sub-title', 'div.title', 'h2', 'h1'];
-  for (const el of elTitleList) {
-    const element = doc.querySelector(el);
-    if (element) {
-      title = applyTitleReplaceRules(element.textContent);
-      if (title) break;
-    }
-  }
-
-  // 优先级2: 从页面 title 提取
-  if (!title) {
-    try {
-      if (!isInIframeMode) title = (doc.title || '').split(/ [-|_] /)[0].trim();
-      else title = getMediaTitle(window.top!.document);
-    } catch (_e) {
-      // ignore
-    }
-    if (import.meta.env.DEV) console.log('title2', title, isInIframeMode);
-  }
-
-  return title;
+  return resolveMediaTitle(doc);
 }
 
 /** 从 URL 参数中提取媒体链接（每个 URL 至多包含一个媒体链接） */

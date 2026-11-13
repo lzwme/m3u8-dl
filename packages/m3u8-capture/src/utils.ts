@@ -181,6 +181,12 @@ export function applyTitleReplaceRules(title: string): string {
   }
 }
 
+/** 清理文本：压缩连续空白并去除首尾空格 */
+export function cleanText(text: string | null | undefined): string {
+  if (!text) return '';
+  return String(text).replace(/\s+/g, ' ').trim();
+}
+
 /** HTML 转义，防止标题/URL 中的引号破坏 DOM 结构 */
 export function escapeHtml(str: string | null | undefined): string {
   if (str == null) return '';

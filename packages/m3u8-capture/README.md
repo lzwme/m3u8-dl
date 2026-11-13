@@ -13,6 +13,7 @@ packages/m3u8-capture/
 │   ├── config.ts        # 配置常量
 │   ├── storage.ts       # 存储相关函数
 │   ├── utils.ts         # 工具函数
+│   ├── title.ts         # 页面标题解析（书名号、h1/og:title、剧集信息）
 │   ├── media.ts         # 媒体相关函数
 │   ├── hooks.ts         # 网络请求拦截器
 │   ├── swal.ts          # SweetAlert2 集成
