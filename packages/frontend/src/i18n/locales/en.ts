@@ -55,7 +55,7 @@ export default {
     subUrlRegex: 'Playback page link pattern',
     subUrlRegexHint:
       'Used to accurately identify playback addresses from video list pages. Example: play/845-1-. Supports * wildcard (converted to .+)',
-    videoLinks: 'Video Links (one per line, supports m3u8 addresses and Douyin, Weibo, Pipixia video share links)',
+    videoLinks: 'Video Links (one per line, supports m3u8 addresses and Douyin, Weibo, Pipixia, Bilibili video share links)',
     videoLinksPlaceholder: "Format: URL {'|'} Name(optional), Name {'|'} URL",
     videoLinksDesc: 'Paste download links directly, supports multiple formats',
     coreFeature: 'Core Feature',
@@ -258,7 +258,7 @@ export default {
     webUIFeature5: 'Config management: Visual configuration of download parameters (thread count, save directory, etc.)',
     webUIFeature6: 'Access control: Support setting access password (token) to protect service',
     parserFeatures: '🎬 Video Parsing Features',
-    parserFeature1: 'Multi-platform support: Support parsing video share links from Douyin, Weibo, Pipixia and other platforms',
+    parserFeature1: 'Multi-platform support: Support parsing video share links from Douyin, Weibo, Pipixia, Bilibili and other platforms',
     parserFeature2: 'Watermark-free download: Automatically extract watermark-free video addresses and download',
     parserFeature3: 'Smart recognition: Automatically identify video platforms and select appropriate parser',
     extractFeatures: '🔍 Smart Extraction Features',

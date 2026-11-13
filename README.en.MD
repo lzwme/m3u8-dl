@@ -44,8 +44,9 @@ A free, open-source, and powerful m3u8 video batch downloader with multi-threade
 
 ### 🎬 Video Parsing Features
 
-- **Multi-platform Support**: Supports parsing video sharing links from platforms like Douyin, Weibo, Pipixia, etc.
+- **Multi-platform Support**: Supports parsing video sharing links from platforms like Douyin, Weibo, Pipixia, Bilibili, etc.
 - **Watermark-free Download**: Automatically extracts watermark-free video addresses and downloads
+- **Bilibili HD Quality**: Automatically merges DASH audio/video streams into an H.264/AAC mp4 (no login required)
 - **Smart Recognition**: Automatically recognizes video platforms and selects appropriate parsers
 
 ### 🔍 Smart m3u8 Address Extraction
@@ -204,7 +205,7 @@ m3u8dl series-list.txt --filename "Series Name"
 
 #### Video Parsing Download
 
-Supports sharing links from platforms like Douyin, Weibo, etc.:
+Supports sharing links from platforms like Douyin, Weibo, Bilibili, etc.:
 
 ```bash
 # Douyin video sharing link
@@ -212,7 +213,14 @@ m3u8dl "https://v.douyin.com/xxxxx/" --type parser
 
 # Weibo video sharing link
 m3u8dl "https://weibo.com/xxxxx" --type parser
+
+# Bilibili video (supports BV ids, b23.tv short links and multi-part videos)
+m3u8dl "https://www.bilibili.com/video/BV1x411c7mD" --type parser
+m3u8dl "https://b23.tv/xxxxx" --type parser
 ```
+
+> Without logging in, Bilibili streams are limited to 1080P. Supplying a Bilibili cookie (`SESSDATA`) in the configuration unlocks higher quality and member-only content.
+> DASH audio/video streams are merged into an mp4 automatically, which requires `ffmpeg` to be available on the system.
 
 #### Extract m3u8 Address from Web Page
 
@@ -269,7 +277,7 @@ After starting, visit `http://localhost:6600` in your browser to use WebUI.
 
 **WebUI Main Features:**
 
-- 📥 Create download tasks (supports m3u8 links, Weibo and Pipixia video sharing links, video playback page extraction)
+- 📥 Create download tasks (supports m3u8 links, Weibo, Pipixia and Bilibili video sharing links, video playback page extraction)
 - 📊 View download progress and speed in real-time
 - ⏸️ Pause/Resume download tasks
 - 🗑️ Delete tasks and downloaded files
@@ -333,7 +341,7 @@ await m3u8BatchDownload(fileList, {
   threadNum: 4,
 });
 
-// Example 3: Video parsing download (Douyin, Weibo, etc.)
+// Example 3: Video parsing download (Douyin, Weibo, Bilibili, etc.)
 const parser = new VideoParser();
 const parseResult = await parser.parse('https://v.douyin.com/xxxxx/');
 if (parseResult.data) {

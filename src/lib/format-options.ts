@@ -60,7 +60,8 @@ export async function formatOptions(url: string, opts: M3u8DLOptions) {
     if (VideoParser.getPlatform(url).platform !== 'unknown') {
       options.type = 'parser';
       if (!opts.filename) {
-        const info = await VideoParser.parse(url);
+        // 透传请求头：部分平台需要 cookie 才能取到视频信息
+        const info = await VideoParser.parse(url, formatHeaders(options.headers));
         if (info.code === 0 && info.data?.title) {
           options.filename = info.data.title
             .split('\n')[0]

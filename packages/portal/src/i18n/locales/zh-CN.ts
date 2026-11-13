@@ -57,7 +57,7 @@ export default {
       },
       videoParse: {
         title: '视频解析',
-        desc: '支持抖音、微博、皮皮虾等平台的视频分享链接解析，无水印下载',
+        desc: '支持抖音、微博、皮皮虾、B站等平台的视频分享链接解析，无水印下载',
       },
       smartExtract: {
         title: '智能提取',

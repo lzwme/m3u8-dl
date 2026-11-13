@@ -57,7 +57,22 @@ commander v12。主命令收多个 url → `m3u8BatchDownload`；子命令 `serv
 
 ### 视频解析（`src/video-parser/`）
 
-`BaseParser` 提供静态 `success/error` 与默认 `parse(url, headers)`；实现有 `douyin-parser.ts`、`weibo-parser.ts`（需 cookie）、`pipixia-parser.ts`。`VideoParser` 用静态注册表 `platforms`（hostname 去 `www.` 后 `includes` 匹配，兜底 `**`）分发，`download()` 得直链后走 `fileDownload`。
+`BaseParser` 提供静态 `success/error` 与默认 `parse(url, headers)`；实现有 `douyin-parser.ts`、`weibo-parser.ts`（需 cookie）、`pipixia-parser.ts`、`bilibili-parser.ts`。`VideoParser` 用静态注册表 `platforms`（hostname 去 `www.` 后 `includes` 匹配，兜底 `**`）分发，`download()` 得直链后走 `fileDownload`。
+
+解析器可通过 `headers` 拿到用户自定义请求头（CLI `-H` / WebUI Custom Header），`VideoParser.download()` 与 `formatOptions()` 都会把 `options.headers` 透传给 `parse()`——**cookie 必须靠这条链路传到解析器**，否则取不到高清地址。
+
+#### B 站解析（`src/video-parser/parsers/bilibili/`）
+
+- `wbi.ts`：WBI 签名。`nav` 接口取 `wbi_img` 的 img_key/sub_key → 64 位乱序表派生 mixin_key → 参数排序+过滤 `!'()*`+`wts` → MD5 得 `w_rid`。密钥有 1 小时缓存；B 站换密钥表时需同步更新 `MIXIN_KEY_ENC_TAB`。
+- `api.ts`：`view`（标题/分P/UP 主，免签名）、`playurl`（取流）。取流三级降级：**有 cookie → WBI 接口 DASH（画质最高）→ 免登录老接口 + `try_look=1` 的 DASH（实测可达 1080P）→ `fnval=1` 的 durl 单文件**。
+- DASH 流的 m4s 是**完整 MP4（ftyp/moov/mdat）**，不是 fMP4 分片，**不能喂给 `fmp4Merger`**。
+- CDN 节点会随机分配且部分不可达：取流时保留 `backupUrl`，下载端逐个探测可用节点，优先标准 upos 节点（`*.bilivideo.com`）而非 mcdn 节点（`*.bilivideo.cn`）。
+- CDN 有防盗链，**必须带 `Referer: https://www.bilibili.com`**（缺 Referer 返回 403）；直链约 120 分钟过期。
+
+#### 音视频分离流合并（`src/lib/dash-download.ts`）
+
+`dashDownload()` 处理 DASH 这类音视频分离的场景：并发 Range 分段下载视频流与音频流（`Range: bytes=0-0` 探测大小，CDN 常不支持 HEAD）→ `ffmpeg -c copy -movflags +faststart` 合并为 mp4。`VideoInfo.audioUrl` 存在时 `VideoParser.download()` 走此路径，否则走 `fileDownload`。
+
 
 ### 前端（`packages/frontend`）
 

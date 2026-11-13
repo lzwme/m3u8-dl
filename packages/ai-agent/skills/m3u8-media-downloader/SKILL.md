@@ -1,6 +1,6 @@
 ---
 name: m3u8-media-downloader
-description: Use @lzwme/m3u8-dl for media download and video info parsing. Use when the user mentions video/music download (m3u8/HLS/mp4/mp3 or 抖音/皮皮虾/微博视频), or 获取视频信息、解析视频链接, and a video/music URL is present.
+description: Use @lzwme/m3u8-dl for media download and video info parsing. Use when the user mentions video/music download (m3u8/HLS/mp4/mp3 or 抖音/皮皮虾/微博/B站视频), or 获取视频信息、解析视频链接, and a video/music URL is present.
 version: "1.9.0"
 author: "renxia (https://lzw.me)"
 license: "MIT"
@@ -27,7 +27,7 @@ metadata:
 
 # m3u8-downloader
 
-Download m3u8/mp4 video and mp3/music, support 抖音、皮皮虾、微博 sharing links. Multi-thread download, WebUI, batch and Node API.
+Download m3u8/mp4 video and mp3/music, support 抖音、皮皮虾、微博、B站 sharing links. Multi-thread download, WebUI, batch and Node API.
 
 Example:
 
@@ -37,7 +37,7 @@ Example:
 
 - **m3u8/HLS & mp4** — download and merge to mp4 (ffmpeg required for ts→mp4)
 - **Music** — mp3/m4a from m3u8/stream sources
-- **抖音/皮皮虾/微博** — parse or download sharing links
+- **抖音/皮皮虾/微博/B站** — parse or download sharing links (Bilibili DASH streams are merged into mp4, ffmpeg required)
 
 ## CLI
 
@@ -65,11 +65,13 @@ m3u8dl server            # 启动 WebUI (http://localhost:6600)
 # Basic download
 m3u8dl https://example.com/video.m3u8 -f "My Video" -S ./downloads
 
-# 抖音/皮皮虾/微博 sharing link
+# 抖音/皮皮虾/微博/B站 sharing link
 # parser and download video
 m3u8dl "https://v.douyin.com/xxxxx/" --type parser
 # parser and print info
 m3u8dl info "https://h5.pipix.com/xxxxx"
+# Bilibili BV id / b23.tv short link (DASH audio+video merged into mp4)
+m3u8dl "https://www.bilibili.com/video/BV1x411c7mD" --type parser
 
 # With name: "name|url"
 m3u8dl "Episode 1|https://example.com/ep1.m3u8"
@@ -108,7 +110,7 @@ import { m3u8Download, VideoParser, m3u8BatchDownload } from '@lzwme/m3u8-dl';
 // Download m3u8/mp4
 await m3u8Download(url, { filename: 'video', saveDir: './downloads' });
 
-// Parse 抖音/皮皮虾/微博
+// Parse 抖音/皮皮虾/微博/B站
 const parser = new VideoParser();
 const info = await parser.parse('https://v.douyin.com/xxxxx/');
 await parser.download(info, { saveDir: './downloads' });
@@ -122,7 +124,7 @@ await m3u8BatchDownload(['name1$url1', 'name2$url2'], { saveDir: './downloads' }
 | Scenario | CLI | Node API |
 |----------|-----|----------|
 | m3u8/mp4 URL | `m3u8dl <url>` | `m3u8Download(url)` |
-| 抖音/皮皮虾/微博 | `--type parser` or `info <url>` | `VideoParser.parse()` |
+| 抖音/皮皮虾/微博/B站 | `--type parser` or `info <url>` | `VideoParser.parse()` |
 | Web page with m3u8 | `--type web` | `getM3u8Urls()` |
 | Batch download | `"name\|url"` or file | `m3u8BatchDownload()` |
 | mp4 conversion | Requires ffmpeg | Set `ffmpegPath` |

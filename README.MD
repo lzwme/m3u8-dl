@@ -44,8 +44,9 @@
 
 ### 🎬 视频解析功能
 
-- **多平台支持**：支持抖音、微博、皮皮虾等平台的视频分享链接解析
+- **多平台支持**：支持抖音、微博、皮皮虾、哔哩哔哩（B 站）等平台的视频分享链接解析
 - **无水印下载**：自动提取无水印视频地址并下载
+- **B 站高画质**：自动合并 DASH 音视频双流，输出 H.264/AAC 的 mp4（无需登录）
 - **智能识别**：自动识别视频平台并选择合适的解析器
 
 ### 🔍 m3u8 地址智能提取功能
@@ -204,7 +205,7 @@ m3u8dl 剧集列表.txt --filename "剧集名称"
 
 #### 视频解析下载
 
-支持抖音、微博等平台的分享链接：
+支持抖音、微博、B 站等平台的分享链接：
 
 ```bash
 # 抖音视频分享链接
@@ -212,7 +213,14 @@ m3u8dl "https://v.douyin.com/xxxxx/" --type parser
 
 # 微博视频分享链接
 m3u8dl "https://weibo.com/xxxxx" --type parser
+
+# B 站视频（支持 BV 号、b23.tv 短链、多 P 视频）
+m3u8dl "https://www.bilibili.com/video/BV1x411c7mD" --type parser
+m3u8dl "https://b23.tv/xxxxx" --type parser
 ```
+
+> B 站在未登录状态下最高可取到 1080P；若在配置中提供 B 站 Cookie（SESSDATA），可获取更高画质及会员内容。
+> 音视频双流（DASH）会自动合并为 mp4，需要系统中存在 `ffmpeg`。
 
 #### 从网页提取 m3u8 地址
 
@@ -269,7 +277,7 @@ m3u8dl server -p 8080 -t "your-secret-token"
 
 **WebUI 主要功能：**
 
-- 📥 创建下载任务（支持 m3u8 链接、微博和皮皮虾视频分享链接、视频播放网页提取）
+- 📥 创建下载任务（支持 m3u8 链接、微博、皮皮虾和 B 站视频分享链接、视频播放网页提取）
 - 📊 实时查看下载进度和速度
 - ⏸️ 暂停/恢复下载任务
 - 🗑️ 删除任务和已下载文件
@@ -333,7 +341,7 @@ await m3u8BatchDownload(fileList, {
   threadNum: 4,
 });
 
-// 示例 3：视频解析下载（抖音、微博等）
+// 示例 3：视频解析下载（抖音、微博、B 站等）
 const parser = new VideoParser();
 const parseResult = await parser.parse('https://v.douyin.com/xxxxx/');
 if (parseResult.data) {

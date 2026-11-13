@@ -59,7 +59,7 @@ export default {
       },
       videoParse: {
         title: 'Video Parsing',
-        desc: 'Supports video sharing link parsing from platforms like Douyin, Weibo, Pipixia, watermark-free download',
+        desc: 'Supports video sharing link parsing from platforms like Douyin, Weibo, Pipixia, Bilibili, watermark-free download',
       },
       smartExtract: {
         title: 'Smart Extraction',

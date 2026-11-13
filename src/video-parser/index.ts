@@ -1,9 +1,11 @@
 import { extname } from 'node:path';
 import { URL } from 'node:url';
+import { dashDownload } from '../lib/dash-download';
 import { fileDownload } from '../lib/file-download';
 import { formatHeaders, logger } from '../lib/utils';
 import type { ApiResponse, M3u8DLOptions, M3u8DLResult, VideoInfo } from '../types';
 import { BaseParser } from './parsers/base-parser';
+import { BilibiliParser } from './parsers/bilibili-parser';
 import { DouyinParser } from './parsers/douyin-parser';
 import { PipixiaParser } from './parsers/pipixia-parser';
 import { WeiboParser } from './parsers/weibo-parser';
@@ -29,6 +31,10 @@ export class VideoParser {
       class: WeiboParser,
       domains: ['weibo.com'],
     },
+    bilibili: {
+      class: BilibiliParser,
+      domains: ['bilibili.com', 'b23.tv'],
+    },
     unknown: {
       class: BaseParser,
       domains: ['**'],
@@ -46,7 +52,8 @@ export class VideoParser {
   }
 
   public static async download(url: string, options: M3u8DLOptions): Promise<M3u8DLResult> {
-    const info = await VideoParser.parse(url);
+    // 透传请求头：部分平台（如 B 站、微博）需要 cookie 才能取到可用地址
+    const info = await VideoParser.parse(url, formatHeaders(options.headers));
     logger.debug('解析视频信息', info);
 
     if (info.code || !info.data?.url) return { errmsg: info.message || '解析视频信息失败', options };
@@ -63,6 +70,9 @@ export class VideoParser {
       referer: info.data.referer || info.data.url,
       ...formatHeaders(options.headers),
     };
+
+    // 音视频分离的平台（如 B 站 DASH）返回两条流，需要下载后合并
+    if (info.data.audioUrl) return dashDownload(info.data, options);
 
     return fileDownload(info.data.url, options);
   }

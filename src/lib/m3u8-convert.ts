@@ -86,7 +86,7 @@ async function concatFiles(files: string[], output: string) {
 }
 
 /** 执行 ffmpeg 命令（异步，避免阻塞事件循环导致服务端并发任务的进度推送停滞） */
-async function execFfmpeg(cmd: string, ffmpegBin: string) {
+export async function execFfmpeg(cmd: string, ffmpegBin: string) {
   logger.debug('[ffmpeg]cmd:', cyan(cmd));
   const r = await execPromisfy(cmd);
   if (r.error) logger.warn(`[ffmpeg]执行失败，请确认 \`${ffmpegBin}\` 已正确安装并可用！`, r.stderr);
