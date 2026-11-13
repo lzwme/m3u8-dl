@@ -1,5 +1,5 @@
 import { createWriteStream, existsSync, promises as fsPromises, unlinkSync } from 'node:fs';
-import { resolve } from 'node:path';
+import { dirname, resolve } from 'node:path';
 import { formatByteSize, formatTimeCost, md5, mkdirp } from '@lzwme/fe-utils';
 import { blueBright, cyan, gray, greenBright, magentaBright, yellowBright } from 'console-log-colors';
 import type { M3u8DLOptions, M3u8DLProgressStats, M3u8DLResult } from '../types/m3u8';
@@ -265,6 +265,8 @@ export async function dashDownload(info: VideoInfo, opts: M3u8DLOptions): Promis
     }
 
     logger.info(t('download.status.dashMerging', lang), greenBright(filepath));
+    // 保存目录可能尚未创建（与 m3u8 合并流程保持一致）
+    mkdirp(dirname(filepath));
     const mergeArgs = info.audioUrl
       ? `"${ffmpegBin}" -y -i "${videoFile}" -i "${audioFile}" -c copy -movflags +faststart "${filepath}"`
       : `"${ffmpegBin}" -y -i "${videoFile}" -c copy -movflags +faststart "${filepath}"`;
