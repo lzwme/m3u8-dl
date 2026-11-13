@@ -6,6 +6,8 @@ on:
   push:
     tags:
       - 'v*.*.*'
+  # 手动触发（Trusted Publishing 首次配置、或 tag 流水线失败后重试时使用）
+  workflow_dispatch:
   # release:
   #   types: [created]
 
@@ -53,9 +55,14 @@ jobs:
       - name: Build
         run: npm run build
 
-      - run: npm publish
+      - name: Publish (npm Trusted Publishing / OIDC)
+        run: |
+          # 走 npm Trusted Publishing：由 GitHub Actions 的 OIDC 换取临时发布凭证，
+          # 因此必须清掉 setup-node 写入的占位 _authToken，否则会带着失效 token 去请求并报 404
+          npm config delete "//registry.npmjs.org/:_authToken" || true
+          npm publish --provenance
         env:
-          NODE_AUTH_TOKEN: ${{secrets.NPM_TOKEN}}
+          NODE_OPTIONS: --max-old-space-size=4096
 
       # - name: Github Release
       #   uses: softprops/action-gh-release@v2
