@@ -55,11 +55,17 @@ jobs:
       - name: Build
         run: npm run build
 
+      - name: Upgrade npm (Trusted Publishing 需要 npm >= 11.5.1)
+        run: npm install -g npm@latest
+
       - name: Publish (npm Trusted Publishing / OIDC)
         run: |
+          node --version
+          npm --version
           # 走 npm Trusted Publishing：由 GitHub Actions 的 OIDC 换取临时发布凭证，
           # 因此必须清掉 setup-node 写入的占位 _authToken，否则会带着失效 token 去请求并报 404
           npm config delete "//registry.npmjs.org/:_authToken" || true
+          npm config get registry
           npm publish --provenance
         env:
           NODE_OPTIONS: --max-old-space-size=4096
