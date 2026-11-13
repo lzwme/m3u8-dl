@@ -4,15 +4,26 @@ allowBuilds:
   electron: true
   esbuild: true
   electron-winstaller: true
+# 允许安装"发布未满 minimumReleaseAge 窗口"的新版本的白名单。
+# 注意：当前未配置 minimumReleaseAge（默认 0），因此本清单暂不产生拦截效果，
+# 仅作为"已知可用的新版本"记录；一旦启用 minimumReleaseAge 需同步维护此处版本号。
 minimumReleaseAgeExclude:
-  - '@biomejs/biome@2.5.12'
-  - '@biomejs/cli-darwin-arm64@2.5.12'
-  - '@biomejs/cli-darwin-x64@2.5.12'
-  - '@biomejs/cli-linux-arm64-musl@2.5.12'
-  - '@biomejs/cli-linux-arm64@2.5.12'
-  - '@biomejs/cli-linux-x64-musl@2.5.12'
-  - '@biomejs/cli-linux-x64@2.5.12'
-  - '@biomejs/cli-win32-arm64@2.5.12'
-  - '@biomejs/cli-win32-x64@2.5.12'
-  - electron@44.2.0
-  - postcss@8.5.28
+  - '@biomejs/biome@2.6.7'
+  - '@biomejs/cli-darwin-arm64@2.6.7'
+  - '@biomejs/cli-darwin-x64@2.6.7'
+  - '@biomejs/cli-linux-arm64-musl@2.6.7'
+  - '@biomejs/cli-linux-arm64@2.6.7'
+  - '@biomejs/cli-linux-x64-musl@2.6.7'
+  - '@biomejs/cli-linux-x64@2.6.7'
+  - '@biomejs/cli-win32-arm64@2.6.7'
+  - '@biomejs/cli-win32-x64@2.6.7'
+  - electron@45.3.1
+  - postcss@8.5.32
+  - '@intlify/core-base@11.4.19'
+  - '@intlify/devtools-types@11.4.19'
+  - '@intlify/message-compiler@11.4.19'
+  - '@intlify/shared@11.4.19'
+  - '@vitejs/plugin-vue@6.0.11'
+  - prettier@3.10.1
+  - vue-i18n@11.4.19
+  - ws@8.23.0

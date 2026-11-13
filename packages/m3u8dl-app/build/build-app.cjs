@@ -19,7 +19,7 @@ const T = {
 
     const distPkg = assign({
       dependencies: {
-        "global-agent": "^3.0.0",
+        "global-agent": "^4.1.7",
         'ffmpeg-static': '^5.2.0',
         ...rootPkg.dependencies,
       },

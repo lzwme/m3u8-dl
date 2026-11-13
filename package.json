@@ -53,39 +53,38 @@
     "ffmpeg"
   ],
   "engines": {
-    "node": ">=14.18"
+    "node": "^22.13.0 || >=24"
   },
   "publishConfig": {
     "access": "public",
     "registry": "https://registry.npmjs.com"
   },
   "devDependencies": {
-    "@biomejs/biome": "2.5.12",
+    "@biomejs/biome": "2.6.7",
     "@lzwme/fed-lint-helper": "^2.6.6",
     "@types/express": "^5.0.6",
-    "@types/global-agent": "^3.0.0",
     "@types/m3u8-parser": "^7.2.6",
-    "@types/node": "^26.4.1",
-    "@types/ws": "^8.18.1",
-    "concurrently": "^10.0.5",
-    "express": "^5.2.1",
+    "@types/node": "^26.6.6",
+    "@types/ws": "^8.18.2",
+    "concurrently": "^10.0.7",
+    "express": "^5.3.0",
     "fast-glob": "^3.3.3",
     "husky": "^9.1.7",
     "minimist": "^1.2.8",
     "nodemon": "^3.1.14",
-    "prettier": "^3.9.6",
+    "prettier": "^3.10.1",
     "standard-version": "^9.5.0",
     "typedoc": "^0.28.20",
-    "typescript": "^6",
-    "ws": "^8.21.3"
+    "typescript": "^6.0.3",
+    "ws": "^8.23.0"
   },
   "dependencies": {
     "@lzwme/fe-utils": "^1.9.2",
-    "commander": "^12.0.0",
+    "commander": "^14.0.3",
     "console-log-colors": "^0.5.0",
     "enquirer": "^2.4.1",
-    "global-agent": "^4.1.3",
-    "m3u8-parser": "^7.2.0"
+    "global-agent": "^4.1.7",
+    "m3u8-parser": "^7.2.1"
   },
   "files": [
     "cjs",

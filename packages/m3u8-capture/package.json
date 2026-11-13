@@ -13,9 +13,9 @@
     "fix": "biome check --fix"
   },
   "devDependencies": {
-    "@types/node": "^26.4.1",
+    "@types/node": "^26.6.6",
     "@types/tampermonkey": "^5.5.0",
-    "typescript": "^6",
-    "vite": "^8.2.2"
+    "typescript": "^6.0.3",
+    "vite": "^8.3.8"
   }
 }
