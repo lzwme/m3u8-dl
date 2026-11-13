@@ -160,7 +160,7 @@ const T = {
           category: 'public.app-category.productivity',
           target: [
             // CI 下不产出 7z 压缩包：在 GitHub CI（单 job 串行双架构）下会显著拖长构建时长
-            isCI ? : null : {
+            isCI ? null : {
               target: '7z',
               arch: ['x64', 'arm64'],
             },
