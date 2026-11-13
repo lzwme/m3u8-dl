@@ -11,6 +11,11 @@ export default {
         description: 'm3u8视频在线搜索与下载',
       },
     },
+    server: {
+      missingDependency: '启动服务失败：缺少依赖模块',
+      missingDependencyHint: '服务模式依赖 express 与 ws，请先全局安装后重试：npm install -g express ws',
+      startFailed: '启动服务失败',
+    },
     option: {
       silent: '开启静默模式。',
       debug: '开启调试模式。',

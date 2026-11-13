@@ -11,6 +11,11 @@ export default {
         description: 'm3u8 video online search and download',
       },
     },
+    server: {
+      missingDependency: 'Failed to start server: missing dependency module',
+      missingDependencyHint: 'Server mode requires express and ws, please install them globally first: npm install -g express ws',
+      startFailed: 'Failed to start server',
+    },
     option: {
       silent: 'Enable silent mode.',
       debug: 'Enable debug mode.',

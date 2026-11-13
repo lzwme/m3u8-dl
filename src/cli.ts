@@ -71,9 +71,23 @@ program
     if (opts.cacheDir) options.cacheDir = opts.cacheDir;
     logger.debug('[cli][server]', opts, options);
 
-    import('./server/download-server.js').then(m => {
-      new m.DLServer(options);
-    });
+    import('./server/download-server.js')
+      .then(m => {
+        new m.DLServer(options);
+      })
+      .catch((error: Error) => {
+        const message = error?.message || '';
+        const lang = getLang();
+        // express / ws 为可选依赖（仅在库模式下不引入，避免安装体积过大），
+        // 服务模式需要用户自行安装
+        if (/Cannot find module|Could not find|ERR_MODULE_NOT_FOUND/i.test(message)) {
+          logger.error(t('cli.server.missingDependency', lang), message);
+          logger.warn(t('cli.server.missingDependencyHint', lang));
+        } else {
+          logger.error(t('cli.server.startFailed', lang), message);
+        }
+        process.exit(1);
+      });
   });
 
 program

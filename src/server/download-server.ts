@@ -42,6 +42,27 @@ interface CacheItem extends Omit<TaskItem, 'options' | 'dlOptions'> {
 
 const rootDir = resolve(__dirname, '../..');
 
+let processGuardInstalled = false;
+
+/**
+ * 安装进程级兜底。
+ *
+ * 单个下载任务的异常不应导致整个服务进程退出：此前任何未捕获的异常都会终止进程，
+ * 在 Docker 等编排环境下会被重启策略拉起，形成"容器反复重启"的故障（见 issue #41）。
+ * 这里只记录异常并继续运行，避免单个坏任务带走整个服务。
+ */
+function installProcessGuard() {
+  if (processGuardInstalled) return;
+  processGuardInstalled = true;
+
+  process.on('uncaughtException', error => {
+    logger.error('[uncaughtException]', (error as Error)?.stack || (error as Error)?.message || error);
+  });
+  process.on('unhandledRejection', reason => {
+    logger.error('[unhandledRejection]', (reason as Error)?.stack || (reason as Error)?.message || reason);
+  });
+}
+
 export class DLServer {
   app: Express = null;
   wss: WebSocketServer | null = null;
@@ -91,6 +112,7 @@ export class DLServer {
     if (!opts.configPath) opts.configPath = resolve(opts.cacheDir, 'config.json');
 
     if (opts.token) opts.token = md5(opts.token.trim()).slice(0, 8);
+    installProcessGuard();
     this.init();
   }
   private async init() {
@@ -401,13 +423,32 @@ export class DLServer {
     };
 
     try {
+      // 下载过程中的异步异常必须在此捕获：否则会变成未处理的 Promise 拒绝，
+      // 在旧版本中会直接终止服务进程（Docker 环境下表现为容器反复重启）
+      let settled = false;
+      const settle = (r: M3u8DLResult): Promise<void> | void => {
+        if (settled) return;
+        settled = true;
+        return afterDownload(r, url);
+      };
+      const onError = (error: Error) => {
+        logger.error('下载失败:', error?.stack || error?.message || error);
+        settle({ filepath: '', errmsg: error?.message || String(error) });
+      };
+
       if (dlOptions.type === 'parser') {
         console.log('\n\nDownloading with VideoParser\n\n', dlOptions, url);
-        VideoParser.download(url, opts).then(r => afterDownload(r, url));
+        VideoParser.download(url, opts)
+          .then(r => settle(r))
+          .catch(onError);
       } else if (dlOptions.type === 'file') {
-        fileDownload(url, opts).then(r => afterDownload(r, url));
+        fileDownload(url, opts)
+          .then(r => settle(r))
+          .catch(onError);
       } else {
-        m3u8Download(url, opts).then(r => afterDownload(r, url));
+        m3u8Download(url, opts)
+          .then(r => settle(r))
+          .catch(onError);
       }
     } catch (error) {
       afterDownload({ filepath: '', errmsg: (error as Error).message }, url);
