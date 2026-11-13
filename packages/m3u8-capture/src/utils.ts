@@ -181,6 +181,12 @@ export function applyTitleReplaceRules(title: string): string {
   }
 }
 
+/** HTML 转义，防止标题/URL 中的引号破坏 DOM 结构 */
+export function escapeHtml(str: string | null | undefined): string {
+  if (str == null) return '';
+  return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+}
+
 export function isEmptyObject(obj: Record<string, unknown> | unknown[] | null | undefined): boolean {
   if (obj == null) return true;
   if (Array.isArray(obj)) return obj.length === 0;

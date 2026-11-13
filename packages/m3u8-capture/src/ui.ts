@@ -1,7 +1,7 @@
 /// <reference path="./global.d.ts" />
 
 import { STORAGE_KEY_WEBUI_URL } from './config';
-import { mediaLinks } from './media';
+import { getMediaTitle, mediaLinks } from './media';
 import {
   getAutoCloseWebui,
   getAutoStart,
@@ -23,7 +23,7 @@ import {
 } from './storage';
 import { initSwalCSS, initTailwindCSS, loadSwal } from './swal';
 import type { DragOffset, EventCoordinates } from './types';
-import { copyToClipboard, getEventCoordinates, headersToString, isInIframeMode } from './utils';
+import { copyToClipboard, escapeHtml, getEventCoordinates, headersToString, isInIframeMode } from './utils';
 
 // UI 相关变量
 let shadowHost: HTMLElement | null = null;
@@ -721,6 +721,9 @@ export function updateUI(): void {
 
     const title = item.title || '';
     const type = item.type.toUpperCase();
+    // 转义后的标题，用于插入 HTML（避免引号等字符破坏结构）
+    const safeTitle = escapeHtml(title);
+    const safeUrl = escapeHtml(item.url);
 
     // 根据类型设置徽章颜色
     let typeBadgeClass = 'bg-gray-500';
@@ -736,10 +739,10 @@ export function updateUI(): void {
               <div class="flex justify-between items-start gap-2 mb-2">
                   <div class="flex-1 min-w-0">
                       <div class="flex items-center gap-1.5 mb-1.5">
-                          <span class="font-semibold text-[13px] text-gray-900 overflow-hidden text-ellipsis whitespace-nowrap" title="${title}">${title || '未命名媒体'}</span>
+                          <span class="font-semibold text-[13px] text-gray-900 overflow-hidden text-ellipsis whitespace-nowrap" title="${safeTitle}">${safeTitle || '未命名媒体'}</span>
                           <span class="${typeBadgeClass} text-white px-2 py-0.5 rounded-xl text-[10px] font-bold">${type}</span>
                       </div>
-                      <div class="text-[11px] text-gray-500 overflow-hidden text-ellipsis whitespace-nowrap leading-snug max-w-[320px]" title="${item.url}">${item.url}</div>
+                      <div class="text-[11px] text-gray-500 overflow-hidden text-ellipsis whitespace-nowrap leading-snug max-w-[320px]" title="${safeUrl}">${safeUrl}</div>
                   </div>
               </div>
               <div class="flex gap-2">
@@ -749,10 +752,12 @@ export function updateUI(): void {
                   data-headers="${headersToString(item.headers, true)}">
                       跳转下载
                   </button>
-                  <button class="m3u8-capture-preview-btn bg-green-500 text-white border-none px-3.5 py-2 rounded-md cursor-pointer text-xs font-medium transition-all duration-200 hover:bg-green-600" data-url="${encodeURIComponent(item.url)}">
+                  <button class="m3u8-capture-preview-btn bg-green-500 text-white border-none px-3.5 py-2 rounded-md cursor-pointer text-xs font-medium transition-all duration-200 hover:bg-green-600"
+                  data-url="${encodeURIComponent(item.url)}"
+                  data-title="${encodeURIComponent(title)}">
                       预览
                   </button>
-                  <button class="m3u8-capture-copy-btn bg-gray-500 text-white border-none px-3.5 py-2 rounded-md cursor-pointer text-xs transition-all duration-200 hover:bg-gray-600" data-url="${item.url}">
+                  <button class="m3u8-capture-copy-btn bg-gray-500 text-white border-none px-3.5 py-2 rounded-md cursor-pointer text-xs transition-all duration-200 hover:bg-gray-600" data-url="${encodeURIComponent(item.url)}">
                       复制
                   </button>
               </div>
@@ -791,8 +796,9 @@ export function updateUI(): void {
   panelElement.querySelectorAll('.m3u8-capture-preview-btn').forEach(btn => {
     btn.addEventListener('click', (e: Event) => {
       e.stopPropagation();
-      const title = decodeURIComponent((btn as HTMLElement).getAttribute('data-title') || '');
       const url = decodeURIComponent((btn as HTMLElement).getAttribute('data-url') || '');
+      // 标题优先取列表项记录的标题，缺失时回退到当前页面标题
+      const title = decodeURIComponent((btn as HTMLElement).getAttribute('data-title') || '') || getMediaTitle();
       const previewUrl = `https://m3u8-player.lzw.me?from=capture&title=${encodeURIComponent(title)}&url=${encodeURIComponent(url)}`;
       safeOpenUrl(previewUrl);
     });
@@ -802,7 +808,7 @@ export function updateUI(): void {
   panelElement.querySelectorAll('.m3u8-capture-copy-btn').forEach(btn => {
     btn.addEventListener('click', async (e: Event) => {
       e.stopPropagation();
-      const url = (btn as HTMLElement).getAttribute('data-url') || '';
+      const url = decodeURIComponent((btn as HTMLElement).getAttribute('data-url') || '');
       const originalText = btn.textContent;
       const originalClassName = btn.className;
 
@@ -822,7 +828,7 @@ export function updateUI(): void {
           icon: 'error',
           title: '复制失败',
           text: '请手动复制链接',
-          html: `<code style="word-break: break-all; background: #f3f4f6; padding: 8px; border-radius: 4px; display: block; font-size: 12px;">${url}</code>`,
+          html: `<code style="word-break: break-all; background: #f3f4f6; padding: 8px; border-radius: 4px; display: block; font-size: 12px;">${escapeHtml(url)}</code>`,
           confirmButtonText: '确定',
         });
       }
