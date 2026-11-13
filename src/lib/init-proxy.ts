@@ -1,6 +1,17 @@
-import type { ProxyAgentConfigurationType } from 'global-agent';
 import type { M3u8DLOptions } from '../types';
 import { logger } from './utils';
+
+/**
+ * global-agent 运行时挂载到 globalThis.GLOBAL_AGENT 上的代理控制器结构。
+ *
+ * global-agent v4 自带类型定义，但其包入口只导出 bootstrap / createGlobalProxyAgent，
+ * 不导出代理控制器类型（v3 时代由 @types/global-agent 提供），因此这里自行声明，避免依赖包内部类型。
+ */
+interface ProxyAgentController {
+  HTTP_PROXY: string | null | undefined;
+  HTTPS_PROXY: string | null | undefined;
+  NO_PROXY: string | null | undefined;
+}
 
 /** 初始化失败 N 次后续忽略代理配置 */
 let initializFailedTimes = 3;
@@ -13,7 +24,7 @@ export async function initProxy(options: M3u8DLOptions) {
 
   // 根据代理模式来初始化
   try {
-    const g = global as unknown as { GLOBAL_AGENT: ProxyAgentConfigurationType };
+    const g = global as unknown as { GLOBAL_AGENT: ProxyAgentController };
     let globalAgent = g.GLOBAL_AGENT;
 
     if (!globalAgent) {
