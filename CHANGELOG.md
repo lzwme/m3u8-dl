@@ -2,6 +2,22 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [1.11.0](https://github.com/lzwme/m3u8-dl/compare/v1.10.0...v1.11.0) (2026-11-13)
+
+
+### Features
+
+* 支持哔哩哔哩视频解析与 DASH 双流合并下载 ([4ebfae6](https://github.com/lzwme/m3u8-dl/commit/4ebfae6abda8f56e08f1c4e1561ae6c08ced519b))
+* **m3u8-capture:** 改进页面标题解析，支持《作品名》提取 ([863ecb4](https://github.com/lzwme/m3u8-dl/commit/863ecb45c5d288d028c08c42361a980a612bcb14))
+
+
+### Bug Fixes
+
+* 修复 DASH 合并时未创建保存目录导致输出失败 ([35814e2](https://github.com/lzwme/m3u8-dl/commit/35814e230811ae0a3075d5bff4f139c214dbad4e))
+* 修复 global-agent v4 类型导入断裂导致的编译失败 ([2ed02eb](https://github.com/lzwme/m3u8-dl/commit/2ed02eb85bddad9cd8d7005be8a8a1d0d5375e85))
+* 修复重定向解析与未捕获异常导致的进程崩溃 ([3941f27](https://github.com/lzwme/m3u8-dl/commit/3941f27e91877265f597b239d12bb343904636be))
+* **m3u8-capture:** 修复预览按钮跳转时标题为空的问题 ([632bed1](https://github.com/lzwme/m3u8-dl/commit/632bed18d0d22782f411885a1468102ecf347b65))
+
 ## [1.10.0](https://github.com/lzwme/m3u8-dl/compare/v1.9.2...v1.10.0) (2026-09-04)
 
 
