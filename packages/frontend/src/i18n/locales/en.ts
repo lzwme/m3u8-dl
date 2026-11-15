@@ -69,6 +69,11 @@ export default {
     headers: 'Custom Headers',
     headersPlaceholder:
       'One per line (Weibo videos require Cookie), format: Key: Value. Example:\nReferer: https://example.com\nCookie: token=123',
+    headersHint: 'Default headers are applied automatically, you can still adjust them here',
+    saveAsDefault: 'Save as default',
+    saveAsDefaultHint: 'Save the current headers as default headers for new download tasks',
+    saveAsDefaultSuccess: 'Saved as default headers',
+    saveAsDefaultFailed: 'Failed to save default headers',
     startDownload: 'Start Download',
     submitting: 'Submitting...',
     enterM3u8Link: 'Please enter at least one M3U8 link',
@@ -198,6 +203,9 @@ export default {
     ffmpegPathPlaceholder: 'Leave empty to use ffmpeg from system PATH',
     ffmpegPathHint:
       'Specify the full path to the ffmpeg executable file. If left empty, will try to use ffmpeg from system PATH environment variable',
+    defaultHeaders: 'Default Headers',
+    defaultHeadersPlaceholder: 'One per line, format: Key: Value. Example:\nReferer: https://example.com\nCookie: token=123',
+    defaultHeadersHint: 'Automatically applied to new download tasks. Headers set on a single task take precedence for the same key.',
     save: 'Save',
     saveSuccess: 'Configuration updated',
     saveFailed: 'Configuration update failed',

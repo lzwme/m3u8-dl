@@ -188,6 +188,36 @@ export function formatHeaders(headers: string | OutgoingHttpHeaders) {
   return toLowcaseKeyObject(headers as Record<string, string>);
 }
 
+/**
+ * 合并多组请求头
+ *
+ * 后面的请求头优先级更高（同名 header 覆盖前面的），空值自动跳过。
+ * 用于合并「全局默认请求头」与「单个任务的请求头」，
+ * 避免任务未填写请求头时把全局默认请求头覆盖掉。
+ */
+export function mergeHeaders(...headersList: (OutgoingHttpHeaders | string | undefined)[]) {
+  const merged: Record<string, string> = {};
+  for (const headers of headersList) {
+    Object.assign(merged, formatHeaders(headers as OutgoingHttpHeaders));
+  }
+  return merged;
+}
+
+/**
+ * 将请求头转换为 `Key: Value` 换行分隔的文本
+ *
+ * 用于配置的持久化与前端展示，避免同一份请求头出现对象/字符串两种形态
+ */
+export function headersToText(headers?: OutgoingHttpHeaders | string) {
+  if (!headers) return '';
+  if (typeof headers === 'string') return headers;
+
+  return Object.entries(headers)
+    .filter(([, value]) => value !== undefined && value !== null)
+    .map(([key, value]) => `${key}: ${Array.isArray(value) ? value.join(', ') : value}`)
+    .join('\n');
+}
+
 /** 异步检查文件是否存在 */
 export async function checkFileExists(filepath: string) {
   try {

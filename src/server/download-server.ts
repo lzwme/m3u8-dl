@@ -11,7 +11,7 @@ import { getM3u8Urls } from '../lib/getM3u8Urls.js';
 import { getLang, LANG_CODES, t } from '../lib/i18n.js';
 import { initProxy } from '../lib/init-proxy.js';
 import { m3u8DLStop, m3u8Download } from '../lib/m3u8-download.js';
-import { checkFileExists, logger } from '../lib/utils.js';
+import { checkFileExists, headersToText, logger, mergeHeaders } from '../lib/utils.js';
 import type { ServerInfo, TaskItem } from '../types/contract.js';
 import type { M3u8DLOptions, M3u8DLResult, M3u8WorkerPool, TsItemInfo } from '../types/m3u8.js';
 import { VideoParser } from '../video-parser/index.js';
@@ -206,6 +206,8 @@ export class DLServer {
     try {
       if (!configPath) configPath = this.options.configPath;
       if (await checkFileExists(configPath)) assign(this.cfg, JSON.parse(await fsPromises.readFile(configPath, 'utf8')));
+      // 请求头统一为字符串，便于前端编辑与展示
+      this.cfg.dlOptions.headers = headersToText(this.cfg.dlOptions.headers);
     } catch (error) {
       logger.error('Load config failed:', error);
     }
@@ -227,6 +229,11 @@ export class DLServer {
     }
 
     for (const [key, value] of Object.entries(config)) {
+      // 请求头统一以 `Key: Value` 文本保存，方便前端编辑
+      if (key === 'headers') {
+        this.cfg.dlOptions.headers = headersToText(value as M3u8DLOptions['headers']);
+        continue;
+      }
       // @ts-expect-error 忽略类型错误
       if (key in this.cfg.webOptions) this.cfg.webOptions[key] = value;
       // @ts-expect-error 忽略类型错误
@@ -338,15 +345,25 @@ export class DLServer {
   }
   private async startDownload(url: string, options?: M3u8DLOptions) {
     if (!url) return logger.error('[satartDownload]Invalid URL:', url);
+    options = options || {};
+
+    // 合并请求头：任务级请求头优先，未填写时回退到全局默认请求头
+    const mergedHeaders = mergeHeaders(this.cfg.dlOptions.headers, options.headers);
 
     if (url.endsWith('.html')) {
-      const item = Array.from(await getM3u8Urls({ url, headers: options.headers }))[0];
+      const item = Array.from(await getM3u8Urls({ url, headers: mergedHeaders }))[0];
       if (!item) return logger.error('[startDownload]不是有效(包含)M3U8的地址:', url);
       url = item[0];
       if (!options.filename) options.filename = item[1];
     }
 
-    const { options: dlOptions } = await formatOptions(url, { ...this.cfg.dlOptions, ...options, cacheDir: this.options.cacheDir });
+    // 注意：请求头需要单独合并。若直接展开 options，
+    // 任务未填写请求头时（headers 为 undefined）会把全局默认请求头覆盖为空
+    const mergedOptions: M3u8DLOptions = { ...this.cfg.dlOptions, ...options, cacheDir: this.options.cacheDir };
+    if (Object.keys(mergedHeaders).length) mergedOptions.headers = mergedHeaders;
+    else delete mergedOptions.headers;
+
+    const { options: dlOptions } = await formatOptions(url, mergedOptions);
     if (!dlOptions.saveDir) dlOptions.saveDir = this.cfg.dlOptions.saveDir;
     const cacheItem = this.dlCache.get(url) || { options, dlOptions, status: 'pending', url };
     logger.debug('startDownload', url, dlOptions, cacheItem.status);
@@ -512,11 +529,12 @@ export class DLServer {
       res.json({ message: 'ok', code: 0 });
     });
 
-    app.post('/api/config', (req, res) => {
+    app.post('/api/config', async (req, res) => {
       const lang = this.getLangFromRequest(req);
       try {
         const config = req.body as M3u8DLOptions;
-        this.saveConfig(config);
+        // 必须等待保存完成，否则保存失败（如 ffmpeg 路径不存在）时前端仍会收到成功提示
+        await this.saveConfig(config);
         res.json({ message: t('api.success.configUpdated', lang), code: 0 });
       } catch (error) {
         const errorMessage = error instanceof Error ? error.message : t('api.error.configSaveFailed', lang);
@@ -526,7 +544,7 @@ export class DLServer {
     });
 
     app.get('/api/config', (_req, res) => {
-      res.json({ code: 0, data: { ...this.cfg.dlOptions, ...this.cfg.webOptions } });
+      res.json({ code: 0, data: { ...this.cfg.dlOptions, ...this.cfg.webOptions, headers: headersToText(this.cfg.dlOptions.headers) } });
     });
 
     // API to get all download progress
@@ -918,7 +936,9 @@ export class DLServer {
       if (!url) {
         res.json({ code: 1001, message: t('api.error.invalidUrl', lang) });
       } else {
-        getM3u8Urls({ url, headers, subUrlRegex })
+        // 请求头：任务级优先，未填写时回退到全局默认请求头
+        const mergedHeaders = mergeHeaders(this.cfg.dlOptions.headers, headers);
+        getM3u8Urls({ url, headers: mergedHeaders, subUrlRegex })
           .then(d => res.json({ code: 0, data: Array.from(d) }))
           .catch(err => res.json({ code: 401, message: (err as Error).message }));
       }

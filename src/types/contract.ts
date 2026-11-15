@@ -100,6 +100,8 @@ export interface ServerConfig {
   showLocalPlay: boolean;
   maxDownloads: number;
   ffmpegPath: string;
+  /** 全局默认请求头。格式为 `Key: Value` 每行一条，新建任务时自动带上 */
+  headers?: string;
   /** 代理模式。可选值：custom, system, disabled */
   proxyMode?: 'custom' | 'system' | 'disabled';
   proxyUrl?: string;

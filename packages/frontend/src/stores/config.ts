@@ -13,6 +13,8 @@ export const useConfigStore = defineStore('config', () => {
     showLocalPlay: true,
     maxDownloads: 3,
     ffmpegPath: '',
+    // 全局默认请求头，新建任务时自动带上
+    headers: '',
     // 代理配置默认值
     proxyMode: 'disabled',
     proxyUrl: '',
@@ -26,6 +28,12 @@ export const useConfigStore = defineStore('config', () => {
       const result = await fetchConfig();
       if (result && typeof result === 'object' && 'saveDir' in result) {
         Object.assign(config.value, result);
+        // 兼容旧版本服务端：请求头可能是对象，统一转换为 `Key: Value` 文本
+        if (result.headers && typeof result.headers !== 'string') {
+          config.value.headers = Object.entries(result.headers as unknown as Record<string, string>)
+            .map(([key, value]) => `${key}: ${value}`)
+            .join('\n');
+        }
         // 确保代理模式有默认值
         if (!config.value.proxyMode) {
           config.value.proxyMode = 'disabled';

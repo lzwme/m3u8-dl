@@ -38,6 +38,24 @@
                 <p class="mt-1 text-sm text-gray-500">{{ $t('config.ffmpegPathHint') }}</p>
               </div>
 
+              <!-- 全局默认请求头 -->
+              <div class="md:col-span-2">
+                <div class="flex items-center justify-between mb-1">
+                  <label class="block text-sm font-bold text-gray-700">{{ $t('config.defaultHeaders') }}</label>
+                  <select @change="applyQuickHeader($event)"
+                    class="text-xs border border-gray-300 rounded px-2 py-1 focus:ring-blue-500">
+                    <option value="">{{ $t('newDownload.quickTemplate') }}</option>
+                    <option v-for="template in quickHeaders" :key="template.name" :value="template.value">
+                      {{ template.name }}
+                    </option>
+                  </select>
+                </div>
+                <textarea v-model="configStore.config.headers" rows="3"
+                  class="w-full p-2 border rounded-lg focus:ring-blue-500 font-mono text-xs"
+                  :placeholder="$t('config.defaultHeadersPlaceholder')"></textarea>
+                <p class="mt-1 text-sm text-gray-500">{{ $t('config.defaultHeadersHint') }}</p>
+              </div>
+
               <div>
                 <label class="block text-sm font-bold text-gray-700 mb-1">{{ $t('config.delCache') }}</label>
                 <div class="flex items-center mt-2">
@@ -149,11 +167,12 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, computed } from 'vue';
 import { useI18n } from 'vue-i18n';
 import Layout from '@/components/Layout.vue';
 import { useConfigStore } from '@/stores/config';
 import { useWebSocket } from '@/composables/useWebSocket';
+import { getHeaderTemplates } from '@/utils/headers';
 import { toast } from '@/utils/toast';
 
 const { t } = useI18n();
@@ -162,6 +181,18 @@ const configStore = useConfigStore();
 const token = ref(configStore.token || '');
 
 const { connect } = useWebSocket('');
+
+const quickHeaders = computed(() => getHeaderTemplates(t));
+
+/** 应用快捷请求头模板 */
+function applyQuickHeader(event: Event) {
+  const target = event.target as HTMLSelectElement;
+  if (target.value) {
+    configStore.config.headers = target.value;
+    toast({ text: t('newDownload.templateApplied'), type: 'success' });
+  }
+  target.value = '';
+}
 
 onMounted(async () => {
   await configStore.loadConfig();

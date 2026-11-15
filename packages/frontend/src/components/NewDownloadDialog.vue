@@ -193,6 +193,20 @@
                 rows="3 sm:rows-4"
                 :placeholder="$t('newDownload.headersPlaceholder')"
               ></textarea>
+              <div class="flex items-center justify-between mt-1 gap-2">
+                <p class="text-[10px] sm:text-xs text-gray-500">
+                  <i class="fas fa-info-circle mr-1 text-gray-400"></i>
+                  <span>{{ $t('newDownload.headersHint') }}</span>
+                </p>
+                <button
+                  @click="saveAsDefaultHeaders"
+                  class="text-xs text-blue-500 hover:text-blue-700 transition-colors whitespace-nowrap p-1"
+                  :title="$t('newDownload.saveAsDefaultHint')"
+                >
+                  <i class="fas fa-save"></i>
+                  <span class="sm:inline ml-1">{{ $t('newDownload.saveAsDefault') }}</span>
+                </button>
+              </div>
             </div>
             <div>
               <label class="block text-xs font-medium text-gray-600 mb-0.5 sm:mb-1">{{ $t('newDownload.ignoreSegments') }}</label>
@@ -287,6 +301,7 @@ import { useI18n } from 'vue-i18n';
 import { getM3u8Urls, startDownload } from '@/utils/request';
 import { toast } from '@/utils/toast';
 import { optimizeTitle, urlsTextFormat } from '@/utils/formatTitle';
+import { getHeaderTemplates, mergeHeaderText } from '@/utils/headers';
 import { useConfigStore } from '@/stores/config';
 import { useTasksStore } from '@/stores/tasks';
 import type { DownloadTaskOptions } from '@/types/task';
@@ -311,7 +326,7 @@ const downloadUrls = ref('');
 const filename = ref('');
 const saveDir = ref(configStore.config.saveDir || '');
 const ignoreSegments = ref('');
-const headers = ref('');
+const headers = ref(configStore.config.headers || '');
 const subUrlRegex = ref('');
 const extracting = ref(false);
 const submitting = ref(false);
@@ -320,14 +335,10 @@ const showBasicSettings = ref(true);
 
 // 智能提示相关
 const showUrlHelp = ref(false);
-const quickHeaders = computed(() => [
-  { name: t('newDownload.headerWeibo'), value: 'Referer: https://weibo.com/\nCookie: ' },
-  { name: t('newDownload.headerDouyin'), value: 'Referer: https://www.douyin.com/\nUser-Agent: Mozilla/5.0 (iPhone; CPU iPhone OS 14_0 like Mac OS X)' },
-  {
-    name: t('newDownload.headerBili'),
-    value: 'Referer: https://www.bilibili.com/\nUser-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
-  },
-]);
+const quickHeaders = computed(() => getHeaderTemplates(t));
+
+/** 全局默认请求头（保存在服务端配置中） */
+const defaultHeaders = computed(() => configStore.config.headers || '');
 
 // 计算去重后的非空行数
 const uniqueLineCount = computed(() => {
@@ -345,7 +356,8 @@ const resetToDefault = () => {
   downloadUrls.value = '';
   filename.value = '';
   ignoreSegments.value = '';
-  // headers.value = ''; // 不清空，保留上次输入的 headers
+  // 恢复为全局默认请求头，避免每次都要重新填写
+  headers.value = defaultHeaders.value;
   subUrlRegex.value = '';
   saveDir.value = configStore.config.saveDir || '';
   showAdvanced.value = false;
@@ -383,12 +395,8 @@ watch(
         if (props.initialData.ignoreSegments) {
           ignoreSegments.value = props.initialData.ignoreSegments;
         }
-        if (props.initialData.headers) {
-          headers.value = props.initialData.headers;
-          if (typeof headers.value === 'object') {
-            headers.value = JSON.stringify(headers.value, null, 2);
-          }
-        }
+        // 请求头：以全局默认请求头为基础，任务自带请求头覆盖同名项
+        headers.value = mergeHeaderText(defaultHeaders.value, props.initialData.headers);
       } else {
         resetToDefault()
       }
@@ -460,6 +468,23 @@ function applyQuickHeader(event: Event) {
     headers.value = target.value;
     toast({ text: t('newDownload.templateApplied'), type: 'success' });
   }
+  // 重置选中项，便于再次选择同一个模板
+  target.value = '';
+}
+
+/** 将当前请求头保存为全局默认请求头 */
+async function saveAsDefaultHeaders() {
+  const value = headers.value.trim();
+  const prev = configStore.config.headers;
+  configStore.config.headers = value;
+  const result = await configStore.updateConfig();
+  if (result.code) {
+    // 保存失败时回滚，避免界面与服务端配置不一致
+    configStore.config.headers = prev;
+    toast({ text: result.message || t('newDownload.saveAsDefaultFailed'), type: 'error' });
+    return;
+  }
+  toast({ text: t('newDownload.saveAsDefaultSuccess'), type: 'success' });
 }
 
 async function handleSubmit() {
