@@ -2,6 +2,19 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [1.12.0](https://github.com/lzwme/m3u8-dl/compare/v1.11.0...v1.12.0) (2026-11-16)
+
+
+### Features
+
+* 支持保存并复用自定义请求头 ([#43](https://github.com/lzwme/m3u8-dl/issues/43)) ([666a509](https://github.com/lzwme/m3u8-dl/commit/666a509c68ff880c0724c1603d7ab3c9b9042e74))
+
+
+### Bug Fixes
+
+* 任务请求头支持清空并不再与默认请求头合并 ([292f7ad](https://github.com/lzwme/m3u8-dl/commit/292f7ad1a2924d99310aa3e03c150ca2179c1c61))
+* **app:** 修复内置服务启动竞态导致桌面端窗口白屏 ([06fc049](https://github.com/lzwme/m3u8-dl/commit/06fc0493061b6c8ffd6458ab6d6b5730e753d908))
+
 ## [1.11.0](https://github.com/lzwme/m3u8-dl/compare/v1.10.0...v1.11.0) (2026-11-13)
 
 
