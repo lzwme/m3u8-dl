@@ -301,7 +301,7 @@ import { useI18n } from 'vue-i18n';
 import { getM3u8Urls, startDownload } from '@/utils/request';
 import { toast } from '@/utils/toast';
 import { optimizeTitle, urlsTextFormat } from '@/utils/formatTitle';
-import { getHeaderTemplates, mergeHeaderText } from '@/utils/headers';
+import { getHeaderTemplates, mergeHeaderText, readHeaderTemplateValue } from '@/utils/headers';
 import { useConfigStore } from '@/stores/config';
 import { useTasksStore } from '@/stores/tasks';
 import type { DownloadTaskOptions } from '@/types/task';
@@ -463,18 +463,17 @@ function smartFormatUrls() {
 }
 
 function applyQuickHeader(event: Event) {
-  const target = event.target as HTMLSelectElement;
-  if (target.value) {
-    headers.value = target.value;
+  const value = readHeaderTemplateValue(event);
+  if (value) {
+    headers.value = value;
     toast({ text: t('newDownload.templateApplied'), type: 'success' });
   }
-  // 重置选中项，便于再次选择同一个模板
-  target.value = '';
 }
 
 /** 将当前请求头保存为全局默认请求头 */
 async function saveAsDefaultHeaders() {
   const value = headers.value.trim();
+  if (!window.confirm(t('newDownload.saveAsDefaultConfirm'))) return;
   const prev = configStore.config.headers;
   configStore.config.headers = value;
   const result = await configStore.updateConfig();
@@ -513,7 +512,8 @@ async function handleSubmit() {
     url: item.url,
     filename: item.name || (filename.value ? `${filename.value}${urls.length > 1 ? t('taskItem.episode', { index: idx + 1 }) : ''}` : ''),
     saveDir: finalSaveDir,
-    headers: headers.value.trim() || undefined,
+    // 提交空串以表示「不使用默认请求头」；服务端据此与「未填写」区分
+    headers: headers.value.trim(),
     ignoreSegments: ignoreSegments.value.trim() || undefined,
   }));
 

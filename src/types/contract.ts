@@ -61,6 +61,7 @@ export interface TaskOptions {
   title?: string;
   saveDir?: string;
   ignoreSegments?: string;
+  /** 请求头，`Key: Value` 每行一条。任务显式提供时以任务为准，留空串表示不使用全局默认 */
   headers?: string;
 }
 
@@ -100,7 +101,7 @@ export interface ServerConfig {
   showLocalPlay: boolean;
   maxDownloads: number;
   ffmpegPath: string;
-  /** 全局默认请求头。格式为 `Key: Value` 每行一条，新建任务时自动带上 */
+  /** 全局默认请求头。`Key: Value` 每行一条；任务未填写时生效，任务显式填写（含空串）时以任务为准 */
   headers?: string;
   /** 代理模式。可选值：custom, system, disabled */
   proxyMode?: 'custom' | 'system' | 'disabled';

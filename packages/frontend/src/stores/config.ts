@@ -1,6 +1,7 @@
 import { defineStore } from 'pinia';
 import { ref } from 'vue';
 import type { DownloadConfig } from '@/types/config';
+import { headersToText } from '@/utils/headers';
 import { fetchConfig, updateConfig as updateConfigApi } from '@/utils/request';
 
 export const useConfigStore = defineStore('config', () => {
@@ -30,9 +31,7 @@ export const useConfigStore = defineStore('config', () => {
         Object.assign(config.value, result);
         // 兼容旧版本服务端：请求头可能是对象，统一转换为 `Key: Value` 文本
         if (result.headers && typeof result.headers !== 'string') {
-          config.value.headers = Object.entries(result.headers as unknown as Record<string, string>)
-            .map(([key, value]) => `${key}: ${value}`)
-            .join('\n');
+          config.value.headers = headersToText(result.headers as Record<string, unknown>);
         }
         // 确保代理模式有默认值
         if (!config.value.proxyMode) {

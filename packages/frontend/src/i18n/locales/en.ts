@@ -69,9 +69,10 @@ export default {
     headers: 'Custom Headers',
     headersPlaceholder:
       'One per line (Weibo videos require Cookie), format: Key: Value. Example:\nReferer: https://example.com\nCookie: token=123',
-    headersHint: 'Default headers are applied automatically, you can still adjust them here',
+    headersHint: 'Default headers are applied automatically; clear the box to not use them',
     saveAsDefault: 'Save as default',
     saveAsDefaultHint: 'Save the current headers as default headers for new download tasks',
+    saveAsDefaultConfirm: 'Save the current headers as default headers?',
     saveAsDefaultSuccess: 'Saved as default headers',
     saveAsDefaultFailed: 'Failed to save default headers',
     startDownload: 'Start Download',

@@ -189,18 +189,16 @@ export function formatHeaders(headers: string | OutgoingHttpHeaders) {
 }
 
 /**
- * 合并多组请求头
+ * 解析最终生效的请求头
  *
- * 后面的请求头优先级更高（同名 header 覆盖前面的），空值自动跳过。
- * 用于合并「全局默认请求头」与「单个任务的请求头」，
- * 避免任务未填写请求头时把全局默认请求头覆盖掉。
+ * 任务显式提供了 headers（含空串）时以任务为准，否则回退到全局默认请求头。
+ * 这样任务清空请求头即表示「不使用默认请求头」，与「未填写时回退默认」区分开。
+ * 空值请求头会被过滤，避免下发无意义的空串。
  */
-export function mergeHeaders(...headersList: (OutgoingHttpHeaders | string | undefined)[]) {
-  const merged: Record<string, string> = {};
-  for (const headers of headersList) {
-    Object.assign(merged, formatHeaders(headers as OutgoingHttpHeaders));
-  }
-  return merged;
+export function resolveHeaders(taskHeaders?: OutgoingHttpHeaders | string | null, defaultHeaders?: OutgoingHttpHeaders | string) {
+  const source = taskHeaders !== undefined && taskHeaders !== null ? taskHeaders : defaultHeaders;
+  const headers = formatHeaders(source as OutgoingHttpHeaders);
+  return Object.fromEntries(Object.entries(headers).filter(([, value]) => value));
 }
 
 /**

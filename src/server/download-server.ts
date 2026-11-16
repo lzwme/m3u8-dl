@@ -11,7 +11,7 @@ import { getM3u8Urls } from '../lib/getM3u8Urls.js';
 import { getLang, LANG_CODES, t } from '../lib/i18n.js';
 import { initProxy } from '../lib/init-proxy.js';
 import { m3u8DLStop, m3u8Download } from '../lib/m3u8-download.js';
-import { checkFileExists, headersToText, logger, mergeHeaders } from '../lib/utils.js';
+import { checkFileExists, headersToText, logger, resolveHeaders } from '../lib/utils.js';
 import type { ServerInfo, TaskItem } from '../types/contract.js';
 import type { M3u8DLOptions, M3u8DLResult, M3u8WorkerPool, TsItemInfo } from '../types/m3u8.js';
 import { VideoParser } from '../video-parser/index.js';
@@ -347,8 +347,8 @@ export class DLServer {
     if (!url) return logger.error('[satartDownload]Invalid URL:', url);
     options = options || {};
 
-    // 合并请求头：任务级请求头优先，未填写时回退到全局默认请求头
-    const mergedHeaders = mergeHeaders(this.cfg.dlOptions.headers, options.headers);
+    // 任务显式提供的请求头（含空串）优先；未提供时回退到全局默认请求头
+    const mergedHeaders = resolveHeaders(options.headers, this.cfg.dlOptions.headers);
 
     if (url.endsWith('.html')) {
       const item = Array.from(await getM3u8Urls({ url, headers: mergedHeaders }))[0];
@@ -357,8 +357,7 @@ export class DLServer {
       if (!options.filename) options.filename = item[1];
     }
 
-    // 注意：请求头需要单独合并。若直接展开 options，
-    // 任务未填写请求头时（headers 为 undefined）会把全局默认请求头覆盖为空
+    // 注意：请求头已单独解析为最终生效值，避免展开 options 时被任务参数覆盖
     const mergedOptions: M3u8DLOptions = { ...this.cfg.dlOptions, ...options, cacheDir: this.options.cacheDir };
     if (Object.keys(mergedHeaders).length) mergedOptions.headers = mergedHeaders;
     else delete mergedOptions.headers;
@@ -936,8 +935,8 @@ export class DLServer {
       if (!url) {
         res.json({ code: 1001, message: t('api.error.invalidUrl', lang) });
       } else {
-        // 请求头：任务级优先，未填写时回退到全局默认请求头
-        const mergedHeaders = mergeHeaders(this.cfg.dlOptions.headers, headers);
+        // 任务显式提供的请求头（含空串）优先；未提供时回退到全局默认请求头
+        const mergedHeaders = resolveHeaders(headers, this.cfg.dlOptions.headers);
         getM3u8Urls({ url, headers: mergedHeaders, subUrlRegex })
           .then(d => res.json({ code: 0, data: Array.from(d) }))
           .catch(err => res.json({ code: 401, message: (err as Error).message }));

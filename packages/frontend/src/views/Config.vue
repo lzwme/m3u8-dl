@@ -172,7 +172,7 @@ import { useI18n } from 'vue-i18n';
 import Layout from '@/components/Layout.vue';
 import { useConfigStore } from '@/stores/config';
 import { useWebSocket } from '@/composables/useWebSocket';
-import { getHeaderTemplates } from '@/utils/headers';
+import { getHeaderTemplates, readHeaderTemplateValue } from '@/utils/headers';
 import { toast } from '@/utils/toast';
 
 const { t } = useI18n();
@@ -186,12 +186,11 @@ const quickHeaders = computed(() => getHeaderTemplates(t));
 
 /** 应用快捷请求头模板 */
 function applyQuickHeader(event: Event) {
-  const target = event.target as HTMLSelectElement;
-  if (target.value) {
-    configStore.config.headers = target.value;
+  const value = readHeaderTemplateValue(event);
+  if (value) {
+    configStore.config.headers = value;
     toast({ text: t('newDownload.templateApplied'), type: 'success' });
   }
-  target.value = '';
 }
 
 onMounted(async () => {
