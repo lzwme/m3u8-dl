@@ -27,6 +27,31 @@ const utils = {
         .on('error', () => resolve(utils.findFreePort(start, end, port + 1)));
     });
   },
+  /**
+   * 等待内置 DLServer 就绪后再加载页面。
+   * DLServer 构造后的 init() 是异步的（loadConfig/loadCache/动态 import express 等），
+   * 若立即 loadURL 会大概率撞上 ERR_CONNECTION_REFUSED，窗口停留在空白错误页（issue：win 版打开全白）。
+   */
+  waitForServerReady(port, timeout = 30_000) {
+    const http = require('node:http');
+    const start = Date.now();
+    return new Promise((resolve, reject) => {
+      const retry = () => {
+        if (Date.now() - start > timeout) reject(new Error(`DLServer not ready on port ${port} within ${timeout}ms`));
+        else setTimeout(ping, 200);
+      };
+      const ping = () => {
+        const req = http.get(`http://127.0.0.1:${port}/healthcheck`, res => {
+          res.resume();
+          if (res.statusCode === 200) resolve();
+          else retry();
+        });
+        req.on('error', retry);
+        req.setTimeout(2000, () => req.destroy());
+      };
+      ping();
+    });
+  },
 };
 
 const initAutoUpdater = mWindow => {
@@ -130,7 +155,22 @@ const T = {
       });
 
       if (isDev) mainWindow.webContents.openDevTools();
-      mainWindow.loadURL(`http://localhost:${port}/?from=app`);
+
+      // 必须等内置服务真正开始监听后再加载页面，否则会因启动竞态得到空白错误页
+      await utils.waitForServerReady(port);
+      const appUrl = `http://localhost:${port}/?from=app`;
+      mainWindow.loadURL(appUrl);
+
+      // 兜底：主框架加载失败（如服务尚未就绪、端口被瞬时占用）时自动重试，避免窗口永久白屏
+      let failRetryTimes = 0;
+      mainWindow.webContents.on('did-fail-load', (_event, errorCode, _desc, _url, isMainFrame) => {
+        if (!isMainFrame || errorCode === -3 || failRetryTimes >= 10) return; // -3: ERR_ABORTED
+        failRetryTimes++;
+        console.error(`[Main] load failed(${errorCode}), retry ${failRetryTimes}...`);
+        setTimeout(() => {
+          if (!mainWindow.isDestroyed()) mainWindow.loadURL(appUrl);
+        }, 1000);
+      });
     }
 
     mainWindow.on('close', () => {
