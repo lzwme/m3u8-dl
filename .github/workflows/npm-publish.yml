@@ -63,8 +63,11 @@ jobs:
           node --version
           npm --version
           # 走 npm Trusted Publishing：由 GitHub Actions 的 OIDC 换取临时发布凭证，
-          # 因此必须清掉 setup-node 写入的占位 _authToken，否则会带着失效 token 去请求并报 404
+          # 因此必须清掉 setup-node 写入的占位 _authToken，否则会带着失效 token 去请求并报 404。
+          # 注意 setup-node 的 registry-url 是 registry.npmjs.com，占位 token 写在 .com 键下，
+          # 只删 .org 键会删不掉（此前连续发布失败的根因），两个键都清理。
           npm config delete "//registry.npmjs.org/:_authToken" || true
+          npm config delete "//registry.npmjs.com/:_authToken" || true
           npm config get registry
           npm publish --provenance
         env:
