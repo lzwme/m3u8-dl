@@ -70,14 +70,14 @@ export async function m3u8BatchDownload(urls: string[], options: M3u8DLOptions) 
 
         tasks.delete(url);
         o.onInited = (s, _i, wp) => {
-          if (workPoll) workPoll = wp;
+          workPoll = wp;
           if (o.type === 'parser') {
             logger.info('视频解析完成：', s.filename, gray(s.url));
           }
         };
         o.onProgress = (finished, total, info, stats) => {
           if (onProgress) onProgress(finished, total, info, stats);
-          if (o.type === 'm3u8' && !preDLing && urlNext && tasks.size && workPoll.freeNum > 1 && total - finished < options.threadNum) {
+          if (o.type === 'm3u8' && !preDLing && urlNext && tasks.size && workPoll?.freeNum > 1 && total - finished < options.threadNum) {
             logger.debug(
               '\n[预下载下一集]',
               'freeNum:',
