@@ -83,7 +83,7 @@ const T = {
         artifactName: '${productName}-${os}_${arch}-${version}.${ext}',
         electronVersion: appPkg.devDependencies.electron,
         copyright: `Copyright © ${new Date().getFullYear()} \${author}`,
-        compression: 'normal',
+        compression: 'maximum',
         electronDownload: {
           mirror:
             process.env.ELECTRON_MIRROR ||
