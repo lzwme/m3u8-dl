@@ -3,8 +3,8 @@ import { basename, extname } from 'node:path';
 import { md5 } from '@lzwme/fe-utils';
 import type { M3u8DLOptions } from '../types';
 import { VideoParser } from '../video-parser';
-import { formatHeaders, logger } from './utils';
 import { VIDEO_EXT_RE } from './container';
+import { formatHeaders, logger } from './utils';
 
 const fileSupportExtList = [
   // video
