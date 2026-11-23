@@ -13,17 +13,23 @@
 <section class="tsd-panel">
 <ul class="tsd-signatures">
 <li class="">
-<div class="tsd-signature tsd-anchor-link" id="predownload"><span class="tsd-kind-call-signature">preDownLoad</span><span class="tsd-signature-symbol">(</span><br/>    <span class="tsd-kind-parameter">url</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">,</span><br/>    <span class="tsd-kind-parameter">options</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">M3u8DLOptions</span><span class="tsd-signature-symbol">,</span><br/>    <span class="tsd-kind-parameter">wp</span><span class="tsd-signature-symbol">?:</span> <span class="tsd-signature-type">M3u8WorkerPool</span><span class="tsd-signature-symbol">,</span><br/><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">void</span><span class="tsd-signature-symbol">&gt;</span><a href="#predownload" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></div>
+<div class="tsd-signature tsd-anchor-link" id="predownload"><span class="tsd-kind-call-signature">preDownLoad</span><span class="tsd-signature-symbol">(</span><br/>    <span class="tsd-kind-parameter">url</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">,</span><br/>    <span class="tsd-kind-parameter">options</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">M3u8DLOptions</span><span class="tsd-signature-symbol">,</span><br/>    <span class="tsd-kind-parameter">wp</span><span class="tsd-signature-symbol">?:</span> <span class="tsd-signature-type">M3u8WorkerPool</span><span class="tsd-signature-symbol">,</span><br/>    <span class="tsd-kind-parameter">maxTasks</span><span class="tsd-signature-symbol">?:</span> <span class="tsd-signature-type">number</span><span class="tsd-signature-symbol">,</span><br/><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">void</span><span class="tsd-signature-symbol">&gt;</span><a href="#predownload" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></div>
 <div class="tsd-description">
+<div class="tsd-comment tsd-typography"><p>预下载指定 url 的分片（用于批量下载时预取下一集）。</p>
+</div>
 <div class="tsd-parameters">
 <h4 class="tsd-parameters-title">Parameters</h4>
 <ul class="tsd-parameter-list">
 <li><span><span class="tsd-kind-parameter">url</span>: <span class="tsd-signature-type">string</span></span></li>
 <li><span><span class="tsd-kind-parameter">options</span>: <span class="tsd-signature-type">M3u8DLOptions</span></span></li>
-<li><span><span class="tsd-kind-parameter">wp</span>: <span class="tsd-signature-type">M3u8WorkerPool</span><span class="tsd-signature-symbol"> = workPollPublic</span></span></li></ul></div>
-<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">void</span><span class="tsd-signature-symbol">&gt;</span></h4><aside class="tsd-sources">
+<li><span><span class="tsd-kind-parameter">wp</span>: <span class="tsd-signature-type">M3u8WorkerPool</span><span class="tsd-signature-symbol"> = workPollPublic</span></span></li>
+<li><span><span class="tsd-kind-parameter">maxTasks</span>: <span class="tsd-signature-type">number</span><span class="tsd-signature-symbol"> = 0</span></span>
+<div class="tsd-comment tsd-typography"><p>最多提交的任务数，0 表示不限制（受 wp 空闲线程数约束）</p>
+</div></li></ul></div>
+<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">void</span><span class="tsd-signature-symbol">&gt;</span></h4><p>所有已提交任务完成（无论成功失败）后 resolve</p>
+<aside class="tsd-sources">
 <ul>
-<li>Defined in <a href="https://github.com/lzwme/m3u8-dl/blob/d8487921fa2012f2865812cf2e7bbe932122070e/src/lib/m3u8-download.ts#L196">lib/m3u8-download.ts:196</a></li></ul></aside></div></li></ul></section></div>
+<li>Defined in <a href="https://github.com/lzwme/m3u8-dl/blob/5bb8a1ebcb47d3b207e6ab65c735d934ee9cf9b4/src/lib/m3u8-download.ts#L206">lib/m3u8-download.ts:206</a></li></ul></aside></div></li></ul></section></div>
 <div class="col-sidebar">
 <div class="page-menu">
 <div class="tsd-navigation settings">
