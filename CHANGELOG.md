@@ -2,6 +2,17 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [1.12.1](https://github.com/lzwme/m3u8-dl/compare/v1.12.0...v1.12.1) (2026-11-23)
+
+
+### Bug Fixes
+
+* **batch-download:** 修复批量下载时 workPoll 未赋值导致的 TypeError ([a6c6dc8](https://github.com/lzwme/m3u8-dl/commit/a6c6dc800bc5d497effb4c6d9c805966cebb5db8))
+* **batch-download:** 修复预下载失效、--no-convert 误判失败与异常悬挂 ([acaf96f](https://github.com/lzwme/m3u8-dl/commit/acaf96fc2cd2eb50bb1cd95a80f64637f4587318))
+* **download:** 修复播放列表复用、预下载被终止与错误信息丢失 ([7cc62dd](https://github.com/lzwme/m3u8-dl/commit/7cc62dd1ab1556eac818035c5faace8d1a6653b4))
+* **download:** 修复分片重试失效、速度计算越界崩溃等下载链路问题 ([d848792](https://github.com/lzwme/m3u8-dl/commit/d8487921fa2012f2865812cf2e7bbe932122070e))
+* **server:** 重命名后同步 dlOptions.filename 并移除硬编码中文提示 ([eee04f3](https://github.com/lzwme/m3u8-dl/commit/eee04f36bd01ebc218c1c086c088bec5d6ce2f8b))
+
 ## [1.12.0](https://github.com/lzwme/m3u8-dl/compare/v1.11.0...v1.12.0) (2026-11-16)
 
 
