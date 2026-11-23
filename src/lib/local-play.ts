@@ -1,4 +1,4 @@
-import { createReadStream, existsSync, readdirSync, statSync, writeFileSync } from 'node:fs';
+import { createReadStream, existsSync, readdirSync, readFileSync, statSync, writeFileSync } from 'node:fs';
 import { createServer } from 'node:http';
 import { basename, dirname, extname, join, resolve } from 'node:path';
 import { execSync, findFreePort, mkdirp } from '@lzwme/fe-utils';
@@ -38,7 +38,6 @@ export function toLocalM3u8(m3u8Info: M3u8Info | TsItemInfo[], m3u8FilePath = ''
   const cacheDirname = basename(cacheDir);
 
   if (!m3u8FilePath) m3u8FilePath = resolve(cacheDir, `${cacheDirname}.m3u8`);
-  if (existsSync(m3u8FilePath)) return m3u8FilePath;
 
   const initSegment = info.initSegment?.tsOut && existsSync(info.initSegment.tsOut) ? basename(info.initSegment.tsOut) : '';
 
@@ -67,6 +66,11 @@ export function toLocalM3u8(m3u8Info: M3u8Info | TsItemInfo[], m3u8FilePath = ''
   const ext = extname(m3u8FilePath);
   if (ext !== '.m3u8') m3u8FilePath = `${m3u8FilePath.replace(ext, '')}.m3u8`;
   m3u8FilePath = resolve(cacheDir, m3u8FilePath);
+
+  // 已存在时仍需比对内容：分片集合可能变化（如 ignoreSegments 过滤、续传补齐分片），
+  // 直接复用旧列表会指向不存在或已变更的分片
+  if (existsSync(m3u8FilePath) && readFileSync(m3u8FilePath, 'utf8') === m3u8Content) return m3u8FilePath;
+
   mkdirp(cacheDir);
   writeFileSync(m3u8FilePath, m3u8Content, 'utf8');
 

@@ -108,7 +108,7 @@ async function m3u8InfoParse(u: string, o: M3u8DLOptions = {}) {
   let filepath = resolve(options.saveDir, options.filename);
   if (!VIDEO_EXT_RE.test(filepath)) filepath += ffmpegSupport ? '.mp4' : '.ts';
 
-  const result = { options, m3u8Info: null as Awaited<ReturnType<typeof parseM3U8>>, filepath };
+  const result = { options, m3u8Info: null as Awaited<ReturnType<typeof parseM3U8>>, filepath, errmsg: '' };
 
   if (cache.m3u8Info[url]) {
     Object.assign(result, cache.m3u8Info[url]);
@@ -121,7 +121,12 @@ async function m3u8InfoParse(u: string, o: M3u8DLOptions = {}) {
   const m3u8Info = await parseM3U8(url, resolve(options.cacheDir, urlMd5), options.headers as IncomingHttpHeaders).catch(e => {
     logger.error(t('download.status.parseFailed', lang), e?.message);
     if (e) console.log(e);
+    // 透传具体失败原因，避免上层只显示「未知错误」
+    result.errmsg = `${t('download.status.parseFailed', lang)}${e?.message ? `: ${e.message}` : ''}`;
   });
+
+  // 解析成功但无可用分片（如空列表、全部被过滤）时同样需要给出明确原因
+  if (m3u8Info && !(m3u8Info.tsCount > 0)) result.errmsg = t('download.status.noSegments', lang);
 
   if (m3u8Info && m3u8Info?.tsCount > 0) {
     result.m3u8Info = m3u8Info;
@@ -193,22 +198,42 @@ function calcSpeed(idx: number, data: TsItemInfo[], maxTime = 60 * 1000) {
   return now > startTime ? 1000 * (downloadedSize / (now - startTime)) : 0;
 }
 
-export async function preDownLoad(url: string, options: M3u8DLOptions, wp = workPollPublic) {
+/**
+ * 预下载指定 url 的分片（用于批量下载时预取下一集）。
+ * @param maxTasks 最多提交的任务数，0 表示不限制（受 wp 空闲线程数约束）
+ * @returns 所有已提交任务完成（无论成功失败）后 resolve
+ */
+export async function preDownLoad(url: string, options: M3u8DLOptions, wp = workPollPublic, maxTasks = 0) {
   const result = await m3u8InfoParse(url, options);
 
   if (!result.m3u8Info) return;
 
+  const pending: Promise<void>[] = [];
+  let submitted = 0;
+
   for (const info of result.m3u8Info.data) {
-    if (!wp.freeNum) return;
+    if (!wp.freeNum) break;
+    if (maxTasks && submitted >= maxTasks) break;
 
     if (!cache.downloading.has(info.uri)) {
       cache.downloading.add(info.uri);
+      submitted++;
 
-      wp.runTask({ url, info, options: JSON.parse(JSON.stringify(result.options)), crypto: result.m3u8Info.crypto[info.keyUri] }, () => {
-        cache.downloading.delete(info.uri);
-      });
+      pending.push(
+        new Promise<void>(resolve => {
+          wp.runTask(
+            { url, info, options: JSON.parse(JSON.stringify(result.options)), crypto: result.m3u8Info.crypto[info.keyUri] },
+            () => {
+              cache.downloading.delete(info.uri);
+              resolve();
+            }
+          );
+        })
+      );
     }
   }
+
+  await Promise.all(pending);
 }
 
 export async function m3u8Download(url: string, options: M3u8DLOptions = {}) {
