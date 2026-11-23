@@ -184,7 +184,7 @@ function calcSpeed(idx: number, data: TsItemInfo[], maxTime = 60 * 1000) {
   for (let i = idx; i >= 0; i--) {
     const info = data[i];
 
-    if (info.tsSize && info.startTime && now - info.startTime < maxTime) {
+    if (info?.tsSize && info.startTime && now - info.startTime < maxTime) {
       if (startTime > info.startTime) startTime = info.startTime;
       downloadedSize += info.tsSize;
     }
@@ -271,7 +271,9 @@ export async function m3u8Download(url: string, options: M3u8DLOptions = {}) {
         workPoll.runTask({ url, info, options: o, crypto: m3u8Info.crypto[info.keyUri] }, (err, res, taskStartTime) => {
           stats.errmsg = err ? (err.cause as string) || err.message || err.toString() : '';
 
-          if (!res || err) {
+          // tsDownload 失败时不会抛错，而是返回 { success: false }，因此必须把这种结果也纳入失败分支，
+          // 否则下面的重试逻辑永远不会执行（一次网络抖动就会直接判定整集下载失败）
+          if (!res?.success || err) {
             if (err) {
               console.log('\n');
               logger.error(t('download.status.tsDownloadError', lang), info.index, err, res || '');
@@ -294,7 +296,9 @@ export async function m3u8Download(url: string, options: M3u8DLOptions = {}) {
             info.success = 1;
             stats.tsSuccess++;
             stats.durationDownloaded += info.duration;
-            stats.speed = calcSpeed(info.index, data);
+            // 必须用完整分片列表计算速度：重试时会以 runTask([info]) 单条调用，此时 data 的长度为 1，
+            // 而 info.index 是全局序号，按它下标访问 data 会得到 undefined 并抛 TypeError
+            stats.speed = calcSpeed(info.index, m3u8Info.data);
           } else {
             stats.tsFailed++;
           }

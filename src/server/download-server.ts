@@ -870,7 +870,8 @@ export class DLServer {
       let filepath = decodeURIComponent(req.params[0]);
 
       if (filepath) {
-        let ext = filepath.split('.').pop();
+        // 无扩展名时默认按 .m3u8 处理（原来用 split('.').pop()，无点时会把文件名本身当成扩展名，兜底分支永远不会命中）
+        let ext = extname(filepath).slice(1).toLowerCase();
         if (!ext) {
           ext = 'm3u8';
           if (!(await checkFileExists(filepath))) filepath += '.m3u8';

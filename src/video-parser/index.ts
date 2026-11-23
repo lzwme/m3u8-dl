@@ -64,7 +64,9 @@ export class VideoParser {
 
     if (!options.type) options.type = 'parser';
 
-    if (!extname(options.filename)) options.filename += '.mp4';
+    // 解析结果可能没有标题，此时 filename 为空，等 fileDownload/formatOptions 兜底生成，
+    // 不能直接对 undefined 调 extname（会抛 TypeError）
+    if (options.filename && !extname(options.filename)) options.filename += '.mp4';
 
     options.headers = {
       referer: info.data.referer || info.data.url,

@@ -46,7 +46,8 @@ export function toLocalM3u8(m3u8Info: M3u8Info | TsItemInfo[], m3u8FilePath = ''
     '#EXTM3U',
     `#EXT-X-VERSION:${initSegment ? 6 : 3}`,
     '#EXT-X-ALLOW-CACHE:YES',
-    `#EXT-X-TARGETDURATION:${Math.max(...info.data.map(d => d.duration))}`,
+    // RFC 8216：EXT-X-TARGETDURATION 必须是十进制整数，取分片时长的向上取整值
+    `#EXT-X-TARGETDURATION:${Math.max(1, Math.ceil(Math.max(...info.data.map(d => Number(d.duration) || 0))))}`,
     '#EXT-X-MEDIA-SEQUENCE:0',
     // `#EXT-X-KEY:METHOD=AES-128,URI="/api/aes/enc.key"`,
   ];

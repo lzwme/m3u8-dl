@@ -86,7 +86,8 @@ export async function parseM3U8(content: string, cacheDir = './cache', headers?:
   }
 
   const mapInfo = mapInfoList[0];
-  const initSegment = mapInfo?.uri ? await fetchInitSegment(mapInfo, url, cacheDir, result.crypto, headers) : null;
+  const mediaSequence = Number(parser.manifest.mediaSequence) || 0;
+  const initSegment = mapInfo?.uri ? await fetchInitSegment(mapInfo, url, cacheDir, result.crypto, headers, mediaSequence) : null;
 
   if (initSegment) result.initSegment = initSegment;
   result.container = resolveContainer(initSegment, tsList[0].uri);
@@ -120,6 +121,7 @@ export async function parseM3U8(content: string, cacheDir = './cache', headers?:
 
     result.data.push({
       index: i,
+      seq: mediaSequence + i,
       duration: item.duration,
       timeline: item.timeline || result.duration,
       uri: item.uri,
@@ -173,7 +175,8 @@ async function fetchInitSegment(
   baseUrl: string,
   cacheDir: string,
   crypto: M3u8Info['crypto'],
-  headers?: OutgoingHttpHeaders | string
+  headers?: OutgoingHttpHeaders | string,
+  mediaSequence = 0
 ): Promise<M3u8MapInfo | null> {
   const uri = mapInfo.uri.includes('://') ? mapInfo.uri : new URL(mapInfo.uri, baseUrl).toString();
   const result: M3u8MapInfo = { uri, tsOut: '', byterange: mapInfo.byterange, keyUri: '' };
@@ -209,7 +212,7 @@ async function fetchInitSegment(
     }
 
     const initBuffer = sliceByterange(r.buffer, mapInfo.byterange);
-    const data = decryptSegmentData(initBuffer, result.keyUri ? crypto[result.keyUri] : undefined);
+    const data = decryptSegmentData(initBuffer, result.keyUri ? crypto[result.keyUri] : undefined, mediaSequence);
     const container = detectContainerByHeader(data.subarray(0, 256)) || detectContainerType(uri) || 'fmp4';
 
     mkdirp(dirname(tsOut));

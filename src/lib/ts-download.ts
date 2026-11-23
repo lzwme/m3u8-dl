@@ -1,4 +1,4 @@
-import { existsSync, promises } from 'node:fs';
+import { existsSync, promises, statSync } from 'node:fs';
 import type { OutgoingHttpHeaders } from 'node:http';
 import { dirname } from 'node:path';
 import { isMainThread, parentPort } from 'node:worker_threads';
@@ -9,7 +9,11 @@ import { getRetry, isOkStatus, logger, sliceByterange, withRangeHeader } from '.
 
 export async function tsDownload(info: TsItemInfo, cryptoInfo: M3u8Crypto, headers?: OutgoingHttpHeaders | string) {
   try {
-    if (existsSync(info.tsOut)) return true;
+    // 断点续传：已落盘的分片直接命中，需要回填大小，否则进度/大小统计会漏算这部分数据
+    if (existsSync(info.tsOut)) {
+      info.tsSize = statSync(info.tsOut).size;
+      return true;
+    }
 
     // EXT-X-BYTERANGE：多个分片可能共用一个 url，仅通过字节区间区分
     const r = await getRetry(info.uri, withRangeHeader(headers, info.byterange));
@@ -17,10 +21,13 @@ export async function tsDownload(info: TsItemInfo, cryptoInfo: M3u8Crypto, heade
     if (isOkStatus(r.response.statusCode)) {
       logger.debug('\n', info);
       const buffer = sliceByterange(r.buffer, info.byterange);
-      const data = decryptSegmentData(buffer, cryptoInfo);
+      const data = decryptSegmentData(buffer, cryptoInfo, info.seq);
 
       mkdirp(dirname(info.tsOut));
-      await promises.writeFile(info.tsOut, data);
+      // 先写临时文件再原子重命名：进程中断或 worker 被 terminate 时不会留下被误判为「已下载」的截断分片
+      const tmpFile = `${info.tsOut}.part`;
+      await promises.writeFile(tmpFile, data);
+      await promises.rename(tmpFile, info.tsOut);
       info.tsSize = data.byteLength;
 
       return true;

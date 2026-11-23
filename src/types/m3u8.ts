@@ -43,6 +43,11 @@ export interface TsItemInfo {
   m3u8: string;
   /** ts 文件次序 */
   index: number;
+  /**
+   * 分片序号（media sequence number）。
+   * 用于 `EXT-X-KEY` 未声明 IV 时派生默认 IV（RFC 8216 §5.2）
+   */
+  seq?: number;
   /** 视频片段时长 */
   duration: number;
   /** 时间线(起点) */

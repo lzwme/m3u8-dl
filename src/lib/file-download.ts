@@ -51,7 +51,8 @@ export async function fileDownload(u: string, opts: M3u8DLOptions): Promise<M3u8
         stats.downloadedSize = info.downloaded;
         stats.speed = info.speed;
         stats.speedDesc = `${formatByteSize(stats.speed)}/s`;
-        stats.remainingTime = Math.round((info.size - info.downloaded) / stats.speed);
+        // speed 为 0 时（如服务端未返回进度）避免算出 Infinity/NaN 污染进度显示
+        stats.remainingTime = stats.speed > 0 ? Math.round((info.size - info.downloaded) / stats.speed) : 0;
 
         if (options.showProgress) {
           const processBar = info.percent === -1 ? '' : '='.repeat(Math.floor(stats.progress * 0.2)).padEnd(20, '-');

@@ -112,6 +112,8 @@ async function downloadRanged(
   const handle = await fsPromises.open(filepath, 'w');
   let downloaded = 0;
   let cursor = 0;
+  /** 首个失败的分片错误。一旦出现，其它 worker 停止取新分片，避免写入已关闭的 fd */
+  let abortError: Error | null = null;
 
   const downloadChunk = async (index: number) => {
     const start = index * chunkSize;
@@ -146,9 +148,16 @@ async function downloadRanged(
 
   const worker = async () => {
     while (true) {
+      if (abortError) return;
       const index = cursor++;
       if (index >= chunkCount) return;
-      await downloadChunk(index);
+      try {
+        await downloadChunk(index);
+      } catch (e) {
+        // 记录首个错误并让其余 worker 尽快退出；不能让它变成未处理的 Promise 拒绝（会终止进程）
+        if (!abortError) abortError = e as Error;
+        return;
+      }
     }
   };
 
@@ -156,6 +165,16 @@ async function downloadRanged(
     await Promise.all(Array.from({ length: Math.min(parallelism, chunkCount) }, () => worker()));
   } finally {
     await handle.close();
+  }
+
+  if (abortError) {
+    // 失败时清理半成品，避免下次运行把它当成完整文件
+    try {
+      if (existsSync(filepath)) unlinkSync(filepath);
+    } catch {
+      // 清理失败不影响错误上报
+    }
+    throw abortError;
   }
 
   return { size: total, isExist: false };

@@ -26,7 +26,7 @@ export async function VideoSerachAndDL(
         ...cache.latestSearchDL,
         info,
         urls,
-        dlOptions: { filename: info.vod_name.replaceAll(' ', '_'), ...baseOpts },
+        dlOptions: { filename: String(info.vod_name || '').replaceAll(' ', '_'), ...baseOpts },
       };
       stor.save({ latestSearchDL: cache.latestSearchDL });
       const r = await m3u8BatchDownload(cache.latestSearchDL.urls, cache.latestSearchDL.dlOptions);
@@ -103,19 +103,17 @@ export async function VideoSerachAndDL(
   }
 
   if (!info.vod_play_note || !String(info.vod_play_url).includes(info.vod_play_note)) {
-    ['#', '$'].some(d => {
-      if (info.vod_play_url.includes(d)) {
-        info.vod_play_note = d;
-        return true;
-      }
-      return true;
-    });
+    // 依次探测常见的分隔符；原来的 some() 恒在第一项返回 true，导致 '$' 分支永远不会执行
+    const note = ['#', '$'].find(d => info.vod_play_url.includes(d));
+    if (note) info.vod_play_note = note;
   }
 
-  const urls = info.vod_play_url
-    .split(info.vod_play_note || '$')
-    .find(d => d.includes('.m3u8'))
-    .split('#');
+  const playListLine = info.vod_play_url.split(info.vod_play_note || '$').find(d => d.includes('.m3u8'));
+  if (!playListLine) {
+    logger.error('未获取到 m3u8 播放地址信息', info.vod_play_url);
+    return VideoSerachAndDL(keyword, options, baseOpts);
+  }
+  const urls = playListLine.split('#');
 
   logger.debug(info, urls);
   const r = (key: keyof typeof info, desc: string) => (info[key] ? `  [${desc}] ${greenBright(info[key])}` : '');

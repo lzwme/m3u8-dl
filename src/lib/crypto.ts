@@ -21,13 +21,34 @@ export function isWholeSegmentCrypto(method?: string) {
 }
 
 /**
+ * 由分片序号(media sequence number)生成 128 位大端 IV。
+ *
+ * RFC 8216 §5.2：`EXT-X-KEY` 未声明 `IV` 属性时，IV 为该分片的 media sequence number。
+ * 此前固定使用全 0 IV，会让「未声明 IV」的流解密必然失败。
+ */
+function toSequenceIv(seq: number) {
+  const iv = new Uint8Array(16);
+  new DataView(iv.buffer).setUint32(12, seq >>> 0);
+  return iv;
+}
+
+/** 执行整段 AES-128-CBC 解密 */
+function decryptCbc(buf: Buffer, cryptoInfo: M3u8Crypto, iv: Uint8Array | NodeJS.ArrayBufferView) {
+  const cipherName = `${cryptoInfo.method}-cbc`.toLowerCase();
+  const decipher = createDecipheriv(cipherName, cryptoInfo.key as NodeJS.ArrayBufferView, iv as NodeJS.ArrayBufferView);
+  return Buffer.concat([decipher.update(buf), decipher.final()]);
+}
+
+/**
  * 对分片数据进行解密。
  * 仅 `AES-128` 走整段 CBC 解密；其它方式(如 SAMPLE-AES)原样返回。
  *
  * 注意：解密失败会直接抛出错误，由上层(tsDownload)按分片下载失败处理并重试，
  * 而不是把解密失败的密文当作成功结果落盘。
+ *
+ * @param seq 分片序号(media sequence number)，用于未声明 IV 时派生默认 IV
  */
-export function decryptSegmentData<T extends Buffer | Uint8Array>(data: T, cryptoInfo?: M3u8Crypto): Buffer {
+export function decryptSegmentData<T extends Buffer | Uint8Array>(data: T, cryptoInfo?: M3u8Crypto, seq?: number): Buffer {
   const buf = Buffer.isBuffer(data) ? data : Buffer.from(data);
 
   if (!cryptoInfo?.key) return buf;
@@ -40,9 +61,16 @@ export function decryptSegmentData<T extends Buffer | Uint8Array>(data: T, crypt
     return buf;
   }
 
-  const iv = cryptoInfo.iv || new Uint8Array(16);
-  const cipherName = `${cryptoInfo.method}-cbc`.toLowerCase();
-  const decipher = createDecipheriv(cipherName, cryptoInfo.key as NodeJS.ArrayBufferView, iv as NodeJS.ArrayBufferView);
+  const explicitIv = cryptoInfo.iv as NodeJS.ArrayBufferView;
+  if (explicitIv) return decryptCbc(buf, cryptoInfo, explicitIv);
 
-  return Buffer.concat([decipher.update(buf), decipher.final()]);
+  // 未声明 IV：按规范使用 media sequence 派生；失败的再退回全 0 IV，
+  // 兼容少数实际用全 0 IV 加密但未在播放列表中声明的服务端
+  const derivedIv = typeof seq === 'number' ? toSequenceIv(seq) : new Uint8Array(16);
+  try {
+    return decryptCbc(buf, cryptoInfo, derivedIv);
+  } catch (e) {
+    if (typeof seq !== 'number') throw e;
+    return decryptCbc(buf, cryptoInfo, new Uint8Array(16));
+  }
 }
