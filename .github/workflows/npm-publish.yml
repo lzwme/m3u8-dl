@@ -25,10 +25,11 @@ jobs:
           ref: main
           submodules: 'recursive'
 
+      # 不设 registry-url：它只为写入占位 _authToken 的 .npmrc，而 Trusted Publishing 需要「无凭据」状态。
+      # 发布目标 registry 由 package.json 的 publishConfig.registry 决定。
       - uses: actions/setup-node@v7
         with:
           node-version: 26
-          registry-url: https://registry.npmjs.com
 
       - uses: pnpm/action-setup@v6
         id: pnpm-install
@@ -55,20 +56,13 @@ jobs:
       - name: Build
         run: npm run build
 
-      - name: Upgrade npm (Trusted Publishing 需要 npm >= 11.5.1)
-        run: npm install -g npm@latest
-
       - name: Publish (npm Trusted Publishing / OIDC)
         run: |
           node --version
           npm --version
-          # 走 npm Trusted Publishing：由 GitHub Actions 的 OIDC 换取临时发布凭证，
-          # 因此必须清掉 setup-node 写入的占位 _authToken，否则会带着失效 token 去请求并报 404。
-          # 注意 setup-node 的 registry-url 是 registry.npmjs.com，占位 token 写在 .com 键下，
-          # 只删 .org 键会删不掉（此前连续发布失败的根因），两个键都清理。
-          npm config delete "//registry.npmjs.org/:_authToken" || true
-          npm config delete "//registry.npmjs.com/:_authToken" || true
           npm config get registry
+          # 走 npm Trusted Publishing：由 GitHub Actions 的 OIDC 换取临时发布凭证。
+          # 注意 OIDC audience 是 npm:<registry hostname>，registry 必须用 registry.npmjs.org（.com 会被服务端判 401）。
           npm publish --provenance
         env:
           NODE_OPTIONS: --max-old-space-size=4096

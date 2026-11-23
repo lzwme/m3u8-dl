@@ -42,7 +42,6 @@ jobs:
       - uses: actions/setup-node@v7
         with:
           node-version: ${{ matrix.node-version }}
-          registry-url: https://registry.npmjs.com
 
       - uses: pnpm/action-setup@v6
         id: pnpm-install
