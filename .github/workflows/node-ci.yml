@@ -30,7 +30,7 @@ jobs:
         node-version:
           - 24
         include:
-          - node-version: 22
+          - node-version: 26
             os: ubuntu-latest
     name: Node ${{ matrix.node-version }} on ${{ matrix.os }}
     steps:

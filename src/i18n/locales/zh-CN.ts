@@ -89,6 +89,8 @@ export default {
       remuxFallback: '标准 mp4 重新封装失败，已降级为分片拼接产物。该文件一般可正常播放，但可能不支持边下边播',
       unsupportedCrypto: '暂不支持的加密方式: {method}，将按未加密处理',
       downloadFailedWithMessage: '下载失败: {message}',
+      noSegments: '播放列表中未解析到可用的分片',
+      fileDeleted: '已删除',
       dashDownloading: '正在下载音视频流',
       dashMerging: '音视频流下载完成，开始合并...',
       dashMergeFailed: '音视频合并失败',

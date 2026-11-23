@@ -93,6 +93,8 @@ export default {
         'Standard mp4 remux failed, falling back to the concatenated segments. The file is generally playable, but progressive playback may not be supported',
       unsupportedCrypto: 'Unsupported encryption method: {method}, treating as unencrypted',
       downloadFailedWithMessage: 'Download failed: {message}',
+      noSegments: 'No playable segments found in the playlist',
+      fileDeleted: 'File deleted',
       dashDownloading: 'Downloading video and audio streams',
       dashMerging: 'Video and audio streams downloaded, merging...',
       dashMergeFailed: 'Failed to merge video and audio streams',

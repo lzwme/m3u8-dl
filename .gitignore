@@ -30,6 +30,7 @@ docs
 downloads
 cache
 tmp
+local
 coverage
 package-lock.json
 yarn.lock

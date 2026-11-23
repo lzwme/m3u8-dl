@@ -172,7 +172,7 @@ export class DLServer {
 
       if (!(await checkFileExists(item.localVideo)) && !existsSync(item.localVideo)) {
         item.status = 'error';
-        item.errmsg = '已删除';
+        item.errmsg = t('download.status.fileDeleted', getLang());
       }
     } else if (item.status === 'error' && item.progress === 100) {
       if (await checkFileExists(item.localVideo)) {
@@ -851,9 +851,11 @@ export class DLServer {
         await fsPromises.rename(oldPath, newPath);
         logger.debug('重命名文件：', gray(oldPath), '->', cyan(newPath));
 
-        // 更新任务信息
+        // 更新任务信息。dlOptions 是删除/续传时重建文件路径的优先来源，必须同步，
+        // 否则 localVideo 失效后会按旧文件名去找文件
         item.localVideo = newPath;
         item.options.filename = item.filename = basename(newPath);
+        if (item.dlOptions) item.dlOptions.filename = item.filename;
 
         this.dlCache.set(url, item);
         this.saveCache();
