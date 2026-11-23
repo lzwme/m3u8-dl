@@ -1,9 +1,9 @@
 import { createReadStream, createWriteStream, existsSync, renameSync, statSync, unlinkSync, writeFileSync } from 'node:fs';
-import { dirname, extname, resolve } from 'node:path';
+import { dirname, resolve } from 'node:path';
 import { execPromisfy, formatByteSize, mkdirp } from '@lzwme/fe-utils';
 import { cyan, greenBright, magentaBright } from 'console-log-colors';
 import type { M3u8ContainerType, M3u8DLOptions, M3u8Info, TsItemInfo } from '../types/m3u8';
-import { detectContainerByFile, detectContainerType, getOutputExt } from './container';
+import { detectContainerByFile, detectContainerType, getOutputExt, VIDEO_EXT_RE } from './container';
 import { getLang, t } from './i18n.js';
 import { isSupportFfmpeg, logger } from './utils';
 
@@ -243,7 +243,9 @@ function resolveOutputPath(filepath: string, container: M3u8ContainerType, ffmpe
     return filepath;
   }
 
-  if (extname(filepath)) return filepath;
+  // 仅当已是常见视频扩展名时保持原样，否则补充容器对应的扩展名。
+  // 文件名可能带 `.导学课`、`.v2` 这类点号后缀，不能据此判定为已有扩展名（否则 ffmpeg 无法推断输出格式）
+  if (VIDEO_EXT_RE.test(filepath)) return filepath;
 
   return `${filepath}${getOutputExt(container, ffmpegSupport)}`;
 }

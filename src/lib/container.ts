@@ -56,6 +56,12 @@ export function detectContainerByFile(filepath: string, size = 256): M3u8Contain
   }
 }
 
+/**
+ * 常见视频文件扩展名。
+ * 文件名中可能包含 `.导学课`、`.v2` 这类非扩展名的点号后缀，不能用 `extname()` 判断是否为视频扩展名
+ */
+export const VIDEO_EXT_RE = /\.(mp4|m4s|ts|m2ts|mts|mkv|mov|m4v|avi|flv|webm|wmv)$/i;
+
 /** 分片缓存文件的扩展名 */
 export function getSegmentExt(container: M3u8ContainerType = 'ts') {
   return container === 'fmp4' ? '.m4s' : '.ts';

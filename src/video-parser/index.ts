@@ -1,5 +1,5 @@
-import { extname } from 'node:path';
 import { URL } from 'node:url';
+import { VIDEO_EXT_RE } from '../lib/container';
 import { dashDownload } from '../lib/dash-download';
 import { fileDownload } from '../lib/file-download';
 import { formatHeaders, logger } from '../lib/utils';
@@ -65,8 +65,9 @@ export class VideoParser {
     if (!options.type) options.type = 'parser';
 
     // 解析结果可能没有标题，此时 filename 为空，等 fileDownload/formatOptions 兜底生成，
-    // 不能直接对 undefined 调 extname（会抛 TypeError）
-    if (options.filename && !extname(options.filename)) options.filename += '.mp4';
+    // 不能直接对 undefined 调 extname（会抛 TypeError）。
+    // 用视频扩展名白名单判断：标题里的 `.导学课` 这类点号后缀不是扩展名，需补 `.mp4`
+    if (options.filename && !VIDEO_EXT_RE.test(options.filename)) options.filename += '.mp4';
 
     options.headers = {
       referer: info.data.referer || info.data.url,

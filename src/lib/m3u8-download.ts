@@ -5,6 +5,7 @@ import { Barrier, formatTimeCost, rmrfAsync } from '@lzwme/fe-utils';
 import { formatByteSize } from '@lzwme/fe-utils/cjs/common/helper';
 import { blueBright, cyan, cyanBright, green, greenBright, magenta, magentaBright, yellowBright } from 'console-log-colors';
 import type { M3u8DLOptions, M3u8DLProgressStats, M3u8DLResult, M3u8WorkerPool, TsItemInfo } from '../types/m3u8.js';
+import { VIDEO_EXT_RE } from './container.js';
 import { formatOptions } from './format-options.js';
 import { getLang, t } from './i18n.js';
 import { localPlay, toLocalM3u8 } from './local-play.js';
@@ -12,9 +13,6 @@ import { m3u8Convert } from './m3u8-convert.js';
 import { parseM3U8 } from './parseM3u8.js';
 import { isSupportFfmpeg, logger } from './utils.js';
 import { WorkerPool } from './worker_pool.js';
-
-/** 视频文件扩展名 */
-const VIDEO_EXT_RE = /\.(mp4|m4s|ts|mkv|mov|m4v|avi|flv|webm)$/i;
 
 /** 下载队列管理 */
 export class DownloadQueue {

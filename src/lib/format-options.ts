@@ -4,6 +4,7 @@ import { md5 } from '@lzwme/fe-utils';
 import type { M3u8DLOptions } from '../types';
 import { VideoParser } from '../video-parser';
 import { formatHeaders, logger } from './utils';
+import { VIDEO_EXT_RE } from './container';
 
 const fileSupportExtList = [
   // video
@@ -101,7 +102,8 @@ export async function formatOptions(url: string, opts: M3u8DLOptions) {
     else options.filename = urlMd5 + ext;
   }
 
-  if (!extname(options.filename) && options.type !== 'file') options.filename += ext || '.mp4';
+  // 用视频扩展名白名单判断，避免把 `.导学课` 这类点号后缀误认为扩展名而漏补 `.mp4`
+  if (!VIDEO_EXT_RE.test(options.filename) && options.type !== 'file') options.filename += '.mp4';
 
   if (!options.cacheDir) options.cacheDir = 'cache';
   if (options.headers) options.headers = formatHeaders(options.headers);
