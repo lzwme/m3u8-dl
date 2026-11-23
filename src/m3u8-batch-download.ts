@@ -50,16 +50,22 @@ export async function m3u8BatchDownload(urls: string[], options: M3u8DLOptions) 
   return new Promise<boolean>(rs => {
     let preDLing = false;
     const afterDownload = (r: M3u8DLResult, url: string) => {
-      const success = r.filepath && existsSync(r.filepath);
+      // --no-convert 时不产出合并文件，此时以「分片是否全部下载成功」作为完成依据
+      const noConvertOk = r.options?.convert === false && !!r.stats?.tsSuccess && !r.stats?.tsFailed;
+      const success = noConvertOk || (!!r.filepath && existsSync(r.filepath));
 
       if (success) {
         if (r.isExist) logger.info('文件已存在：', gray(r.filepath));
-        logger.debug('下载完成：', gray(url), gray(r.filepath));
+        logger.debug('下载完成：', gray(url), gray(r.filepath || ''));
       } else {
         logger.error('下载失败：', red(r.errmsg || '未知错误'), gray(url));
       }
-      if (tasks.size === 0) rs(r.filepath && existsSync(r.filepath));
+      if (tasks.size === 0) rs(success);
       else run();
+    };
+    /** 下载流程抛错时统一走失败回调，避免 Promise 悬挂导致整个批任务不结束 */
+    const onDownloadError = (error: unknown, url: string) => {
+      afterDownload({ filepath: '', errmsg: (error as Error)?.message || String(error) }, url);
     };
     const run = () => {
       const [url, urlNext] = [...tasks.keys()];
@@ -77,7 +83,7 @@ export async function m3u8BatchDownload(urls: string[], options: M3u8DLOptions) 
         };
         o.onProgress = (finished, total, info, stats) => {
           if (onProgress) onProgress(finished, total, info, stats);
-          if (o.type === 'm3u8' && !preDLing && urlNext && tasks.size && workPoll?.freeNum > 1 && total - finished < options.threadNum) {
+          if (o.type === 'm3u8' && !preDLing && urlNext && tasks.size && workPoll?.freeNum > 1 && total - finished < o.threadNum) {
             logger.debug(
               '\n[预下载下一集]',
               'freeNum:',
@@ -89,18 +95,26 @@ export async function m3u8BatchDownload(urls: string[], options: M3u8DLOptions) 
               tasks.size
             );
             preDLing = true;
-            preDownLoad(urlNext, options, workPoll).then(() => {
-              preDLing = false;
-            });
+            preDownLoad(urlNext, options, workPoll)
+              .catch(e => logger.warn('[预下载下一集]异常:', (e as Error)?.message || e))
+              .finally(() => {
+                preDLing = false;
+              });
           }
         };
 
         if (o.type === 'parser') {
-          VideoParser.download(url, o).then(r => afterDownload(r, url));
+          VideoParser.download(url, o)
+            .then(r => afterDownload(r, url))
+            .catch(e => onDownloadError(e, url));
         } else if (o.type === 'file') {
-          fileDownload(url, o).then(r => afterDownload(r, url));
+          fileDownload(url, o)
+            .then(r => afterDownload(r, url))
+            .catch(e => onDownloadError(e, url));
         } else {
-          m3u8Download(url, o).then(r => afterDownload(r, url));
+          m3u8Download(url, o)
+            .then(r => afterDownload(r, url))
+            .catch(e => onDownloadError(e, url));
         }
       }
     };
