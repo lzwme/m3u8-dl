@@ -26,10 +26,13 @@ async function formatUrls(urls: string[], options: M3u8DLOptions): Promise<Map<s
         const list = content
           .split('\n')
           .filter(d => d.includes('.m3u8'))
-          .map((href, idx) => (href.startsWith('http') ? `${idx}|${href}` : href));
-        const o = { ...options };
-        if (!o.filename) o.filename = basename(url).split('.')[0];
-        const t = await formatUrls(list, o);
+          .map((href, idx) => {
+            if (!href.startsWith('http')) return href;
+            // 纯 URL 行无行内名称：未指定 --filename 时用「txt 文件名-行号」兜底
+            const prefix = options.filename ? '' : `${basename(url).split('.')[0]}-`;
+            return `${prefix}${idx}$${href}`;
+          });
+        const t = await formatUrls(list, { ...options });
         for (const d of t.entries()) taskset.set(d[0], d[1]);
 
         continue;
