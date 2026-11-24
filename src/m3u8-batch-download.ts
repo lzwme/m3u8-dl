@@ -25,6 +25,7 @@ async function formatUrls(urls: string[], options: M3u8DLOptions): Promise<Map<s
       if (content.includes('.m3u8')) {
         const list = content
           .split('\n')
+          .filter(d => !d.trimStart().startsWith('#'))
           .filter(d => d.includes('.m3u8'))
           .map((href, idx) => {
             if (!href.startsWith('http')) return href;
