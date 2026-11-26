@@ -85,7 +85,7 @@ export default {
       totalSegments: 'Total segments: {count}, duration: {duration}sec',
       parallelJobs: 'Parallel jobs: {count}',
       segmentsFailed: '{count} segments failed!',
-      downloadFailedRetry: 'Download Failed! Please retry!',
+      partialVideoSaved: 'Available segments merged. The video is missing {count} segments.',
       mergingVideo: 'Starting to merge video file, please wait...',
       mergeFailed: 'Video file merge failed!',
       initSegmentMissing: 'Missing init segment (EXT-X-MAP), fMP4 (m4s) segments cannot be merged into a playable file!',

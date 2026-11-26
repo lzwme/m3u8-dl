@@ -82,7 +82,7 @@ export default {
       totalSegments: '总片段数: {count}，时长: {duration}秒',
       parallelJobs: '并行任务数: {count}',
       segmentsFailed: '{count} 个片段下载失败！',
-      downloadFailedRetry: '下载失败！请重试！',
+      partialVideoSaved: '已合并现有分片，视频缺少 {count} 个分片。',
       mergingVideo: '开始合并为视频文件，请稍等...',
       mergeFailed: '视频文件合并失败！',
       initSegmentMissing: '缺失初始化片段(EXT-X-MAP)，fMP4(m4s) 分片无法合并为一个可播放的文件！',

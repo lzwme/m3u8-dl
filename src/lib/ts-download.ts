@@ -1,17 +1,18 @@
-import { existsSync, promises, statSync } from 'node:fs';
+import { promises, statSync } from 'node:fs';
 import type { OutgoingHttpHeaders } from 'node:http';
 import { dirname } from 'node:path';
 import { isMainThread, parentPort } from 'node:worker_threads';
 import { mkdirp } from '@lzwme/fe-utils';
-import type { M3u8Crypto, TsItemInfo, WorkerTaskInfo } from '../types/m3u8';
+import type { M3u8Crypto, TsItemInfo, WorkerTaskInfo } from '../types/m3u8.js';
 import { decryptSegmentData } from './crypto.js';
 import { getRetry, isOkStatus, logger, sliceByterange, withRangeHeader } from './utils.js';
 
 export async function tsDownload(info: TsItemInfo, cryptoInfo: M3u8Crypto, headers?: OutgoingHttpHeaders | string) {
   try {
     // 断点续传：已落盘的分片直接命中，需要回填大小，否则进度/大小统计会漏算这部分数据
-    if (existsSync(info.tsOut)) {
-      info.tsSize = statSync(info.tsOut).size;
+    const cached = statSync(info.tsOut, { throwIfNoEntry: false });
+    if (cached?.isFile() && cached.size > 0) {
+      info.tsSize = cached.size;
       return true;
     }
 
@@ -22,6 +23,7 @@ export async function tsDownload(info: TsItemInfo, cryptoInfo: M3u8Crypto, heade
       logger.debug('\n', info);
       const buffer = sliceByterange(r.buffer, info.byterange);
       const data = decryptSegmentData(buffer, cryptoInfo, info.seq);
+      if (!data.byteLength) throw new Error('Empty segment');
 
       mkdirp(dirname(info.tsOut));
       // 先写临时文件再原子重命名：进程中断或 worker 被 terminate 时不会留下被误判为「已下载」的截断分片

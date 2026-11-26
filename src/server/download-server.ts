@@ -174,7 +174,7 @@ export class DLServer {
         item.status = 'error';
         item.errmsg = t('download.status.fileDeleted', getLang());
       }
-    } else if (item.status === 'error' && item.progress === 100) {
+    } else if (item.status === 'error' && item.progress === 100 && !item.tsFailed) {
       if (await checkFileExists(item.localVideo)) {
         item.status = 'done';
         delete item.errmsg;

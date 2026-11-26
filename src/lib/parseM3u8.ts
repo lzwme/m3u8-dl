@@ -3,10 +3,10 @@ import type { OutgoingHttpHeaders } from 'node:http';
 import { dirname, resolve } from 'node:path';
 import { md5, mkdirp } from '@lzwme/fe-utils';
 import { Parser } from 'm3u8-parser';
-import type { M3u8ContainerType, M3u8Crypto, M3u8Info, M3u8MapInfo, TsItemInfo } from '../types/m3u8';
-import { detectContainerByFile, detectContainerByHeader, detectContainerType, getSegmentExt } from './container';
-import { decryptSegmentData } from './crypto';
-import { getRetry, isOkStatus, logger, sliceByterange, withRangeHeader } from './utils';
+import type { M3u8ContainerType, M3u8Crypto, M3u8Info, M3u8MapInfo, TsItemInfo } from '../types/m3u8.js';
+import { detectContainerByFile, detectContainerByHeader, detectContainerType, getSegmentExt } from './container.js';
+import { decryptSegmentData } from './crypto.js';
+import { getRetry, isOkStatus, logger, sliceByterange, withRangeHeader } from './utils.js';
 
 /** m3u8-parser 未完整导出 EXT-X-MAP 上的 key 信息，这里做类型补全 */
 type MapInfoRaw = { uri: string; byterange?: { length: number; offset: number }; key?: { method: string; uri: string; iv?: unknown } };
@@ -90,7 +90,7 @@ export async function parseM3U8(content: string, cacheDir = './cache', headers?:
   const initSegment = mapInfo?.uri ? await fetchInitSegment(mapInfo, url, cacheDir, result.crypto, headers, mediaSequence) : null;
 
   if (initSegment) result.initSegment = initSegment;
-  result.container = resolveContainer(initSegment, tsList[0].uri);
+  result.container = resolveContainer(initSegment, mapInfo?.uri, tsList[0].uri);
 
   const segmentExt = getSegmentExt(result.container);
 
@@ -137,14 +137,14 @@ export async function parseM3U8(content: string, cacheDir = './cache', headers?:
 }
 
 /** 确定分片的容器类型。优先以初始化段的实际文件头为准，其次依据 url 后缀推断 */
-function resolveContainer(initSegment: M3u8MapInfo | null, firstSegmentUri: string): M3u8ContainerType {
+function resolveContainer(initSegment: M3u8MapInfo | null, mapUri: string | undefined, firstSegmentUri: string): M3u8ContainerType {
   if (initSegment?.container && initSegment.container !== 'unknown') return initSegment.container;
 
-  const byUri = detectContainerType(initSegment?.uri || firstSegmentUri);
+  const byUri = detectContainerType(mapUri || firstSegmentUri);
   if (byUri !== 'unknown') return byUri;
 
   // 有 EXT-X-MAP 但无法识别时，按 fMP4 处理（EXT-X-MAP 几乎只用于 fMP4/CMAF）
-  return initSegment ? 'fmp4' : 'ts';
+  return mapUri ? 'fmp4' : 'ts';
 }
 
 /** 获取并缓存加密 key */
