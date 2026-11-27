@@ -4,6 +4,7 @@
       <CompletedList
         @show-detail="showTaskDetail"
         @local-play="handleLocalPlay"
+        @resume="handleResume"
         @delete="handleDelete"
       />
       <TaskDetailModal
@@ -48,7 +49,7 @@ import DeleteConfirmDialog from '@/components/DeleteConfirmDialog.vue';
 import ConfirmDialog from '@/components/ConfirmDialog.vue';
 import VideoPlayer from '@/components/VideoPlayer.vue';
 import { useTasksStore } from '@/stores/tasks';
-import { deleteDownload } from '@/utils/request';
+import { deleteDownload, resumeDownload } from '@/utils/request';
 import { toast } from '@/utils/toast';
 import type { DownloadTask } from '@/types/task';
 
@@ -71,6 +72,11 @@ const playTask = ref<DownloadTask | null>(null);
 function showTaskDetail(task: DownloadTask) {
   selectedTask.value = task;
   showDetailModal.value = true;
+}
+
+async function handleResume(url: string) {
+  const result = await resumeDownload([url]);
+  if (!result.code) toast({ text: result.message || t('toast.resumeSuccess'), type: 'success' });
 }
 
 function handleDelete(urls: string[]) {

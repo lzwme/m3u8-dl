@@ -133,6 +133,14 @@
                   <i class="fas fa-play-circle"></i>
                 </button>
                 <button
+                  v-if="task.status === 'error'"
+                  @click="emit('resume', task.url)"
+                  class="text-green-600 hover:text-green-800"
+                  :title="$t('taskItem.resume')"
+                >
+                  <i class="fas fa-redo"></i>
+                </button>
+                <button
                   @click="toggleTaskFavorite(task.url)"
                   class="transition-colors"
                   :class="isTaskFavorite(task.url) ? 'text-yellow-500 hover:text-yellow-600' : 'text-gray-400 hover:text-yellow-500'"
@@ -173,6 +181,7 @@
                   <p class="text-xs text-gray-500 truncate max-w-[calc(35vw)]" :title="task.url">
                     {{ task.url }}
                   </p>
+                  <p v-if="task.status === 'error' && task.errmsg" class="text-xs text-red-600">{{ task.errmsg }}</p>
                 </div>
               </div>
             </td>
@@ -493,6 +502,7 @@ function formatDateTime(timestamp?: number): string {
 const emit = defineEmits<{
   (e: 'show-detail', task: DownloadTask): void;
   (e: 'local-play', data: { task: DownloadTask; url: string }): void;
+  (e: 'resume', url: string): void;
   (e: 'delete', urls: string[]): void;
 }>();
 

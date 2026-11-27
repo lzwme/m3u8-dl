@@ -1,3 +1,4 @@
+import { randomUUID } from 'node:crypto';
 import { existsSync, statSync, writeFileSync } from 'node:fs';
 import type { IncomingHttpHeaders } from 'node:http';
 import { dirname, resolve, sep } from 'node:path';
@@ -312,7 +313,7 @@ export async function m3u8Download(url: string, options: M3u8DLOptions = {}) {
             }
           }
 
-          if (res?.success) {
+          if (!err && res?.success) {
             info.tsSize = res.info.tsSize;
             info.startTime = taskStartTime; // res.timeCost;
             info.timeCost = Date.now() - taskStartTime;
@@ -387,22 +388,45 @@ export async function m3u8Download(url: string, options: M3u8DLOptions = {}) {
     await barrier.wait();
     workPoll.close();
 
-    if (stats.tsFailed > 0) {
-      stats.errmsg = t('download.status.segmentsFailed', lang, { count: stats.tsFailed });
-      result.errmsg = stats.errmsg;
-      logger.warn(t('download.status.downloadFailedRetry', lang), stats.tsFailed);
-    } else if (options.convert !== false) {
+    const partial = stats.tsFailed > 0;
+    if (partial) {
+      result.filepath = '';
+      result.errmsg = t('download.status.segmentsFailed', lang, { count: stats.tsFailed });
+      logger.warn(result.errmsg);
+    }
+
+    if (options.convert !== false && stats.tsSuccess > 0) {
       stats.errmsg = t('download.status.mergingVideo', lang);
       if (options.onProgress) options.onProgress(stats.tsCount, m3u8Info.tsCount, null, stats);
-      result.filepath = await m3u8Convert(options, m3u8Info);
-      stats.errmsg = result.filepath ? '' : t('download.status.mergeFailed', lang);
+      let mergeOptions = options;
+      if (partial) {
+        let filename = options.filename.replace(VIDEO_EXT_RE, '.partial$&');
+        const partialPath = resolve(options.saveDir, filename);
+        const possibleOutputs = [partialPath, partialPath.replace(VIDEO_EXT_RE, '.ts'), partialPath.replace(VIDEO_EXT_RE, '.mp4')];
+        if (possibleOutputs.some(existsSync)) {
+          filename = options.filename.replace(VIDEO_EXT_RE, `.${randomUUID()}.partial$&`);
+        }
+        mergeOptions = { ...options, filename };
+      }
+      const mergeInfo = partial
+        ? { ...m3u8Info, data: m3u8Info.data.filter(info => info.success === 1), tsCount: stats.tsSuccess }
+        : m3u8Info;
+      result.filepath = await m3u8Convert(mergeOptions, mergeInfo);
 
       if (result.filepath && existsSync(result.filepath)) {
         stats.size = statSync(result.filepath).size;
+        if (partial) {
+          result.errmsg = t('download.status.partialVideoSaved', lang, { count: stats.tsFailed });
+          logger.warn(result.errmsg);
+        }
         if (options.delCache) rmrfAsync(dirname(m3u8Info.data[0].tsOut));
+      } else {
+        const mergeError = t('download.status.mergeFailed', lang);
+        result.errmsg = partial ? `${result.errmsg} ${mergeError}` : mergeError;
       }
     }
 
+    stats.errmsg = result.errmsg;
     if (options.onProgress) options.onProgress(stats.tsCount, m3u8Info.tsCount, null, stats);
   }
 

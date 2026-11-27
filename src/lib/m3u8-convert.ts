@@ -2,10 +2,10 @@ import { createReadStream, createWriteStream, existsSync, renameSync, statSync, 
 import { dirname, resolve } from 'node:path';
 import { execPromisfy, formatByteSize, mkdirp } from '@lzwme/fe-utils';
 import { cyan, greenBright, magentaBright } from 'console-log-colors';
-import type { M3u8ContainerType, M3u8DLOptions, M3u8Info, TsItemInfo } from '../types/m3u8';
-import { detectContainerByFile, detectContainerType, getOutputExt, VIDEO_EXT_RE } from './container';
+import type { M3u8ContainerType, M3u8DLOptions, M3u8Info, TsItemInfo } from '../types/m3u8.js';
+import { detectContainerByFile, detectContainerType, getOutputExt, VIDEO_EXT_RE } from './container.js';
 import { getLang, t } from './i18n.js';
-import { isSupportFfmpeg, logger } from './utils';
+import { isSupportFfmpeg, logger } from './utils.js';
 
 /** 合并上下文 */
 export interface MergeContext {
@@ -47,6 +47,11 @@ export interface Merger {
   support(ctx: MergeContext): boolean;
   /** 执行合并。成功返回生成的文件路径，失败返回空字符串 */
   merge(ctx: MergeContext): Promise<string>;
+}
+
+function hasSegmentFile(filepath?: string) {
+  const stat = filepath ? statSync(filepath, { throwIfNoEntry: false }) : undefined;
+  return stat?.isFile() && stat.size > 0;
 }
 
 /**
@@ -110,7 +115,7 @@ export const fmp4Merger: Merger = {
     const { m3u8Info, filepath, cacheDir, ffmpegSupport, ffmpegBin, lang } = ctx;
     const initSegment = m3u8Info.initSegment;
 
-    if (!initSegment?.tsOut || !existsSync(initSegment.tsOut)) {
+    if (!hasSegmentFile(initSegment?.tsOut)) {
       logger.error(t('download.status.initSegmentMissing', lang), initSegment?.uri || '');
       return '';
     }
@@ -147,14 +152,15 @@ export const tsMerger: Merger = {
   async merge(ctx) {
     const { m3u8Info, filepath, cacheDir, ffmpegBin } = ctx;
     const ffconcatFile = resolve(cacheDir, 'ffconcat.txt');
-    let filesAllArr = m3u8Info.data.filter(d => d.tsOut && existsSync(d.tsOut)).map(d => `file '${d.tsOut}'\nduration ${d.duration}`);
+    const availableFiles = new Set(ctx.files);
+    let filesAllArr = m3u8Info.data.filter(d => availableFiles.has(d.tsOut)).map(d => `file '${d.tsOut}'\nduration ${d.duration}`);
 
     if (process.platform === 'win32') filesAllArr = filesAllArr.map(d => d.replaceAll('\\', '/'));
     writeFileSync(ffconcatFile, `ffconcat version 1.0\n${filesAllArr.join('\n')}`);
 
     // ffmpeg -i nz.ts -c copy -map 0:v -map 0:a -bsf:a aac_adtstoasc nz.mp4
     const r = await execFfmpeg(
-      `"${ffmpegBin}" -async 1 -y -f concat -safe 0 -i "${ffconcatFile}" -c:v copy -c:a copy -movflags +faststart -fflags +genpts -bsf:a aac_adtstoasc "${filepath}"`,
+      `"${ffmpegBin}" -y -f concat -safe 0 -i "${ffconcatFile}" -c:v copy -c:a copy -movflags +faststart -fflags +genpts -bsf:a aac_adtstoasc "${filepath}"`,
       ffmpegBin
     );
 
@@ -170,11 +176,11 @@ export const binaryMerger: Merger = {
   container: '*',
   priority: 0,
   // 缺失初始化段时，fMP4 分片拼接产物无法解码，不产出无效文件
-  support: ctx => ctx.files.length > 0 && !(ctx.m3u8Info.container === 'fmp4' && !ctx.m3u8Info.initSegment?.tsOut),
+  support: ctx => ctx.files.length > 0 && (ctx.m3u8Info.container !== 'fmp4' || hasSegmentFile(ctx.m3u8Info.initSegment?.tsOut)),
   async merge(ctx) {
     const { m3u8Info } = ctx;
     const initSegment = m3u8Info.initSegment;
-    const files = initSegment?.tsOut && existsSync(initSegment.tsOut) ? [initSegment.tsOut, ...ctx.files] : ctx.files;
+    const files = hasSegmentFile(initSegment?.tsOut) ? [initSegment.tsOut, ...ctx.files] : ctx.files;
 
     // 纯二进制拼接的 MPEG-TS 流不能伪装成 mp4，按 ts 修正输出扩展名，避免产出不可播放的假 mp4
     const output = m3u8Info.container === 'fmp4' ? ctx.filepath : resolveOutputPath(ctx.filepath, 'ts', false);
@@ -268,7 +274,7 @@ export async function m3u8Convert(options: M3u8DLOptions, m3u8Info: M3u8Info | T
 
   if ((!options.force && existsSync(filepath)) || !info.data.length) return filepath;
 
-  const files = info.data.map(d => d.tsOut).filter(d => d && existsSync(d));
+  const files = info.data.map(d => d.tsOut).filter(hasSegmentFile);
   if (!files.length) return '';
 
   logger.info(
